@@ -5,6 +5,8 @@
 
 # Assumes Oxford Tracker is at user home directory
 # clone from https://github.com/OxCGRT/covid-policy-tracker.git
+
+.libPaths("/home/rmk7/other_R_libs")
   
 require(idealstan)
 require(ggplot2)
