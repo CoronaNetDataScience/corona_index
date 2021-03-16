@@ -154,6 +154,17 @@ filter_list <- switch(model_type,
   
   # note no missing data :)
   
+  # determine cores
+  
+  if(floor(length(unique(to_ideal@score_matrix$item_id))/parallel::detectCores())<1) {
+    
+    ncores <- 1
+    
+  } else {
+    
+    ncores <- floor(length(unique(to_ideal@score_matrix$item_id))/parallel::detectCores())
+  }
+  
   activity_fit <- id_estimate(to_ideal,vary_ideal_pts="AR1",
                               ncores=floor(length(unique(to_ideal@score_matrix$item_id))/parallel::detectCores()),
                               nchains=as.numeric(nchains),niters=400,
