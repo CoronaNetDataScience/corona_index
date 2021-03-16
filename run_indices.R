@@ -156,13 +156,13 @@ filter_list <- switch(model_type,
   
   # determine cores
   
-  if(floor(length(unique(to_ideal@score_matrix$item_id))/parallel::detectCores())<1) {
+  if(floor(length(unique(to_ideal@score_matrix$person_id))/parallel::detectCores())<1) {
     
     ncores <- 1
     
   } else {
     
-    ncores <- floor(length(unique(to_ideal@score_matrix$item_id))/parallel::detectCores())
+    ncores <- floor(length(unique(to_ideal@score_matrix$person_id))/parallel::detectCores())
   }
   
   activity_fit <- id_estimate(to_ideal,vary_ideal_pts="AR1",
