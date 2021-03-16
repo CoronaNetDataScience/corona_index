@@ -156,7 +156,7 @@ filter_list <- switch(model_type,
   
   activity_fit <- id_estimate(to_ideal,vary_ideal_pts="AR1",
                               ncores=floor(length(unique(to_ideal@score_matrix$item_id))/parallel::detectCores()),
-                              nchains=nchains,niters=400,
+                              nchains=as.numeric(nchains),niters=400,
                               warmup=300,grainsize = 1,
                               within_chain="threads",
                               gpu=FALSE,save_files = "~/corona_private/data/indices/",
