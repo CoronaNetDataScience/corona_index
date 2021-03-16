@@ -158,18 +158,18 @@ filter_list <- switch(model_type,
   
   if(floor(length(unique(to_ideal@score_matrix$person_id))/parallel::detectCores())<1) {
     
-    ncores <- 1
+    grainsize <- 1
     
   } else {
     
-    ncores <- floor(length(unique(to_ideal@score_matrix$person_id))/parallel::detectCores())
+    grainsize <- floor(length(unique(to_ideal@score_matrix$person_id))/parallel::detectCores())
   }
   print(nchains)
-  print(ncores)
+  print(grainsize)
   activity_fit <- id_estimate(to_ideal,vary_ideal_pts="AR1",
-                              ncores=ncores,
+                              ncores=parallel::detectCores(),
                               nchains=as.numeric(nchains),niters=400,
-                              warmup=300,grainsize = 1,
+                              warmup=300,grainsize = grainsize,
                               within_chain="threads",
                               gpu=FALSE,save_files = "/scratch/rmk7/coronanet",
                               fixtype="prefix",pos_discrim = F,
