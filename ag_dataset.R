@@ -57,222 +57,561 @@ clean <- readRDS("/scratch/rmk7/coronanet/coronanet_internal_allvars.RDS")
   
   range01 <- function(x){(x-min(x,na.rm=T))/(max(x,na.rm =T)-min(x,na.rm=T))}
   
+
+# make new index from clean -----------------------------------------------
+
+
   
-  index <- filter(clean, !type %in% c("COVID-19 Vaccines",
-                                      "Declaration of Emergency",
-                                      "New Task Force, Bureau or Administrative Configuration",
-                                      "Other Policy Not Listed Above",
-                                      "Anti-Disinformation Measures",
-                                      "Restriction and Regulation of Government Services"),
-                  #!grepl(x=type_mass_gathering,pattern="capacity"),
-                  !is.na(date_start)) %>% 
-    select(record_id,policy_id,description,date_start,date_end,country,compliance,type,
-           target_geog_level,target_city,target_province,target_other,
-           target_who_what,target_who_gen,target_direction,travel_mechanism,
-           institution_conditions,
-           institution_cat,
-           type_sub_cat,type_mass_gathering,type_curfew_start,
-           type_curfew_end,domestic_policy,init_country_level,matches("type_health")) %>% 
-    mutate(curfew_length=(as_datetime(as.numeric(type_curfew_end)) + days(1)) - as_datetime(as.numeric(type_curfew_start)),
-           curfew_length=ifelse(curfew_length>24, curfew_length - 24,curfew_length),
-           curfew_length=curfew_length/24,
-           preschool=as.numeric(type_sub_cat=="Preschool or childcare facilities (generally for children ages 5 and below)"),
-           primary_school=as.numeric(type_sub_cat=="Primary Schools (generally for children ages 10 and below)"),
-           secondary_school=as.numeric(type_sub_cat=="Secondary Schools (generally for children ages 10 to 18)"),
-           higher_ed=as.numeric(type_sub_cat %in% c("Higher education institutions (i.e. degree granting institutions)",
-                                                     "Higher education (i.e. degree granting institutions)")),
-           school_clean=as.numeric(grepl(x=institution_conditions,
-                                         pattern="cleaning and sanitary")),
-           school_distance=as.numeric(grepl(x=institution_conditions,
-                                                                 pattern="Keeping a distance")),
-           school_mask=as.numeric(grepl(x=institution_conditions,
-                                         pattern="Mask wearing")),
-           school_other=as.numeric(grepl(x=institution_conditions,
-                                         pattern="Other conditions")),
-           school_num=as.numeric(grepl(x=institution_conditions,
-                                         pattern="Number of people")),
-           school_type_pers=as.numeric(grepl(x=institution_conditions,
-                                        pattern="Types of people")),
-           school_health_q=as.numeric(grepl(x=institution_conditions,
-                                            pattern="Health Questionnaire")),
-           school_special_student=as.numeric(grepl(x=institution_conditions,
-                                           pattern="Special provisions for all students")),
-           school_special_teacher=as.numeric(grepl(x=institution_conditions,
-                                                   pattern="Special provisions exist for how teaching")),
-           school_temp=as.numeric(grepl(x=institution_conditions,
-                                        pattern="Temperature")),
-           school_health_monitoring=as.numeric(grepl(x=institution_conditions,
-                                                     pattern="Other Health Monitoring")),
-  
-           biz_restrict_all=as.numeric(type_sub_cat=="All or unspecified businesses"),
-           biz_restrict_rest=as.numeric(type_sub_cat %in% c("Restaurants","Restaurants/Bars","Bars")),
-           biz_restrict_comm=as.numeric(type_sub_cat=="Commercial Businesses"),
-           biz_restrict_retail=as.numeric(type_sub_cat=="Retail Businesses"),
-           biz_restrict_shop=as.numeric(type_sub_cat=="Shopping Centers"),
-           biz_restrict_groom=as.numeric(type_sub_cat=="Personal Grooming Businesses (e.g. hair salons)"),
-           biz_restrict_other=as.numeric(type_sub_cat=="Other Businesses"),
-           biz_restrict_grocery=as.numeric(type_sub_cat=="Supermarkets/grocery stores"),
-           biz_restrict_telecom=as.numeric(type_sub_cat=="Telecommunications"),
-           biz_restrict_info=as.numeric(type_sub_cat=="Information service activities"),
-           biz_restrict_publish=as.numeric(type_sub_cat=="Publishing activities"),
-           biz_restrict_construct=as.numeric(type_sub_cat=="Construction"),
-           biz_restrict_farm=as.numeric(type_sub_cat=="Agriculture; forestry and fishing"),
-           biz_restrict_transport=as.numeric(type_sub_cat=="Transportation (land; water and air)"),
-           biz_restrict_hotel=as.numeric(type_sub_cat=="Paid lodgings (e.g. hotels; motels)"),
-           biz_restrict_warehouse=as.numeric(type_sub_cat=="Warehousing and support activities for transportation"),
-           biz_restrict_health=as.numeric(type_sub_cat=="Private health offices"),
-           biz_restrict_pharmacy=as.numeric(type_sub_cat=="Pharmacies"),
-           biz_restrict_water=as.numeric(type_sub_cat=="Water supply; sewerage; waste management and remediation activities"),
-           biz_restrict_finance=as.numeric(type_sub_cat=="Financial service activities except insurance and pension funding"),
-           biz_restrict_mining=as.numeric(type_sub_cat=="Mining and quarrying"),
-           biz_restrict_insurance=as.numeric(type_sub_cat=="Insurance; reinsurance; and pension funding except compulsory social security"),
-           biz_restrict_na=is.na(type_sub_cat=="Pharmacies" & type=="Restriction and Regulation of Businesses"),
-           biz_nonessential=as.numeric(grepl(x=institution_cat,pattern="Non-Essential Businesses")),
-           biz_hygiene=as.numeric(grepl(x=institution_conditions,pattern="Hygiene")),
-           biz_hours=as.numeric(grepl(x=institution_conditions,pattern="business hours")),
-           biz_work_home=as.numeric(grepl(x=institution_conditions,pattern="work at home policies|Maximum number of employees")),
-           biz_meeting=as.numeric(grepl(x=institution_conditions,pattern="business meetings")),
-           biz_social_distance=as.numeric(grepl(x=institution_conditions,pattern="1.5 meters")),
-           biz_mask=as.numeric(grepl(x=institution_conditions,pattern="Mask")),
-           biz_temp=as.numeric(grepl(x=institution_conditions,pattern="Temperature")),
-           biz_health_cert=as.numeric(grepl(x=institution_conditions,pattern="Health Certificate")),
-           biz_health_q=as.numeric(grepl(x=institution_conditions,pattern="Health Questionnaire")),
-           biz_num_cust=as.numeric(grepl(x=institution_conditions,pattern="number of customers")),
-           biz_store_size=as.numeric(grepl(x=institution_conditions,pattern="Size of store")),
-           biz_cont_trace=as.numeric(grepl(x=institution_conditions,pattern="Contact tracing")),
-           biz_cond_other=as.numeric(grepl(x=institution_conditions,pattern="Other condition")),
-           hr_cold_storage=as.numeric(grepl(x=type_sub_cat,pattern="Cold storage")),
-           hr_doctors=as.numeric(grepl(x=type_sub_cat,pattern="Doctors")),
-           hr_dry_ice=as.numeric(grepl(x=type_sub_cat,pattern="Dry ice")),
-           hr_sanitizer=as.numeric(grepl(x=type_sub_cat,pattern="Sanitizer")),
-           hr_insurance=as.numeric(grepl(x=type_sub_cat,pattern="Insurance")),
-           hr_facilities=as.numeric(grepl(x=type_sub_cat,pattern="Facilities")),
-           hr_volunteers=as.numeric(grepl(x=type_sub_cat,pattern="Volunteers")),
-           hr_hospitals=as.numeric(grepl(x=type_sub_cat,pattern="Hospitals")),
-           hr_masks=as.numeric(grepl(x=type_sub_cat,pattern="Masks")),
-           hr_drugs=as.numeric(grepl(x=type_sub_cat,pattern="Drugs")),
-           hr_nurses=as.numeric(grepl(x=type_sub_cat,pattern="Nurses")),
-           hr_other_infra=as.numeric(grepl(x=type_sub_cat,pattern="Other Health Infrastructure|Unspecified Health Infrastructure")),
-           hr_other_mat=as.numeric(grepl(x=type_sub_cat,pattern="Other Health Materials|Unspecified Health Materials")),
-           hr_other_staff=as.numeric(grepl(x=type_sub_cat,pattern="Other Heath Staff|Unspecified Health Staff")),
-           hr_ppe=as.numeric(grepl(x=type_sub_cat,pattern="Protective")),
-           hr_testing=as.numeric(grepl(x=type_sub_cat,pattern="Public Testing")),
-           hr_syringe=as.numeric(grepl(x=type_sub_cat,pattern="Syringes")),
-           hr_quarantine=as.numeric(grepl(x=type_sub_cat,pattern="Temporary Quarantine")),
-           hr_pcr=as.numeric(grepl(x=type_sub_cat,pattern="Thermal cyclers")),
-           hr_ventilator=as.numeric(grepl(x=type_sub_cat,pattern="Ventilators")),
-           hr_test_kit=as.numeric(grepl(x=type_sub_cat,pattern="Test Kits")),
-           hr_test_kit=as.numeric(grepl(x=type_sub_cat,pattern="Test Kits")),
-           hr_test_kit=as.numeric(grepl(x=type_sub_cat,pattern="Test Kits")),
-           hr_target_staff=as.numeric(grepl(x=target_who_what,pattern="Health Staff")),
-           hr_target_supply=as.numeric(grepl(x=target_who_what,pattern="Health-Related Supplies")),
-           hm_home_visit=as.numeric(grepl(x=type_health_mon_hum,pattern="Home visits")),
-           hm_other_mon=as.numeric(grepl(x=type_health_mon_hum,pattern="Other human health monitoring strategy")),
-           hm_telephone=as.numeric(grepl(x=type_health_mon_hum,pattern="Telephone calls")),
-           hm_loc_nursing=as.numeric(grepl(x=type_health_mon_loc,pattern="Nursing Homes")),
-           hm_loc_other=as.numeric(grepl(x=type_health_mon_loc,pattern="Other Health Monitoring Location|Other Public Transportation")),
-           hm_loc_subway=as.numeric(grepl(x=type_health_mon_loc,pattern="Subways/Trams")),
-           hm_loc_buses=as.numeric(grepl(x=type_health_mon_loc,pattern="Buses")),
-           hm_loc_trains=as.numeric(grepl(x=type_health_mon_loc,pattern="Trains")),
-           hm_loc_nursing=as.numeric(grepl(x=type_health_mon_loc,pattern="Nursing Homes")),
-           hm_cert=as.numeric(grepl(x=type_health_mon_snap,pattern="Health Certificate")),
-           hm_q=as.numeric(grepl(x=type_health_mon_snap,pattern="Questionnaire")),
-           hm_snap_other=as.numeric(grepl(x=type_health_mon_snap,pattern="Other")),
-           hm_snap_temp=as.numeric(grepl(x=type_health_mon_snap,pattern="Temperature")),
-           hm_stra_contact_human=as.numeric(grepl(x=type_health_mon_stra,pattern="Contact tracing through human teams")),
-           hm_stra_contact_phone=as.numeric(grepl(x=type_health_mon_stra,pattern="Contact tracing through smart phones")),
-           hm_stra_other=as.numeric(grepl(x=type_health_mon_stra,pattern="Other")),
-           hm_stra_wearable=as.numeric(grepl(x=type_health_mon_stra,pattern="Wearable technology")),
-           hm_tech_bluetooth=as.numeric(grepl(x=type_health_mon_tech,pattern="Bluetooth")),
-           hm_tech_gps=as.numeric(grepl(x=type_health_mon_tech,pattern="GPS")),
-           hm_tech_qr=as.numeric(grepl(x=type_health_mon_tech,pattern="QR")),
-           hm_tech_other=as.numeric(grepl(x=type_health_mon_tech,pattern="Other")),
-           ht_door2door=as.numeric(grepl(x=type_sub_cat,pattern="Door-to-door")),
-           ht_drivein=as.numeric(grepl(x=type_sub_cat,pattern="Drive-in")),
-           ht_fixed=as.numeric(grepl(x=type_sub_cat,pattern="Fixed Health Testing")),
-           ht_entire_pop=as.numeric(grepl(x=type_sub_cat,pattern="entire population")),
-           ht_mobile=as.numeric(grepl(x=type_sub_cat,pattern="Mobile Health Testing")),
-           ht_other=as.numeric(grepl(x=type_sub_cat,pattern="Other Health Testing")),
-           ht_type_antibody=as.numeric(grepl(x=type_health_test_cat,pattern="Antibody/serological")),
-           ht_type_antigen=as.numeric(grepl(x=type_health_test_cat,pattern="Antigen")),
-           ht_type_other=as.numeric(grepl(x=type_health_test_cat,pattern="Not specified|Other")),
-           ht_type_pcr=as.numeric(grepl(x=type_health_test_cat,pattern="PCR test")),
-           ht_type_antibody=as.numeric(grepl(x=type_health_test_cat,pattern="Antibody/serological")),
-           ht_portal_email=as.numeric(grepl(x=type_health_test_res,pattern="Email")),
-           ht_portal_sms=as.numeric(grepl(x=type_health_test_res,pattern="Mobile text")),
-           ht_portal_app=as.numeric(grepl(x=type_health_test_res,pattern="app or website")),
-           ht_portal_other=as.numeric(grepl(x=type_health_test_res,pattern="Other|Not specified")),
-           ht_portal_paper=as.numeric(grepl(x=type_health_test_res,pattern="Paper")),
-           ht_portal_phone=as.numeric(grepl(x=type_health_test_res,pattern="Phone call")),
-           ht_cost_free_all=as.numeric(grepl(x=type_health_test_eco,pattern="Testing is free for all individuals")),
-           ht_cost_free_subset=as.numeric(grepl(x=type_health_test_eco,pattern="Testing is free for a subset of the population")),
-           ht_cost_partly_free=as.numeric(grepl(x=type_health_test_eco,pattern="Testing is partially subsidized by the government")),
-           ht_cost_biz=as.numeric(grepl(x=type_health_test_eco,pattern="Business employees and employers")),
-           ht_cost_other=as.numeric(grepl(x=type_health_test_eco,pattern="No information provided")),
-           ht_cost_all_pay=as.numeric(grepl(x=type_health_test_eco,pattern="All Individuals must pay full cost")),
-           ht_cost_symptomatic=as.numeric(grepl(x=type_health_test_eco,pattern="Symptomatic people")),
-           ht_loc_clinic=as.numeric(grepl(x=type_health_test_loc,pattern="Health Clinics")),
-           ht_loc_private=as.numeric(grepl(x=type_health_test_loc,pattern="Private doctors offices")),
-           ht_loc_hospital=as.numeric(grepl(x=type_health_test_loc,pattern="Hospitals")),
-           ht_loc_other=as.numeric(grepl(x=type_health_test_loc,pattern="Not specified|Other")),
-           ht_loc_pharmacy=as.numeric(grepl(x=type_health_test_loc,pattern="Pharmacies")),
-           social_distance=as.numeric(type_sub_cat=="Keeping a distance of at least 6 feet or 1.5 meters apart"),
-           mask_public=as.numeric(type_sub_cat=="Wearing Masks inside public buildings"),
-           mask_everywhere=as.numeric(type_sub_cat %in% c("Wearing Masks in all public spaces/everywhere",
-                                                          "Wearing Masks in all indoor spaces",
-                                                          "Wearing Masks inside public or commercial building")),
-           mask_business=as.numeric(type_sub_cat=="Wearing Masks inside private businesses (e.g. supermarkets)"),
-           mask_primary_school=as.numeric(type_sub_cat=="Wearing Masks inside Primary Schools (generally for children ages 10 and below)"),
-           mask_sec_school=as.numeric(type_sub_cat=="Wearing Masks inside Secondary Schools (generally for children ages 10 to 18)"),
-           mask_transport=as.numeric(type_sub_cat=="Wearing Masks inside Public transportation"),
-           mask_unspec=as.numeric(type_sub_cat %in% c("Unspecified Mask Wearing Policy",
-                                                      "Wearing masks")),
-           mask_preschool=as.numeric(type_sub_cat=="Wearing Masks inside Preschools or childcare facilities (generally for children age 5 and below)"),
-           mask_higher_ed=as.numeric(type_sub_cat=="Wearing Masks inside Higher education institutions (i.e. degree granting institutions)"),
-           buses=as.numeric(type_sub_cat=="Restrictions on ridership of buses"),
-           other_transport=as.numeric(type_sub_cat=="Restrictions ridership of other forms of public transportation (please include details in the text entry)"),
-           private_transport=as.numeric(type_sub_cat=="Restrictions on  private vehicles in public circulation"),
-           subways=as.numeric(type_sub_cat=="Restrictions on ridership of subways and trams"),
-           buses=as.numeric(type_sub_cat=="Restrictions on ridership of trains"),
-           distance_other=as.numeric(type_sub_cat=="Keep a distance of some other distance not listed above. Please note the distance in meters in the text entry."),
-           number_mass=clean_mass(type_mass_gathering),
-           number_mass=1 - range01(number_mass),
-           cancel_rec_event=as.numeric(grepl(x=type_sub_cat,pattern="Cancellation of a recreational or commercial event")),
-           cancel_annual_event=as.numeric(grepl(x=type_sub_cat,pattern="Cancellation of a recreational or commercial event")),
-           prison_pop=as.numeric(grepl(x=type_sub_cat,pattern="Prison population reduced")),
-           #other_mass=as.numeric(grepl(x=type_sub_cat,pattern="Prison population reduced") | is.na(type_sub_cat)),
-           postpone_ann_event=as.numeric(grepl(x=type_sub_cat,pattern="Postponement of a recreational or commercial event")),
-           postpone_rec_event=as.numeric(grepl(x=type_sub_cat,pattern="Postponement of an annually recurring event")),
-           private_event=as.numeric(grepl(x=type_sub_cat,pattern="Events at private residencies restricted")),
-           allow_ann_event=as.numeric(grepl(x=type_sub_cat,pattern="Annually recurring event allowed to occur")),
-           event_no_audience=as.numeric(grepl(x=type_sub_cat,pattern="allowed to occur but no audience is allowed")),
-           int_restrict_flights=as.numeric(grepl(x=travel_mechanism,pattern="Flights")),
-           int_restrict_border=as.numeric(grepl(x=travel_mechanism,pattern="Land Border")),
-           int_restrict_all=as.numeric(grepl(x=travel_mechanism,pattern="All kinds of transport")),
-           int_restrict_NA=as.numeric(grepl(x=travel_mechanism,pattern="Not Applicable")),
-           int_restrict_cruises=as.numeric(grepl(x=travel_mechanism,pattern="Cruises")),
-           int_restrict_ferries=as.numeric(grepl(x=travel_mechanism,pattern="Ferries")),
-           int_restrict_ports=as.numeric(grepl(x=travel_mechanism,pattern="Seaports")),
-           int_restrict_trains=as.numeric(grepl(x=travel_mechanism,pattern="Trains")),
-           int_restrict_buses=as.numeric(grepl(x=travel_mechanism,pattern="Buses")),
-           date_end=as_date(ifelse(is.na(date_end),today() - days(5),date_end)),
-           type_sub_cat=ifelse(grepl(x=type_sub_cat,pattern="[Qq]uarantine"),NA_character_,type_sub_cat),
-           date_start=as_date(ifelse(date_start>date_end,date_end,date_start)),
-           voluntary=grepl(x=compliance,pattern="Voluntary/Recommended but No Penalties"),
-           man1=grepl(x=compliance,pattern="Mandatory \\(Unspecified/Implied\\)"),
-           man2=grepl(x=compliance,pattern="Mandatory with Fines"),
-           man3=grepl(x=compliance,pattern="Mandatory with Legal Penalties \\(Jail Time\\)"),
-           compliance=case_when(man3 ~ 3,
-                                man2 ~ 2,
-                                man1 ~ 1,
-                                voluntary ~ 0,
-                                TRUE~NA_real_)) %>% 
+  index <- filter(
+    clean,
+    !type %in% c(
+      "COVID-19 Vaccines",
+      "Declaration of Emergency",
+      "New Task Force, Bureau or Administrative Configuration",
+      "Other Policy Not Listed Above",
+      "Anti-Disinformation Measures",
+      "Restriction and Regulation of Government Services"
+    ),
+    #!grepl(x=type_mass_gathering,pattern="capacity"),!is.na(date_start)
+  ) %>%
+    select(
+      record_id,
+      policy_id,
+      description,
+      date_start,
+      date_end,
+      country,
+      compliance,
+      type,
+      target_geog_level,
+      target_city,
+      target_province,
+      target_other,
+      target_who_what,
+      target_who_gen,
+      target_direction,
+      travel_mechanism,
+      institution_conditions,
+      institution_status,
+      institution_cat,
+      type_sub_cat,
+      type_mass_gathering,
+      type_curfew_start,
+      type_curfew_end,
+      domestic_policy,
+      init_country_level,
+      matches("type_health")
+    ) %>%
+    mutate(
+      curfew_length = (as_datetime(as.numeric(type_curfew_end)) + days(1)) - as_datetime(as.numeric(type_curfew_start)),
+      curfew_length = ifelse(curfew_length > 24, curfew_length - 24, curfew_length),
+      curfew_length = curfew_length / 24,
+      preschool = case_when(
+        as.numeric(
+          type_sub_cat == "Preschool or childcare facilities (generally for children ages 5 and below)"
+        ) & as.numeric(grepl(x = institution_status,
+                             pattern =
+                               "closed/locked down")) ~ 3,
+        as.numeric(
+          type_sub_cat == "Preschool or childcare facilities (generally for children ages 5 and below)"
+        ) & as.numeric(grepl(x = institution_status,
+                             pattern =
+                               "open with conditions")) ~ 2,
+        TRUE ~
+          1
+      ),
+      primary_school = case_when(
+        as.numeric(
+          type_sub_cat == "Primary Schools (generally for children ages 10 and below)"
+        ) & as.numeric(grepl(x = institution_status,
+                             pattern =
+                               "closed/locked down")) ~ 3,
+        as.numeric(
+          type_sub_cat == "Primary Schools (generally for children ages 10 and below)"
+        ) & as.numeric(grepl(x = institution_status,
+                             pattern =
+                               "open with conditions")) ~ 2,
+        TRUE ~
+          1
+      ),
+      secondary_school = case_when(
+        as.numeric(
+          type_sub_cat == "Secondary Schools (generally for children ages 10 to 18)"
+        ) & as.numeric(grepl(x = institution_status,
+                             pattern =
+                               "closed/locked down")) ~ 3,
+        as.numeric(
+          type_sub_cat == "Secondary Schools (generally for children ages 10 to 18)"
+        ) & as.numeric(grepl(x = institution_status,
+                             pattern =
+                               "open with conditions")) ~ 2,
+        TRUE ~
+          1
+      ),
+      higher_ed = case_when(
+        type_sub_cat %in% c(
+          "Higher education institutions (i.e. degree granting institutions)",
+          "Higher education (i.e. degree granting institutions)"
+        ) & as.numeric(grepl(x = institution_status,
+                             pattern =
+                               "closed/locked down")) ~ 3,
+        type_sub_cat %in% c(
+          "Higher education institutions (i.e. degree granting institutions)",
+          "Higher education (i.e. degree granting institutions)"
+        )  & as.numeric(grepl(x = institution_status,
+                              pattern =
+                                "open with conditions")) ~ 2,
+        TRUE ~
+          1
+      ),
+      school_clean = as.numeric(
+        grepl(x = institution_conditions,
+              pattern = "cleaning and sanitary")
+      ),
+      school_distance = as.numeric(grepl(x = institution_conditions,
+                                         pattern =
+                                           "Keeping a distance")),
+      school_mask = as.numeric(grepl(x = institution_conditions,
+                                     pattern = "Mask wearing")),
+      school_other = as.numeric(grepl(x = institution_conditions,
+                                      pattern = "Other conditions")),
+      school_num = as.numeric(grepl(x = institution_conditions,
+                                    pattern = "Number of people")),
+      school_type_pers = as.numeric(grepl(x = institution_conditions,
+                                          pattern = "Types of people")),
+      school_health_q = as.numeric(
+        grepl(x = institution_conditions,
+              pattern = "Health Questionnaire")
+      ),
+      school_special_student = as.numeric(
+        grepl(x = institution_conditions,
+              pattern = "Special provisions for all students")
+      ),
+      school_special_teacher = as.numeric(
+        grepl(x = institution_conditions,
+              pattern = "Special provisions exist for how teaching")
+      ),
+      school_temp = as.numeric(grepl(x = institution_conditions,
+                                     pattern = "Temperature")),
+      school_health_monitoring = as.numeric(
+        grepl(x = institution_conditions,
+              pattern = "Other Health Monitoring")
+      ),
+      biz_restrict_all = case_when(type_sub_cat == "All or unspecified businesses" & grepl(x = institution_status, pattern =
+                                                                                             "closed/locked down") ~ 3,
+                                   type_sub_cat == "All or unspecified businesses" & grepl(x = institution_status, pattern =
+                                                                                             "open with conditions") ~ 2,
+                                   TRUE~1),
+      biz_restrict_rest = case_when(type_sub_cat %in% c(
+                                "Restaurants", "Restaurants/Bars", "Bars") & grepl(x = institution_status, pattern =
+                                                                                              "closed/locked down") ~ 3,
+                                type_sub_cat %in% c(
+                                  "Restaurants", "Restaurants/Bars", "Bars") & grepl(x = institution_status, pattern =
+                                                                                              "open with conditions") ~ 2,
+                                    TRUE~1),
+      biz_restrict_comm = case_when(type_sub_cat == "Commercial Businesses" & grepl(x = institution_status, pattern =
+                                                                                              "closed/locked down") ~ 3,
+                                    type_sub_cat == "Commercial Businesses" & grepl(x = institution_status, pattern =
+                                                                                              "open with conditions") ~ 2,
+                                    TRUE~1),
+      biz_restrict_retail = case_when(type_sub_cat == "Retail Businesses" & grepl(x = institution_status, pattern =
+                                                                                        "closed/locked down") ~ 3,
+                                      type_sub_cat == "Retail Businesses" & grepl(x = institution_status, pattern =
+                                                                                        "open with conditions") ~ 2,
+                                      TRUE~1),
+      biz_restrict_shop = case_when(type_sub_cat == "Shopping Centers" & grepl(x = institution_status, pattern =
+                                                                                  "closed/locked down") ~ 3,
+                                    type_sub_cat == "Shopping Centers" & grepl(x = institution_status, pattern =
+                                                                                  "open with conditions") ~ 2,
+                                    TRUE~1),
+      biz_restrict_groom = case_when(type_sub_cat == "Personal Grooming Businesses (e.g. hair salons)" & grepl(x = institution_status, pattern =
+                                                                                  "closed/locked down") ~ 3,
+                                     type_sub_cat == "Personal Grooming Businesses (e.g. hair salons)" & grepl(x = institution_status, pattern =
+                                                                                  "open with conditions") ~ 2,
+                                     TRUE~1),
+      biz_restrict_other = case_when(type_sub_cat == "Other Businesses" & grepl(x = institution_status, pattern =
+                                                                                                                 "closed/locked down") ~ 3,
+                                     type_sub_cat == "Other Businesses" & grepl(x = institution_status, pattern =
+                                                                                                                 "open with conditions") ~ 2,
+                                     TRUE~1),
+      biz_restrict_grocery = case_when(type_sub_cat == "Supermarkets/grocery stores" & grepl(x = institution_status, pattern =
+                                                                                    "closed/locked down") ~ 3,
+                                       type_sub_cat == "Supermarkets/grocery stores" & grepl(x = institution_status, pattern =
+                                                                                    "open with conditions") ~ 2,
+                                       TRUE~1),
+      biz_restrict_telecom = case_when(type_sub_cat == "Telecommunications" & grepl(x = institution_status, pattern =
+                                                                                               "closed/locked down") ~ 3,
+                                       type_sub_cat == "Telecommunications" & grepl(x = institution_status, pattern =
+                                                                                               "open with conditions") ~ 2,
+                                       TRUE~1),
+      biz_restrict_info = case_when(type_sub_cat == "Information service activities" & grepl(x = institution_status, pattern =
+                                                                                   "closed/locked down") ~ 3,
+                                    type_sub_cat == "Information service activities" & grepl(x = institution_status, pattern =
+                                                                                   "open with conditions") ~ 2,
+                                    TRUE~1),
+      biz_restrict_publish = case_when(type_sub_cat == "Publishing activities" & grepl(x = institution_status, pattern =
+                                                                                                  "closed/locked down") ~ 3,
+                                       type_sub_cat == "Publishing activities" & grepl(x = institution_status, pattern =
+                                                                                                  "open with conditions") ~ 2,
+                                       TRUE~1),
+      biz_restrict_construct = case_when(type_sub_cat == "Construction" & grepl(x = institution_status, pattern =
+                                                                                           "closed/locked down") ~ 3,
+                                         type_sub_cat == "Construction" & grepl(x = institution_status, pattern =
+                                                                                           "open with conditions") ~ 2,
+                                         TRUE~1),
+      biz_restrict_farm = case_when(type_sub_cat == "Agriculture; forestry and fishing" & grepl(x = institution_status, pattern =
+                                                                             "closed/locked down") ~ 3,
+                                    type_sub_cat == "Agriculture; forestry and fishing" & grepl(x = institution_status, pattern =
+                                                                             "open with conditions") ~ 2,
+                                    TRUE~1),
+      biz_restrict_transport = case_when(type_sub_cat == "Transportation (land; water and air)" & grepl(x = institution_status, pattern =
+                                                                                                       "closed/locked down") ~ 3,
+                                         type_sub_cat == "Transportation (land; water and air)" & grepl(x = institution_status, pattern =
+                                                                                                       "open with conditions") ~ 2,
+                                         TRUE~1),
+      biz_restrict_hotel = case_when(type_sub_cat == "Paid lodgings (e.g. hotels; motels)" & grepl(x = institution_status, pattern =
+                                                                                                      "closed/locked down") ~ 3,
+                                     type_sub_cat == "Paid lodgings (e.g. hotels; motels)" & grepl(x = institution_status, pattern =
+                                                                                                      "open with conditions") ~ 2,
+                                     TRUE~1),
+      biz_restrict_warehouse = case_when(type_sub_cat == "Warehousing and support activities for transportation" & grepl(x = institution_status, pattern =
+                                                                                                         "closed/locked down") ~ 3,
+                                         type_sub_cat == "Warehousing and support activities for transportation" & grepl(x = institution_status, pattern =
+                                                                                                         "open with conditions") ~ 2,
+                                         TRUE~1),
+      biz_restrict_health = case_when(type_sub_cat == "Private health offices" & grepl(x = institution_status, pattern =
+                                                                                                                        "closed/locked down") ~ 3,
+                                      type_sub_cat == "Private health offices" & grepl(x = institution_status, pattern =
+                                                                                                                        "open with conditions") ~ 2,
+                                      TRUE~1),
+      biz_restrict_pharmacy = case_when(type_sub_cat == "Pharmacies" & grepl(x = institution_status, pattern =
+                                                                                           "closed/locked down") ~ 3,
+                                        type_sub_cat == "Pharmacies" & grepl(x = institution_status, pattern =
+                                                                                           "open with conditions") ~ 2,
+                                        TRUE~1),
+      biz_restrict_water = case_when(type_sub_cat == "Water supply; sewerage; waste management and remediation activities" & grepl(x = institution_status, pattern =
+                                                                            "closed/locked down") ~ 3,
+                                     type_sub_cat == "Water supply; sewerage; waste management and remediation activities" & grepl(x = institution_status, pattern =
+                                                                            "open with conditions") ~ 2,
+                                     TRUE~1),
+      biz_restrict_finance = case_when(type_sub_cat == "Financial service activities except insurance and pension funding" & grepl(x = institution_status, pattern =
+                                                                                                                                       "closed/locked down") ~ 3,
+                                       type_sub_cat == "Financial service activities except insurance and pension funding" & grepl(x = institution_status, pattern =
+                                                                                                                                       "open with conditions") ~ 2,
+                                       TRUE~1),
+      biz_restrict_mining = case_when(type_sub_cat == "Mining and quarrying" & grepl(x = institution_status, pattern =
+                                                                                                                                    "closed/locked down") ~ 3,
+                                      type_sub_cat == "Mining and quarrying" & grepl(x = institution_status, pattern =
+                                                                                                                                    "open with conditions") ~ 2,
+                                      TRUE~1),
+      biz_restrict_insurance = case_when(type_sub_cat == "Insurance; reinsurance; and pension funding except compulsory social security" & grepl(x = institution_status, pattern =
+                                                                  "closed/locked down") ~ 3,
+                 type_sub_cat == "Insurance; reinsurance; and pension funding except compulsory social security" & grepl(x = institution_status, pattern =
+                                                                  "open with conditions") ~ 2,
+                 TRUE~1),
+      biz_restrict_na =  case_when(is.na(
+                    type_sub_cat == "Pharmacies" &
+                      type == "Restriction and Regulation of Businesses"
+                      ) & grepl(x = institution_status, pattern = "closed/locked down") ~ 3,
+                    is.na(
+                      type_sub_cat == "Pharmacies" &
+                        type == "Restriction and Regulation of Businesses"
+                    )  & grepl(x = institution_status, pattern = "open with conditions") ~ 2,
+                                   TRUE~1),
+      biz_nonessential = as.numeric(grepl(x = institution_cat, pattern =
+                                            "Non-Essential Businesses")),
+      biz_essential = as.numeric(institution_cat == "Non-Essential Businesses"),
+      biz_hygiene = as.numeric(grepl(x = institution_conditions, pattern =
+                                       "Hygiene")),
+      biz_hours = as.numeric(grepl(x = institution_conditions, pattern =
+                                     "business hours")),
+      biz_work_home = as.numeric(
+        grepl(x = institution_conditions, pattern = "work at home policies|Maximum number of employees")
+      ),
+      biz_meeting = as.numeric(grepl(x = institution_conditions, pattern =
+                                       "business meetings")),
+      biz_social_distance = as.numeric(grepl(x = institution_conditions, pattern =
+                                               "1.5 meters")),
+      biz_mask = as.numeric(grepl(x = institution_conditions, pattern =
+                                    "Mask")),
+      biz_temp = as.numeric(grepl(x = institution_conditions, pattern =
+                                    "Temperature")),
+      biz_health_cert = as.numeric(
+        grepl(x = institution_conditions, pattern = "Health Certificate")
+      ),
+      biz_health_q = as.numeric(
+        grepl(x = institution_conditions, pattern = "Health Questionnaire")
+      ),
+      biz_num_cust = as.numeric(
+        grepl(x = institution_conditions, pattern = "number of customers")
+      ),
+      biz_store_size = as.numeric(grepl(x = institution_conditions, pattern =
+                                          "Size of store")),
+      biz_cont_trace = as.numeric(grepl(x = institution_conditions, pattern =
+                                          "Contact tracing")),
+      biz_cond_other = as.numeric(grepl(x = institution_conditions, pattern =
+                                          "Other condition")),
+      hr_cold_storage = as.numeric(grepl(x = type_sub_cat, pattern =
+                                           "Cold storage")),
+      hr_doctors = as.numeric(grepl(x = type_sub_cat, pattern = "Doctors")),
+      hr_dry_ice = as.numeric(grepl(x = type_sub_cat, pattern = "Dry ice")),
+      hr_sanitizer = as.numeric(grepl(x = type_sub_cat, pattern = "Sanitizer")),
+      hr_insurance = as.numeric(grepl(x = type_sub_cat, pattern = "Insurance")),
+      hr_facilities = as.numeric(grepl(x = type_sub_cat, pattern =
+                                         "Facilities")),
+      hr_volunteers = as.numeric(grepl(x = type_sub_cat, pattern =
+                                         "Volunteers")),
+      hr_hospitals = as.numeric(grepl(x = type_sub_cat, pattern = "Hospitals")),
+      hr_masks = as.numeric(grepl(x = type_sub_cat, pattern = "Masks")),
+      hr_drugs = as.numeric(grepl(x = type_sub_cat, pattern = "Drugs")),
+      hr_nurses = as.numeric(grepl(x = type_sub_cat, pattern = "Nurses")),
+      hr_other_infra = as.numeric(
+        grepl(x = type_sub_cat, pattern = "Other Health Infrastructure|Unspecified Health Infrastructure")
+      ),
+      hr_other_mat = as.numeric(
+        grepl(x = type_sub_cat, pattern = "Other Health Materials|Unspecified Health Materials")
+      ),
+      hr_other_staff = as.numeric(
+        grepl(x = type_sub_cat, pattern = "Other Heath Staff|Unspecified Health Staff")
+      ),
+      hr_ppe = as.numeric(grepl(x = type_sub_cat, pattern = "Protective")),
+      hr_testing = as.numeric(grepl(x = type_sub_cat, pattern = "Public Testing")),
+      hr_syringe = as.numeric(grepl(x = type_sub_cat, pattern = "Syringes")),
+      hr_quarantine = as.numeric(grepl(x = type_sub_cat, pattern =
+                                         "Temporary Quarantine")),
+      hr_pcr = as.numeric(grepl(x = type_sub_cat, pattern = "Thermal cyclers")),
+      hr_ventilator = as.numeric(grepl(x = type_sub_cat, pattern =
+                                         "Ventilators")),
+      hr_test_kit = as.numeric(grepl(x = type_sub_cat, pattern = "Test Kits")),
+      hr_test_kit = as.numeric(grepl(x = type_sub_cat, pattern = "Test Kits")),
+      hr_test_kit = as.numeric(grepl(x = type_sub_cat, pattern = "Test Kits")),
+      hr_target_staff = as.numeric(grepl(x = target_who_what, pattern =
+                                           "Health Staff")),
+      hr_target_supply = as.numeric(grepl(x = target_who_what, pattern =
+                                            "Health-Related Supplies")),
+      hm_home_visit = as.numeric(grepl(x = type_health_mon_hum, pattern =
+                                         "Home visits")),
+      hm_other_mon = as.numeric(
+        grepl(x = type_health_mon_hum, pattern = "Other human health monitoring strategy")
+      ),
+      hm_telephone = as.numeric(grepl(x = type_health_mon_hum, pattern =
+                                        "Telephone calls")),
+      hm_loc_nursing = as.numeric(grepl(x = type_health_mon_loc, pattern =
+                                          "Nursing Homes")),
+      hm_loc_other = as.numeric(
+        grepl(x = type_health_mon_loc, pattern = "Other Health Monitoring Location|Other Public Transportation")
+      ),
+      hm_loc_subway = as.numeric(grepl(x = type_health_mon_loc, pattern =
+                                         "Subways/Trams")),
+      hm_loc_buses = as.numeric(grepl(x = type_health_mon_loc, pattern =
+                                        "Buses")),
+      hm_loc_trains = as.numeric(grepl(x = type_health_mon_loc, pattern =
+                                         "Trains")),
+      hm_loc_nursing = as.numeric(grepl(x = type_health_mon_loc, pattern =
+                                          "Nursing Homes")),
+      hm_cert = as.numeric(grepl(x = type_health_mon_snap, pattern =
+                                   "Health Certificate")),
+      hm_q = as.numeric(grepl(x = type_health_mon_snap, pattern = "Questionnaire")),
+      hm_snap_other = as.numeric(grepl(x = type_health_mon_snap, pattern =
+                                         "Other")),
+      hm_snap_temp = as.numeric(grepl(x = type_health_mon_snap, pattern =
+                                        "Temperature")),
+      hm_stra_contact_human = as.numeric(
+        grepl(x = type_health_mon_stra, pattern = "Contact tracing through human teams")
+      ),
+      hm_stra_contact_phone = as.numeric(
+        grepl(x = type_health_mon_stra, pattern = "Contact tracing through smart phones")
+      ),
+      hm_stra_other = as.numeric(grepl(x = type_health_mon_stra, pattern =
+                                         "Other")),
+      hm_stra_wearable = as.numeric(grepl(x = type_health_mon_stra, pattern =
+                                            "Wearable technology")),
+      hm_tech_bluetooth = as.numeric(grepl(x = type_health_mon_tech, pattern =
+                                             "Bluetooth")),
+      hm_tech_gps = as.numeric(grepl(x = type_health_mon_tech, pattern =
+                                       "GPS")),
+      hm_tech_qr = as.numeric(grepl(x = type_health_mon_tech, pattern =
+                                      "QR")),
+      hm_tech_other = as.numeric(grepl(x = type_health_mon_tech, pattern =
+                                         "Other")),
+      ht_door2door = as.numeric(grepl(x = type_sub_cat, pattern = "Door-to-door")),
+      ht_drivein = as.numeric(grepl(x = type_sub_cat, pattern = "Drive-in")),
+      ht_fixed = as.numeric(grepl(x = type_sub_cat, pattern = "Fixed Health Testing")),
+      ht_entire_pop = as.numeric(grepl(x = type_sub_cat, pattern =
+                                         "entire population")),
+      ht_mobile = as.numeric(grepl(x = type_sub_cat, pattern = "Mobile Health Testing")),
+      ht_other = as.numeric(grepl(x = type_sub_cat, pattern = "Other Health Testing")),
+      ht_type_antibody = as.numeric(
+        grepl(x = type_health_test_cat, pattern = "Antibody/serological")
+      ),
+      ht_type_antigen = as.numeric(grepl(x = type_health_test_cat, pattern =
+                                           "Antigen")),
+      ht_type_other = as.numeric(grepl(x = type_health_test_cat, pattern =
+                                         "Not specified|Other")),
+      ht_type_pcr = as.numeric(grepl(x = type_health_test_cat, pattern =
+                                       "PCR test")),
+      ht_type_antibody = as.numeric(
+        grepl(x = type_health_test_cat, pattern = "Antibody/serological")
+      ),
+      ht_portal_email = as.numeric(grepl(x = type_health_test_res, pattern =
+                                           "Email")),
+      ht_portal_sms = as.numeric(grepl(x = type_health_test_res, pattern =
+                                         "Mobile text")),
+      ht_portal_app = as.numeric(grepl(x = type_health_test_res, pattern =
+                                         "app or website")),
+      ht_portal_other = as.numeric(grepl(x = type_health_test_res, pattern =
+                                           "Other|Not specified")),
+      ht_portal_paper = as.numeric(grepl(x = type_health_test_res, pattern =
+                                           "Paper")),
+      ht_portal_phone = as.numeric(grepl(x = type_health_test_res, pattern =
+                                           "Phone call")),
+      ht_cost_free_all = as.numeric(
+        grepl(x = type_health_test_eco, pattern = "Testing is free for all individuals")
+      ),
+      ht_cost_free_subset = as.numeric(
+        grepl(x = type_health_test_eco, pattern = "Testing is free for a subset of the population")
+      ),
+      ht_cost_partly_free = as.numeric(
+        grepl(x = type_health_test_eco, pattern = "Testing is partially subsidized by the government")
+      ),
+      ht_cost_biz = as.numeric(
+        grepl(x = type_health_test_eco, pattern = "Business employees and employers")
+      ),
+      ht_cost_other = as.numeric(
+        grepl(x = type_health_test_eco, pattern = "No information provided")
+      ),
+      ht_cost_all_pay = as.numeric(
+        grepl(x = type_health_test_eco, pattern = "All Individuals must pay full cost")
+      ),
+      ht_cost_symptomatic = as.numeric(grepl(x = type_health_test_eco, pattern =
+                                               "Symptomatic people")),
+      ht_loc_clinic = as.numeric(grepl(x = type_health_test_loc, pattern =
+                                         "Health Clinics")),
+      ht_loc_private = as.numeric(
+        grepl(x = type_health_test_loc, pattern = "Private doctors offices")
+      ),
+      ht_loc_hospital = as.numeric(grepl(x = type_health_test_loc, pattern =
+                                           "Hospitals")),
+      ht_loc_other = as.numeric(grepl(x = type_health_test_loc, pattern =
+                                        "Not specified|Other")),
+      ht_loc_pharmacy = as.numeric(grepl(x = type_health_test_loc, pattern =
+                                           "Pharmacies")),
+      social_distance = as.numeric(
+        type_sub_cat == "Keeping a distance of at least 6 feet or 1.5 meters apart"
+      ),
+      mask_public = as.numeric(type_sub_cat == "Wearing Masks inside public buildings"),
+      mask_everywhere = as.numeric(
+        type_sub_cat %in% c(
+          "Wearing Masks in all public spaces/everywhere",
+          "Wearing Masks in all indoor spaces",
+          "Wearing Masks inside public or commercial building"
+        )
+      ),
+      mask_business = as.numeric(
+        type_sub_cat == "Wearing Masks inside private businesses (e.g. supermarkets)"
+      ),
+      mask_primary_school = as.numeric(
+        type_sub_cat == "Wearing Masks inside Primary Schools (generally for children ages 10 and below)"
+      ),
+      mask_sec_school = as.numeric(
+        type_sub_cat == "Wearing Masks inside Secondary Schools (generally for children ages 10 to 18)"
+      ),
+      mask_transport = as.numeric(type_sub_cat == "Wearing Masks inside Public transportation"),
+      mask_unspec = as.numeric(
+        type_sub_cat %in% c("Unspecified Mask Wearing Policy",
+                            "Wearing masks")
+      ),
+      mask_preschool = as.numeric(
+        type_sub_cat == "Wearing Masks inside Preschools or childcare facilities (generally for children age 5 and below)"
+      ),
+      mask_higher_ed = as.numeric(
+        type_sub_cat == "Wearing Masks inside Higher education institutions (i.e. degree granting institutions)"
+      ),
+      buses = as.numeric(type_sub_cat == "Restrictions on ridership of buses"),
+      other_transport = as.numeric(
+        type_sub_cat == "Restrictions ridership of other forms of public transportation (please include details in the text entry)"
+      ),
+      private_transport = as.numeric(
+        type_sub_cat == "Restrictions on  private vehicles in public circulation"
+      ),
+      subways = as.numeric(type_sub_cat == "Restrictions on ridership of subways and trams"),
+      buses = as.numeric(type_sub_cat == "Restrictions on ridership of trains"),
+      distance_other = as.numeric(
+        type_sub_cat == "Keep a distance of some other distance not listed above. Please note the distance in meters in the text entry."
+      ),
+      number_mass = clean_mass(type_mass_gathering),
+      number_mass = 1 - range01(number_mass),
+      #cancel_rec_event=as.numeric(grepl(x=type_sub_cat,pattern="Cancellation of a recreational or commercial event")),
+      cancel_annual_event = as.numeric(
+        grepl(x = type_sub_cat, pattern = "Cancellation of a recreational or commercial event")
+      ),
+      prison_pop = as.numeric(grepl(x = type_sub_cat, pattern = "Prison population reduced")),
+      #other_mass=as.numeric(grepl(x=type_sub_cat,pattern="Prison population reduced") | is.na(type_sub_cat)),
+      postpone_ann_event = as.numeric(
+        grepl(x = type_sub_cat, pattern = "Postponement of a recreational or commercial event")
+      ),
+      postpone_rec_event = as.numeric(
+        grepl(x = type_sub_cat, pattern = "Postponement of an annually recurring event")
+      ),
+      private_event = as.numeric(
+        grepl(x = type_sub_cat, pattern = "Events at private residencies restricted")
+      ),
+      allow_ann_event = as.numeric(
+        grepl(x = type_sub_cat, pattern = "Annually recurring event allowed to occur")
+      ),
+      event_no_audience = as.numeric(
+        grepl(x = type_sub_cat, pattern = "allowed to occur but no audience is allowed")
+      ),
+      int_restrict_flights = as.numeric(grepl(x = travel_mechanism, pattern =
+                                                "Flights")),
+      int_restrict_border = as.numeric(grepl(x = travel_mechanism, pattern =
+                                               "Land Border")),
+      int_restrict_all = as.numeric(grepl(x = travel_mechanism, pattern =
+                                            "All kinds of transport")),
+      int_restrict_NA = as.numeric(grepl(x = travel_mechanism, pattern =
+                                           "Not Applicable")),
+      int_restrict_cruises = as.numeric(grepl(x = travel_mechanism, pattern =
+                                                "Cruises")),
+      int_restrict_ferries = as.numeric(grepl(x = travel_mechanism, pattern =
+                                                "Ferries")),
+      int_restrict_ports = as.numeric(grepl(x = travel_mechanism, pattern =
+                                              "Seaports")),
+      int_restrict_trains = as.numeric(grepl(x = travel_mechanism, pattern =
+                                               "Trains")),
+      int_restrict_buses = as.numeric(grepl(x = travel_mechanism, pattern =
+                                              "Buses")),
+      date_end = as_date(ifelse(
+        is.na(date_end), today() - days(5), date_end
+      )),
+      type_sub_cat = ifelse(
+        grepl(x = type_sub_cat, pattern = "[Qq]uarantine"),
+        NA_character_,
+        type_sub_cat
+      ),
+      date_start = as_date(ifelse(
+        date_start > date_end, date_end, date_start
+      )),
+      voluntary = grepl(x = compliance, pattern = "Voluntary/Recommended but No Penalties"),
+      man1 = grepl(x = compliance, pattern = "Mandatory \\(Unspecified/Implied\\)"),
+      man2 = grepl(x = compliance, pattern = "Mandatory with Fines"),
+      man3 = grepl(x = compliance, pattern = "Mandatory with Legal Penalties \\(Jail Time\\)"),
+      compliance = case_when(man3 ~ 3,
+                             man2 ~ 2,
+                             man1 ~ 1,
+                             voluntary ~ 0,
+                             TRUE ~ NA_real_)
+    ) %>%
     ungroup
+  
+
+# make data time-complete -------------------------------------------------
+
+
   
   # loop over each variable and make a separate series 
   # need to convert a hybrid wide/long system to just long
   
-  all_names <- names(index)[44:204]
+  all_names <- names(index)[45:205]
   
   index_long <- parallel::mclapply(all_names, function(a) {
     
@@ -289,12 +628,15 @@ clean <- readRDS("/scratch/rmk7/coronanet/coronanet_internal_allvars.RDS")
     # make a time series
 
     this_data %>% 
+      filter(!is.na(date_start)) %>% 
     group_by(record_id,policy_id) %>% 
       distinct %>% 
       mutate(date_policy = list(seq(date_start, date_end, by='1 day'))) %>%
       unnest(cols=c(date_policy))
     
-  },cores=parallel::detectCores()) %>% bind_rows
+  },mc.cores=parallel::detectCores()) %>% bind_rows
+  
+  #parallel::detectCores()
   
   # merge in other covariates
   
@@ -328,7 +670,7 @@ clean <- readRDS("/scratch/rmk7/coronanet/coronanet_internal_allvars.RDS")
   
   # need to calculate proportions of provinces/cities
   
-  province_data <- read_csv("data/regions/country_region_clean.csv") %>% 
+  province_data <- read_csv("country_region_clean.csv") %>% 
     mutate(Country=recode(Country,
                   `United States`="United States of America",
                   `Paletsine`="Palestine")) %>% 
@@ -336,7 +678,7 @@ clean <- readRDS("/scratch/rmk7/coronanet/coronanet_internal_allvars.RDS")
     group_by(Country) %>% 
     summarize(n_prov=length(unique(province)))
   
-  city_data <- read_csv("data/regions/world-cities_csv.csv") %>% 
+  city_data <- read_csv("world-cities_csv.csv") %>% 
     mutate(country=recode(country,
                           `United States`="United States of America",
                           `Czech Republic`="Czechia",
@@ -381,7 +723,7 @@ clean <- readRDS("/scratch/rmk7/coronanet/coronanet_internal_allvars.RDS")
   
   # merge in RA work data
   
-  ra_work <- read_csv("data/CoronaNet/certificate.csv") %>% 
+  ra_work <- read_csv("certificate.csv") %>% 
     mutate(length_work=end-start)
   
   # need to make table with total RAs per country

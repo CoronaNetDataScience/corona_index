@@ -45,7 +45,8 @@ sd_items <- c("allow_ann_event","buses","cancel_annual_event",
               "ox_mass_gathering","ox_public_transport","ox_pub_events",
               "ox_stay_home","ox_internal","other_transport")
 
-biz_items <- c("biz_cond_other","biz_cont_trace",          
+biz_items <- c("biz_cond_other","biz_cont_trace",   "biz_closed",
+               "biz_open_cond","biz_open","biz_essential",
                "biz_health_cert"      ,    "biz_health_q"   ,          "biz_hours",    
                "biz_hygiene"   ,           "biz_mask","biz_meeting",           
                "biz_nonessential",         "biz_num_cust",             "biz_restrict_all",        
