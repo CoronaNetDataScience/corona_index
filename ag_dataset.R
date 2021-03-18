@@ -811,7 +811,7 @@ clean <- readRDS("/scratch/rmk7/coronanet/coronanet_internal_allvars.RDS")
     mutate(pop_out=coalesce(pop_out,0),
            var=coalesce(var,0))
   
-  saveRDS(index_long_model,"data/indices/index_long_model.rds")
+  saveRDS(index_long_model,"/scratch/rmk7/coronanet/index_long_model.rds")
   
   rm(index_long_model)
   rm(oxford)
@@ -829,8 +829,8 @@ clean <- readRDS("/scratch/rmk7/coronanet/coronanet_internal_allvars.RDS")
   
   index_long_pop <- select(index_long,-var) %>% spread(key="item",value="pop_out")
   
-  saveRDS(index_long_var,"data/indices/wide_data_binary.rds")
+  saveRDS(index_long_var,"/scratch/rmk7/coronanet/wide_data_binary.rds")
   
-  saveRDS(index_long_pop,"data/indices/wide_data_pop_weighted.rds")
+  saveRDS(index_long_pop,"/scratch/rmk7/coronanet/wide_data_pop_weighted.rds")
   
   
