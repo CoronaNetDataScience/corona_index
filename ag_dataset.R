@@ -611,9 +611,11 @@ clean <- readRDS("/scratch/rmk7/coronanet/coronanet_internal_allvars.RDS")
   # loop over each variable and make a separate series 
   # need to convert a hybrid wide/long system to just long
   
+  rm(clean)
+  
   all_names <- names(index)[45:205]
   
-  index_long <- parallel::mclapply(all_names, function(a) {
+  index_long <- lapply(all_names, function(a) {
     
     print(paste("Now on ",a))
     
@@ -632,9 +634,12 @@ clean <- readRDS("/scratch/rmk7/coronanet/coronanet_internal_allvars.RDS")
     group_by(record_id,policy_id) %>% 
       distinct %>% 
       mutate(date_policy = list(seq(date_start, date_end, by='1 day'))) %>%
-      unnest(cols=c(date_policy))
+      unnest(cols=c(date_policy)) %>% 
+      ungroup
     
-  },mc.cores=parallel::detectCores()) %>% bind_rows
+  })
+  
+  index_long <- bind_rows(index_long)
   
   #parallel::detectCores()
   
@@ -649,6 +654,8 @@ clean <- readRDS("/scratch/rmk7/coronanet/coronanet_internal_allvars.RDS")
                                                      target_province,
                                                      target_other)),
                           by=c("record_id","policy_id"))
+  
+  rm(index)
   
   #index_long <- mutate(index_long,item=paste0(item,init_country_level))
   
