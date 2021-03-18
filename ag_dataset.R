@@ -16,14 +16,14 @@ require(RPostgres)
 #                  user= "corona",
 #                  password="Corona7et")
 
-download.file("https://www.ecdc.europa.eu/sites/default/files/documents/COVID-19-geographic-disbtribution-worldwide-2020-06-24.xlsx",
-              "/scratch/rmk7/coronanet/ecdc.xlsx")
+# download.file("https://www.ecdc.europa.eu/sites/default/files/documents/COVID-19-geographic-disbtribution-worldwide-2020-06-24.xlsx",
+#               "/scratch/rmk7/coronanet/ecdc.xlsx")
 
-ecdc <- read_xlsx("/scratch/rmk7/coronanet/ecdc.xlsx")
+ecdc <- read_xlsx("coronanet/ecdc.xlsx")
 
 # load cleaned file
 
-clean <- readRDS("/scratch/rmk7/coronanet/coronanet_internal_allvars.RDS")
+clean <- readRDS("coronanet/coronanet_internal_allvars.RDS")
 
 
   clean_mass <- function(col) {
