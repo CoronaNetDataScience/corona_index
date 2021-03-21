@@ -32,58 +32,9 @@ compile_data <- F
 if(compile_data) {
   source("RCode/ag_dataset.R")
 } else {
-  index_long <- readRDS("/scratch/rmk7/coronanet/index_long_model.rds")
+  index_long <- readRDS(paste0("coronanet/index_long_model_",model_type,".rds"))
 }
 
-sd_items <- c("allow_ann_event","buses","cancel_annual_event",
-              "cancel_rec_event","curfew_length","distance_other",
-              "event_no_audience","int_restrict_all","int_restrict_border",
-              "int_restrict_buses","int_restrict_cruises","int_restrict_ferries",
-              "int_restrict_flights","int_restrict_NA","int_restrict_ports",
-              "int_restrict_trains","number_mass","other_transport","postpone_ann_event",
-              "postpone_rec_event","prison_pop","social_distance" ,"subways",
-              "ox_mass_gathering","ox_public_transport","ox_pub_events",
-              "ox_stay_home","ox_internal","other_transport")
-
-biz_items <- c("biz_cond_other","biz_cont_trace",   "biz_closed",
-               "biz_open_cond","biz_open","biz_essential",
-               "biz_health_cert"      ,    "biz_health_q"   ,          "biz_hours",    
-               "biz_hygiene"   ,           "biz_mask","biz_meeting",           
-               "biz_nonessential",         "biz_num_cust",             "biz_restrict_all",        
-               "biz_restrict_comm",        "biz_restrict_construct",   "biz_restrict_farm",       
-               "biz_restrict_finance",     "biz_restrict_grocery",     "biz_restrict_groom",      
-               "biz_restrict_health",      "biz_restrict_hotel",       "biz_restrict_info",       
-               "biz_restrict_insurance",   "biz_restrict_mining",      "biz_restrict_na",         
-               "biz_restrict_other",       "biz_restrict_pharmacy",    "biz_restrict_publish",    
-               "biz_restrict_rest",        "biz_restrict_retail",      "biz_restrict_shop",       
-               "biz_restrict_telecom",     "biz_restrict_transport",   "biz_restrict_warehouse",  
-               "biz_restrict_water",       "biz_social_distance",      "biz_store_size",          
-               "biz_temp",                 "biz_work_home","ox_workplace_close" )
-
-ht_items <- c(unique(index_long$item)[grepl(x=unique(index_long$item),
-                                          pattern="ht\\_")],"ox_test")
-
-hm_items <- unique(index_long$item)[grepl(x=unique(index_long$item),
-                                          pattern="hm\\_")]
-
-mask_items <- c(unique(index_long$item)[grepl(x=unique(index_long$item),
-                                            pattern="mask\\_")],"ox_mask")
-
-hr_items <- c(unique(index_long$item)[grepl(x=unique(index_long$item),
-                                          pattern="hr\\_")],"ox_health_invest")
-
-school_items <- c(unique(index_long$item)[grepl(x=unique(index_long$item),pattern="school\\_")],
-                          "preschool","primary_school","higher_ed","secondary_school",
-                  "ox_school_close")
-
-filter_list <- switch(model_type,
-                      sd=sd_items,
-                      biz=biz_items,
-                      ht=ht_items,
-                      hm=hm_items,
-                      mask=mask_items,
-                      hr=hr_items,
-                      school=school_items)
   
 
   countries <- c("United States of America","Germany","Brazil","Switzerland","Israel","France",
@@ -94,7 +45,6 @@ filter_list <- switch(model_type,
   to_make <- index_long %>% 
     #filter(country %in% countries) %>% 
            #date_policy<ymd("2020-05-01")) %>% 
-    filter(item %in% filter_list) %>% 
     group_by(item) %>% 
     mutate(model_id=case_when(grepl(x=item,pattern="ox")~5,
                               TRUE~9),

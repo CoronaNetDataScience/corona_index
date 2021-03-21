@@ -11,6 +11,14 @@ require(stringr)
 require(readxl)
 require(RPostgres)
 
+
+# setup -------------------------------------------------------------------
+
+# what type of model to run
+model_type <- Sys.getenv("MODELTYPE")
+
+# load datasets
+
 # con <- dbConnect("PostgreSQL",dbname="master",
 #                  host="niehaususer.ccecwurg6k9l.us-east-2.rds.amazonaws.com",
 #                  user= "corona",
@@ -613,224 +621,248 @@ clean <- readRDS("coronanet/coronanet_internal_allvars.RDS")
   
   rm(clean)
   
-  all_names <- names(index)[45:205]
+  # load list of variables
   
-  index_long <- lapply(all_names, function(a) {
+  source("create_items.R")
+  
+  filter_list <- list(sd=sd_items,
+                      biz=biz_items,
+                      ht=ht_items,
+                      hm=hm_items,
+                      mask=mask_items,
+                      hr=hr_items,
+                      school=school_items)
+  
+  # loop over type of index
+  
+  lapply(names(filter_list), function(type) {
     
-    print(paste("Now on ",a))
+    print(paste("now on list",type))
     
-    this_data <- select(index,policy_id,record_id,date_start,date_end,one_of(a)) %>% 
-      ungroup
+    this_vars <- c(filter_list[[type]],"voluntary","man1","man2",
+                   "man3")
     
-    names(this_data) <- c("policy_id","record_id","date_start","date_end","var")
+    index_long <- lapply(this_vars, function(a) {
+      
+      if(grepl(x=a,pattern="ox")) {
+        return(NULL)
+      }
+      
+      print(paste("Now on ",a))
+      
+      this_data <- select(index,policy_id,record_id,date_start,date_end,one_of(a)) %>% 
+        ungroup
+      
+      names(this_data) <- c("policy_id","record_id","date_start","date_end","var")
+      
+      this_data <- filter(this_data,!is.na(var),var>0 | var<0) %>% 
+        mutate(item=a)
+      
+      # make a time series
+      
+      this_data %>% 
+        filter(!is.na(date_start)) %>% 
+        group_by(record_id,policy_id) %>% 
+        distinct %>% 
+        mutate(date_policy = list(seq(date_start, date_end, by='1 day'))) %>%
+        unnest(cols=c(date_policy)) %>% 
+        ungroup
+      
+    })
     
-    this_data <- filter(this_data,!is.na(var),var>0 | var<0) %>% 
-      mutate(item=a)
+    index_long <- bind_rows(index_long)
     
-    # make a time series
-
-    this_data %>% 
-      filter(!is.na(date_start)) %>% 
-    group_by(record_id,policy_id) %>% 
-      distinct %>% 
-      mutate(date_policy = list(seq(date_start, date_end, by='1 day'))) %>%
-      unnest(cols=c(date_policy)) %>% 
-      ungroup
+    #parallel::detectCores()
     
-  })
-  
-  index_long <- bind_rows(index_long)
-  
-  #parallel::detectCores()
-  
-  # merge in other covariates
-  
-  index_long <- left_join(ungroup(index_long),distinct(select(index,record_id,
-                                                     policy_id,
-                                                     country,
-                                                     compliance,
-                                                     init_country_level,
-                                                     target_city,
-                                                     target_province,
-                                                     target_other)),
-                          by=c("record_id","policy_id"))
-  
-  rm(index)
-  
-  #index_long <- mutate(index_long,item=paste0(item,init_country_level))
-  
-  # aggregate border restrictions
-  
-  index_long <- group_by(index_long,country,item,date_policy,init_country_level) %>% 
-    mutate(var=case_when(!grepl(x=item,pattern="number|curfew") & init_country_level=="Municipal"~1,
-                         !grepl(x=item,pattern="number|curfew") & init_country_level=="Provincial"~1,
-                         grepl(x=item,pattern="number|curfew") & init_country_level=="Municipal"~mean(var,na.rm=T),
-                         grepl(x=item,pattern="number|curfew") & init_country_level=="Provincial"~mean(var,na.rm=T),
-                         TRUE~var),
-           population=case_when(init_country_level=="Municipal" & var>0~as.numeric(length(unique(target_city))),
-                                init_country_level=="Provincial" & var>0~as.numeric(length(unique(target_province))),
-                                init_country_level=="National" & var>0~1,
-                                var==0~0,
-                                TRUE~0))
-  
-  
-  
-  # need to calculate proportions of provinces/cities
-  
-  province_data <- read_csv("country_region_clean.csv") %>% 
-    mutate(Country=recode(Country,
-                  `United States`="United States of America",
-                  `Paletsine`="Palestine")) %>% 
-    gather(key="prov_num",value="province",-ISO2,-Country) %>% 
-    group_by(Country) %>% 
-    summarize(n_prov=length(unique(province)))
-  
-  city_data <- read_csv("world-cities_csv.csv") %>% 
-    mutate(country=recode(country,
-                          `United States`="United States of America",
-                          `Czech Republic`="Czechia",
-                          Macedonia="North Macedonia",
-                          `Palestinian Territory`="Palestine",
-                          Swaziland="Eswatini")) %>% 
-    group_by(country) %>% 
-    summarize(n_city=length(unique(geonameid)))
-  
-  index_long <- left_join(index_long,province_data,by=c("country"="Country")) %>% 
-    left_join(city_data)
-  
-  index_long <- mutate(ungroup(index_long),
-                       population=case_when(init_country_level=="Municipal"~population/n_city,
-                                     init_country_level=="Provincial"~population/n_prov,
-                                     TRUE~population)) %>% 
-    # get rid of any possible overlapping records, such as reductions in prison population
-    # that I have not yet been able to take apart
-    distinct(country,item,date_policy,var,init_country_level,population) %>% 
-    group_by(country,item,date_policy) %>% 
-    summarize(pop_out=sum(population*var,na.rm=T)/n(),
-              var=mean(var,na.rm=T))
-  
-  # make it complete
-  
-  expand_index <- group_by(index_long,country,item) %>% 
-    expand(date_policy=seq(ymd("2020-01-01"),as_date(today() - days(5)),
-                                                   by="1 day"))
-  
-  # get rid of duplicates due to sum function used earlier
-  # compliance should be equal to -1 if var = 0 to indicate no policy in effect
-  
-  index_long <- left_join(ungroup(expand_index),
-                           ungroup(index_long),by=c("country","item","date_policy")) %>% 
-    group_by(country,item) %>% 
-    distinct
+    # merge in other covariates
+    
+    index_long <- left_join(ungroup(index_long),distinct(select(index,record_id,
+                                                                policy_id,
+                                                                country,
+                                                                compliance,
+                                                                init_country_level,
+                                                                target_city,
+                                                                target_province,
+                                                                target_other)),
+                            by=c("record_id","policy_id"))
+    
+    #index_long <- mutate(index_long,item=paste0(item,init_country_level))
+    
+    # aggregate border restrictions
+    
+    index_long <- group_by(index_long,country,item,date_policy,init_country_level) %>% 
+      mutate(var=case_when(!grepl(x=item,pattern="number|curfew") & init_country_level=="Municipal"~1,
+                           !grepl(x=item,pattern="number|curfew") & init_country_level=="Provincial"~1,
+                           grepl(x=item,pattern="number|curfew") & init_country_level=="Municipal"~mean(var,na.rm=T),
+                           grepl(x=item,pattern="number|curfew") & init_country_level=="Provincial"~mean(var,na.rm=T),
+                           TRUE~var),
+             population=case_when(init_country_level=="Municipal" & var>0~as.numeric(length(unique(target_city))),
+                                  init_country_level=="Provincial" & var>0~as.numeric(length(unique(target_province))),
+                                  init_country_level=="National" & var>0~1,
+                                  var==0~0,
+                                  TRUE~0))
+    
+    
+    
+    # need to calculate proportions of provinces/cities
+    
+    province_data <- read_csv("country_region_clean.csv") %>% 
+      mutate(Country=recode(Country,
+                            `United States`="United States of America",
+                            `Paletsine`="Palestine")) %>% 
+      gather(key="prov_num",value="province",-ISO2,-Country) %>% 
+      group_by(Country) %>% 
+      summarize(n_prov=length(unique(province)))
+    
+    city_data <- read_csv("world-cities_csv.csv") %>% 
+      mutate(country=recode(country,
+                            `United States`="United States of America",
+                            `Czech Republic`="Czechia",
+                            Macedonia="North Macedonia",
+                            `Palestinian Territory`="Palestine",
+                            Swaziland="Eswatini")) %>% 
+      group_by(country) %>% 
+      summarize(n_city=length(unique(geonameid)))
+    
+    index_long <- left_join(index_long,province_data,by=c("country"="Country")) %>% 
+      left_join(city_data)
+    
+    index_long <- mutate(ungroup(index_long),
+                         population=case_when(init_country_level=="Municipal"~population/n_city,
+                                              init_country_level=="Provincial"~population/n_prov,
+                                              TRUE~population)) %>% 
+      # get rid of any possible overlapping records, such as reductions in prison population
+      # that I have not yet been able to take apart
+      distinct(country,item,date_policy,var,init_country_level,population) %>% 
+      group_by(country,item,date_policy) %>% 
+      summarize(pop_out=sum(population*var,na.rm=T)/n(),
+                var=mean(var,na.rm=T))
+    
+    # make it complete
+    
+    expand_index <- group_by(index_long,country,item) %>% 
+      expand(date_policy=seq(ymd("2020-01-01"),as_date(today() - days(5)),
+                             by="1 day"))
+    
+    # get rid of duplicates due to sum function used earlier
+    # compliance should be equal to -1 if var = 0 to indicate no policy in effect
+    
+    index_long <- left_join(ungroup(expand_index),
+                            ungroup(index_long),by=c("country","item","date_policy")) %>% 
+      group_by(country,item) %>% 
+      distinct
     #fill(compliance,.direction=c("downup")) %>% 
     # select(-record_id,-policy_id,-init_country_level,-matches('target'),-date_start,
     #        -date_end) %>% 
     
     # mutate(compliance=ifelse(var==0,0,compliance))
-  
-  # merge in RA work data
-  
-  ra_work <- read_csv("certificate.csv") %>% 
-    mutate(length_work=end-start)
-  
-  # need to make table with total RAs per country
-  
-  ra_country <- lapply(unique(index_long$country), function(c) {
     
-    c1 <- switch(c,`Cape Verde`="Cabo Verde",
-                `United States of America`="United States",
-                Palestine="Israel",
-                c)
+    # merge in RA work data
     
-    tibble(country=c,
-           ra_num=sum(ra_work$length_work[grepl(x=ra_work$country,pattern=c1)],na.rm=T))
+    ra_work <- read_csv("certificate.csv") %>% 
+      mutate(length_work=end-start)
     
-  }) %>% bind_rows
-  
-  index_long <- left_join(index_long,ra_country,by="country")
-  
-  # remove any duplicates
-  
-  index_long <- distinct(index_long)
-  
-  # add in oxford tracker data
-  
-  oxford <- read_csv("/home/rmk7/covid-policy-tracker/data/OxCGRT_latest.csv") %>% 
-    filter(Jurisdiction=="NAT_TOTAL") %>% 
-    select(country="CountryName",
-           ox_mass_gathering="C4_Restrictions on gatherings",
-           ox_public_transport="C5_Close public transport",
-           ox_pub_events="C3_Cancel public events",
-           ox_stay_home="C6_Stay at home requirements",
-           ox_internal="C7_Restrictions on internal movement",
-           ox_school_close="C1_School closing",
-           ox_workplace_close="C2_Workplace closing",
-           ox_external="C8_International travel controls",
-           ox_test="H2_Testing policy",
-           ox_health_invest="H4_Emergency investment in healthcare",
-           ox_mask="H6_Facial Coverings",
-           date_policy="Date") %>% 
-    mutate(country=recode(country,
-                          `United States`="United States of America",
-                          `Timor-Leste`="Timor Leste",
-                          `Cote d'Ivoire`="Ivory Coast",
-                          `Congo`="Republic of the Congo",
-                          `Czech Republic`="Czechia",
-                          `Kyrgyz Republic`="Kyrgyzstan",
-                          `Slovak Republic`="Slovakia",
-                          `Democratic Republic of Congo`="Democratic Republic of the Congo"),
-           date_policy=ymd(as.character(date_policy))) %>% 
-    gather(key="item",value="var",-date_policy,-country) %>% 
-    group_by(item) %>% 
-    mutate(ordered_id=length(unique(var[!is.na(var)])))
-  
-  # remove any not in our data
-  
-  oxford <- semi_join(oxford,index_long,by="country") %>% 
-    distinct
-  
-  index_long_model <- bind_rows(index_long,oxford)
-  
-  index_long_model <- filter(index_long_model, date_policy<max(oxford$date_policy))
-  
-  # check for countries with few records
-  
-  count_cont <- count(distinct(ungroup(index_long_model), country, item), country)
-  
-  # get rid of any countries that don't have at least 5 distinct items coded
-  
-  index_long_model <- anti_join(index_long_model, filter(count_cont, n<5),by="country")
-  
-  fillin <- expand(ungroup(index_long_model),country,date_policy,item)
-  
-  index_long_model <- right_join(index_long_model,fillin) %>% 
-    mutate(ordered_id=coalesce(ordered_id,0)) %>% 
-    group_by(country) %>% 
-    mutate(ra_num=unique(ra_num[!is.na(ra_num)])) %>% 
-    ungroup %>% 
-    mutate(pop_out=coalesce(pop_out,0),
-           var=coalesce(var,0))
-  
-  saveRDS(index_long_model,"/scratch/rmk7/coronanet/index_long_model.rds")
-  
-  rm(index_long_model)
-  rm(oxford)
-  
-  fillin <- expand(ungroup(index_long),country,date_policy,item)
-  
-  index_long <- right_join(index_long,fillin) %>% 
-    group_by(country) %>% 
-    mutate(ra_num=unique(ra_num[!is.na(ra_num)])) %>% 
-    ungroup %>% 
-    mutate(pop_out=coalesce(pop_out,0),
-           var=coalesce(var,0))
-  
-  index_long_var <- select(index_long,-pop_out) %>% spread(key="item",value="var")
-  
-  index_long_pop <- select(index_long,-var) %>% spread(key="item",value="pop_out")
-  
-  saveRDS(index_long_var,"/scratch/rmk7/coronanet/wide_data_binary.rds")
-  
-  saveRDS(index_long_pop,"/scratch/rmk7/coronanet/wide_data_pop_weighted.rds")
+    # need to make table with total RAs per country
+    
+    ra_country <- lapply(unique(index_long$country), function(c) {
+      
+      c1 <- switch(c,`Cape Verde`="Cabo Verde",
+                   `United States of America`="United States",
+                   Palestine="Israel",
+                   c)
+      
+      tibble(country=c,
+             ra_num=sum(ra_work$length_work[grepl(x=ra_work$country,pattern=c1)],na.rm=T))
+      
+    }) %>% bind_rows
+    
+    index_long <- left_join(index_long,ra_country,by="country")
+    
+    # remove any duplicates
+    
+    index_long <- distinct(index_long)
+    
+    # add in oxford tracker data
+    
+    oxford <- read_csv("~/covid-policy-tracker/data/OxCGRT_latest.csv") %>% 
+      filter(Jurisdiction=="NAT_TOTAL") %>% 
+      select(country="CountryName",
+             ox_mass_gathering="C4_Restrictions on gatherings",
+             ox_public_transport="C5_Close public transport",
+             ox_pub_events="C3_Cancel public events",
+             ox_stay_home="C6_Stay at home requirements",
+             ox_internal="C7_Restrictions on internal movement",
+             ox_school_close="C1_School closing",
+             ox_workplace_close="C2_Workplace closing",
+             ox_external="C8_International travel controls",
+             ox_test="H2_Testing policy",
+             ox_health_invest="H4_Emergency investment in healthcare",
+             ox_mask="H6_Facial Coverings",
+             date_policy="Date") %>% 
+      mutate(country=recode(country,
+                            `United States`="United States of America",
+                            `Timor-Leste`="Timor Leste",
+                            `Cote d'Ivoire`="Ivory Coast",
+                            `Congo`="Republic of the Congo",
+                            `Czech Republic`="Czechia",
+                            `Kyrgyz Republic`="Kyrgyzstan",
+                            `Slovak Republic`="Slovakia",
+                            `Democratic Republic of Congo`="Democratic Republic of the Congo"),
+             date_policy=ymd(as.character(date_policy))) %>% 
+      gather(key="item",value="var",-date_policy,-country) %>% 
+      group_by(item) %>% 
+      mutate(ordered_id=length(unique(var[!is.na(var)])))
+    
+    # remove any not in our data
+    
+    oxford <- semi_join(oxford,index_long,by="country") %>% 
+      distinct
+    
+    index_long_model <- bind_rows(index_long,oxford)
+    
+    index_long_model <- filter(index_long_model, date_policy<max(oxford$date_policy))
+    
+    # check for countries with few records
+    
+    count_cont <- count(distinct(ungroup(index_long_model), country, item), country)
+    
+    # get rid of any countries that don't have at least 5 distinct items coded
+    
+    index_long_model <- anti_join(index_long_model, filter(count_cont, n<5),by="country")
+    
+    fillin <- expand(ungroup(index_long_model),country,date_policy,item)
+    
+    index_long_model <- right_join(index_long_model,fillin) %>% 
+      mutate(ordered_id=coalesce(ordered_id,0)) %>% 
+      group_by(country) %>% 
+      mutate(ra_num=unique(ra_num[!is.na(ra_num)])) %>% 
+      ungroup %>% 
+      mutate(pop_out=coalesce(pop_out,0),
+             var=coalesce(var,0))
+    
+    saveRDS(index_long_model,paste0("coronanet/index_long_model_",type,".rds"))
+    
+    rm(index_long_model)
+    rm(oxford)
+    
+    fillin <- expand(ungroup(index_long),country,date_policy,item)
+    
+    index_long <- right_join(index_long,fillin) %>% 
+      group_by(country) %>% 
+      mutate(ra_num=unique(ra_num[!is.na(ra_num)])) %>% 
+      ungroup %>% 
+      mutate(pop_out=coalesce(pop_out,0),
+             var=coalesce(var,0))
+    
+    index_long_var <- select(index_long,-pop_out) %>% spread(key="item",value="var")
+    
+    index_long_pop <- select(index_long,-var) %>% spread(key="item",value="pop_out")
+    
+    saveRDS(index_long_var,paste0("coronanet/wide_data_binary_",type,".rds"))
+    
+    saveRDS(index_long_pop,paste0("coronanet/wide_data_pop_weighted_",type,".rds"))
+    
+  })
+
   
   
