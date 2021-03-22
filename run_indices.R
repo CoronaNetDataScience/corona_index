@@ -35,6 +35,28 @@ if(compile_data) {
   index_long <- readRDS(paste0("coronanet/index_long_model_",model_type,".rds"))
 }
 
+source("create_items_long.R")
+
+filter_list <- switch(model_type,
+                      sd=sd_items,
+                      biz=biz_items,
+                      ht=ht_items,
+                      hm=hm_items,
+                      mask=mask_items,
+                      hr=hr_items,
+                      school=school_items)
+
+# which items to restrict for each model -- generally just one up
+
+restrict_list <- switch(model_type,
+                        sd=c("social_distance","number_mass"),
+                        biz=c("biz_essential","biz_mask"),
+                        ht=c("ht_type_pcr","ht_portal_sms"),
+                        hm=c("hm_home_visit","hm_telephone"),
+                        mask=c("mask_public","mask_transport"),
+                        hr=c("hr_ventilator","hr_syringe"),
+                        school=c("primary_school","school_distance"))
+
   
 
   countries <- c("United States of America","Germany","Brazil","Switzerland","Israel","France",
@@ -43,6 +65,7 @@ if(compile_data) {
                  "Norway","Venezuela")
   
   to_make <- index_long %>% 
+    filter(item %in% filter_list) %>% 
     #filter(country %in% countries) %>% 
            #date_policy<ymd("2020-05-01")) %>% 
     group_by(item) %>% 
@@ -125,8 +148,8 @@ if(compile_data) {
                               within_chain="threads",
                               gpu=FALSE,save_files = "/scratch/rmk7/coronanet",
                               fixtype="prefix",pos_discrim = F,
-                              restrict_ind_high="social_distance",
-                              restrict_ind_low="number_mass",
+                              restrict_ind_high=restrict_list[1],
+                              restrict_ind_low=restrict_list[2],
                               restrict_sd_low=3,
                               mpi_export=getwd(),
                               map_over_id = "persons",
