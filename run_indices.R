@@ -118,6 +118,7 @@ restrict_list <- switch(model_type,
                                 length(unique(var))==1))
   
   to_ideal <- to_make %>% 
+    distinct %>% 
     mutate(var=as.integer(var)) %>% 
     filter(country!="Samoa",
            date_policy <ymd("2021-01-15")) %>% 
@@ -145,7 +146,7 @@ restrict_list <- switch(model_type,
   
   print(nchains)
   print(grainsize)
-  activity_fit <- distinct(to_ideal) %>% 
+  activity_fit <- to_ideal %>% 
                     id_estimate(vary_ideal_pts=time,
                               ncores=parallel::detectCores(),
                               nchains=as.numeric(nchains),niters=400,
