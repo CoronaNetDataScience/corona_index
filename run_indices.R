@@ -50,10 +50,10 @@ filter_list <- switch(model_type,
 
 restrict_list <- switch(model_type,
                         sd=c("social_distance","number_mass"),
-                        biz=c("biz_essential","biz_mask"),
+                        biz=c("biz_hours","biz_mask"),
                         ht=c("ht_type_pcr","ht_portal_sms"),
                         hm=c("hm_home_visit","hm_telephone"),
-                        mask=c("mask_public","mask_transport"),
+                        mask=c("mask_everywhere","mask_transport"),
                         hr=c("hr_ventilator","hr_syringe"),
                         school=c("primary_school","school_distance"))
 
@@ -119,7 +119,8 @@ restrict_list <- switch(model_type,
   
   to_ideal <- to_make %>% 
     mutate(var=as.integer(var)) %>% 
-    filter(country!="Samoa") %>% 
+    filter(country!="Samoa",
+           date_policy <ymd("2021-01-15")) %>% 
     distinct %>% 
             id_make(
             outcome_disc="var",
@@ -131,17 +132,21 @@ restrict_list <- switch(model_type,
   
   # determine cores
   
-  if(floor(length(unique(to_ideal@score_matrix$person_id))/parallel::detectCores())<1) {
-    
-    grainsize <- 1
-    
-  } else {
-    
-    grainsize <- floor(length(unique(to_ideal@score_matrix$person_id))/parallel::detectCores())
-  }
+  # if(floor(length(unique(to_ideal@score_matrix$person_id))/parallel::detectCores())<1) {
+  #   
+  #   grainsize <- 1
+  #   
+  # } else {
+  #   
+  #   grainsize <- floor(length(unique(to_ideal@score_matrix$person_id))/parallel::detectCores())
+  # }
+  
+  grainsize <- 1
+  
   print(nchains)
   print(grainsize)
-  activity_fit <- id_estimate(to_ideal,vary_ideal_pts=time,
+  activity_fit <- distinct(to_ideal) %>% 
+                    id_estimate(vary_ideal_pts=time,
                               ncores=parallel::detectCores(),
                               nchains=as.numeric(nchains),niters=400,
                               warmup=300,grainsize = grainsize,

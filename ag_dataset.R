@@ -328,7 +328,7 @@ clean <- readRDS("coronanet/coronanet_internal_allvars.RDS")
                                    TRUE~1),
       biz_nonessential = as.numeric(grepl(x = institution_cat, pattern =
                                             "Non-Essential Businesses")),
-      biz_essential = as.numeric(institution_cat == "Non-Essential Businesses"),
+      biz_essential = as.numeric(institution_cat == "Essential Businesses"),
       biz_hygiene = as.numeric(grepl(x = institution_conditions, pattern =
                                        "Hygiene")),
       biz_hours = as.numeric(grepl(x = institution_conditions, pattern =
