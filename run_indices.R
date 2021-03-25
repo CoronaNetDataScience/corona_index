@@ -6,6 +6,12 @@
 # Assumes Oxford Tracker is at user home directory
 # clone from https://github.com/OxCGRT/covid-policy-tracker.git
 
+# the type of index we are creating
+
+model_type <- Sys.getenv("MODELTYPE")
+nchains <- Sys.getenv("NCHAINS")
+time <- Sys.getenv("TIME")
+
 libpaths <- switch(model_type,
                       sd="/home/rmk7/other_R_libs_cor1",
                       biz="/home/rmk7/other_R_libs_cor2",
@@ -27,12 +33,6 @@ require(readr)
 require(stringr)
 require(readxl)
 require(ggthemes)
-
-# the type of index we are creating
-
-model_type <- Sys.getenv("MODELTYPE")
-nchains <- Sys.getenv("NCHAINS")
-time <- Sys.getenv("TIME")
 
 compile_data <- F
 
