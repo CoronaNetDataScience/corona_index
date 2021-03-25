@@ -6,7 +6,16 @@
 # Assumes Oxford Tracker is at user home directory
 # clone from https://github.com/OxCGRT/covid-policy-tracker.git
 
-.libPaths("/home/rmk7/other_R_libs")
+libpaths <- switch(model_type,
+                      sd="/home/rmk7/other_R_libs_cor1",
+                      biz="/home/rmk7/other_R_libs_cor2",
+                      ht="/home/rmk7/other_R_libs_cor3",
+                      hm="/home/rmk7/other_R_libs_cor4",
+                      mask="/home/rmk7/other_R_libs_cor5",
+                      hr="/home/rmk7/other_R_libs_cor6",
+                      school="/home/rmk7/other_R_libs_cor7")
+
+.libPaths(libpaths)
 cmdstanr::set_cmdstan_path("/home/rmk7/cmdstan")
   
 require(idealstan)
