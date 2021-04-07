@@ -66,7 +66,7 @@ hm_items <- unique(index_long$item)[grepl(x=unique(index_long$item),
                                           pattern="hm\\_")]
 
 mask_items <- c(unique(index_long$item)[grepl(x=unique(index_long$item),
-                                            pattern="mask\\_")],"ox_mask")
+                                            pattern="mask")],"ox_mask")
 
 hr_items <- c(unique(index_long$item)[grepl(x=unique(index_long$item),
                                           pattern="hr\\_")],"ox_health_invest")

@@ -11,6 +11,7 @@
 model_type <- Sys.getenv("MODELTYPE")
 nchains <- Sys.getenv("NCHAINS")
 time <- Sys.getenv("TIME")
+run <- Sys.getenv("RUN")
 
 libpaths <- switch(model_type,
                       sd="/home/rmk7/other_R_libs_cor1",
@@ -66,19 +67,22 @@ restrict_list <- switch(model_type,
                         hr=c("hr_ventilator","hr_syringe"),
                         school=c("primary_school","school_distance"))
 
+  #pos_discrim <- model_type %in% c("biz","mask","hm")
+
   
 
-  countries <- c("United States of America","Germany","Brazil","Switzerland","Israel","France",
-                 #"Italy","Argentina","Brazil","Russia","United Kingdom",
-                 #"Nigeria","Egypt","United Arab Emirates",
-                 "Norway","Venezuela")
+  # countries <- c("United States of America","Germany","Brazil","Switzerland","Israel","France",
+  #                #"Italy","Argentina","Brazil","Russia","United Kingdom",
+  #                #"Nigeria","Egypt","United Arab Emirates",
+  #                "Norway","Venezuela")
   
   to_make <- index_long %>% 
     filter(item %in% filter_list) %>% 
     #filter(country %in% countries) %>% 
            #date_policy<ymd("2020-05-01")) %>% 
     group_by(item) %>% 
-    mutate(model_id=case_when(grepl(x=item,pattern="ox")~5,
+    mutate(model_id=case_when(item=="ox_health_invest"~9,
+                              grepl(x=item,pattern="ox")~6,
                               TRUE~9),
            var_cont=ifelse(model_id>5,pop_out,0)) %>% 
     group_by(item) %>% 
@@ -88,8 +92,8 @@ restrict_list <- switch(model_type,
     ungroup %>% 
     mutate(ra_num=as.numeric(scale(ra_num))) %>% 
     group_by(item) %>% 
-    mutate(var=ifelse(is.na(var),min(var,na.rm=T),var),
-           var_cont=ifelse(is.na(var_cont),min(var_cont,na.rm=T),var_cont)) %>% 
+    mutate(var=ifelse(is.na(var) & !grepl(x=item,pattern="ox"),min(var,na.rm=T),var),
+           var_cont=ifelse(is.na(var_cont) & item!="ox_health_invest",min(var_cont,na.rm=T),var_cont)) %>% 
     group_by(country,item,date_policy) %>% 
     mutate(n_dup=n()) %>% 
     ungroup
@@ -126,10 +130,15 @@ restrict_list <- switch(model_type,
     mutate(all_equal=ifelse(model_id==9,length(unique(var_cont))==1,
                                 length(unique(var))==1))
   
+  # remove countries that aren't in the Oxford data
+  
   to_ideal <- to_make %>% 
     distinct %>% 
     mutate(var=as.integer(var)) %>% 
-    filter(country!="Samoa",
+    filter(!(country %in% c("Samoa","Solomon Islands","Saint Kitts and Nevis",
+                            "Liechtenstein","Montenegro","Northern Cyprus",
+                            "North Macedonia","Nauru","Equatorial Guinea",
+                            "Luxembourg","Malta","North Korea")),
            date_policy <ymd("2021-01-15")) %>% 
     distinct %>% 
             id_make(
@@ -152,7 +161,7 @@ restrict_list <- switch(model_type,
   # }
   
   grainsize <- 1
-  
+  print(model_type)
   print(nchains)
   print(grainsize)
   activity_fit <- to_ideal %>% 
@@ -177,7 +186,7 @@ restrict_list <- switch(model_type,
                               id_refresh = 100,
                               const_type="items") 
   
-  saveRDS(activity_fit,paste0("/scratch/rmk7/coronanet/activity_fit_rw",model_type,"_",time,".rds"))
+  saveRDS(activity_fit,paste0("/scratch/rmk7/coronanet/activity_fit_rw",model_type,"_",time,"_run_",run,".rds"))
   
   get_all_discrim <- filter(activity_fit@summary,grepl(x=variable,pattern="reg\\_full"))
   
@@ -191,13 +200,13 @@ restrict_list <- switch(model_type,
     labs(x="Items",y="Level of Discrimination") +
     ggtitle("Discrimination parameters from model")
   
-  ggsave(paste0("/scratch/rmk7/coronanet/discrim_",model_type,"_",time,".png"))
+  ggsave(paste0("/scratch/rmk7/coronanet/discrim_",model_type,"_",time,"_run_",run,".png"))
   
   id_plot_legis_dyn(activity_fit,use_ci=T) + ylab(paste0(model_type," Index")) + guides(color="none") +
     ggtitle("CoronaNet Social Distancing Index",
             subtitle="Posterior Median Estimates with 5% - 95% Intervals")
   
-  ggsave(paste0("/scratch/rmk7/coronanet/index_",model_type,"_",time,".png"))
+  ggsave(paste0("/scratch/rmk7/coronanet/index_",model_type,"_",time,"_run_",run,".png"))
   
   range01 <- function(x){(x-min(x))/(max(x)-min(x))}
   
@@ -219,7 +228,7 @@ restrict_list <- switch(model_type,
            distancing_index_low_est="low_est",
            distancing_index_high_est="high_est")
   
-  write_csv(country_est,paste0("/scratch/rmk7/coronanet/",model_type,"_",time,"_index_est.csv"))
+  write_csv(country_est,paste0("/scratch/rmk7/coronanet/",model_type,"_",time,"_run_",run,"_index_est.csv"))
 
     
     # country_names <- read_xlsx("data/ISO WORLD COUNTRIES.xlsx",sheet = "ISO-names")
