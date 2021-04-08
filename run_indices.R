@@ -82,7 +82,7 @@ restrict_list <- switch(model_type,
            #date_policy<ymd("2020-05-01")) %>% 
     group_by(item) %>% 
     mutate(model_id=case_when(item=="ox_health_invest"~9,
-                              grepl(x=item,pattern="ox")~6,
+                              grepl(x=item,pattern="ox")~5,
                               TRUE~9),
            var_cont=ifelse(model_id>5,pop_out,0)) %>% 
     group_by(item) %>% 
@@ -106,9 +106,10 @@ restrict_list <- switch(model_type,
   
   # convert to binary if number of unique values less than 20
   
-  to_make <- mutate(ungroup(to_make), model_id=case_when(item %in% un_vals$item[un_vals$model_id==9 & un_vals$n_un<20] ~ 1,
+  to_make <- group_by(to_make,item) %>% 
+    mutate(model_id=case_when((item %in% un_vals$item[un_vals$model_id==9 & un_vals$n_un<20]) & max(var)<1.5 ~ 1,
                                                 TRUE~model_id),
-                    var=case_when(item %in% un_vals$item[un_vals$model_id==9 & un_vals$n_un<20] ~ round(var),
+                    var=case_when((item %in% un_vals$item[un_vals$model_id==9 & un_vals$n_un<20])  & max(var)<1.5 ~ round(var),
                                   TRUE~var))
   
   # check country scores
@@ -139,7 +140,8 @@ restrict_list <- switch(model_type,
                             "Liechtenstein","Montenegro","Northern Cyprus",
                             "North Macedonia","Nauru","Equatorial Guinea",
                             "Luxembourg","Malta","North Korea")),
-           date_policy <ymd("2021-01-15")) %>% 
+           date_policy <ymd("2021-01-15"),
+           !(item %in% c("allow_ann_event","postpone_rec_event"))) %>% 
     distinct %>% 
             id_make(
             outcome_disc="var",
