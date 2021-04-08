@@ -60,12 +60,12 @@ filter_list <- switch(model_type,
 
 restrict_list <- switch(model_type,
                         sd=c("social_distance","number_mass"),
-                        biz=c("biz_hours","biz_mask"),
+                        biz=c("biz_hours","biz_meeting"),
                         ht=c("ht_type_pcr","ht_portal_sms"),
                         hm=c("hm_home_visit","hm_telephone"),
                         mask=c("mask_everywhere","mask_transport"),
                         hr=c("hr_ventilator","hr_syringe"),
-                        school=c("primary_school","school_distance"))
+                        school=c("primary_school","school_clean"))
 
   #pos_discrim <- model_type %in% c("biz","mask","hm")
 
