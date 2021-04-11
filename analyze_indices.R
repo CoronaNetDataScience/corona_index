@@ -15,7 +15,7 @@ plot_countries <- c("United States of America","Brazil","China","United Arab Emi
 
 # Business ----------------------------------------------------------------
 
-biz_mod <- readRDS("coronanet/activity_fit_rwbiz_random_walk.rds")
+biz_mod <- readRDS("coronanet/activity_fit_rwbiz_random_walk_run_1.rds")
 
 get_all_discrim <- filter(biz_mod@summary,grepl(x=variable,pattern="reg\\_full"))
 
@@ -52,6 +52,8 @@ get_all_discrim$id_rec <- fct_recode(get_all_discrim$id,
                                      "Restaurants" = "biz_restrict_rest",
                                      "Retail" = "biz_restrict_retail",
                                      "Shops" = "biz_restrict_shop",
+                                     "Delivery"="biz_delivery",
+                                     "Takeout"="biz_takeout",
                                      "Telecom" = "biz_restrict_telecom",
                                      "Transport" = "biz_restrict_transport",
                                      "Warehouses" = "biz_restrict_warehouse",
@@ -61,6 +63,12 @@ get_all_discrim$id_rec <- fct_recode(get_all_discrim$id,
                                      "Temperature Checks" = "biz_temp",
                                      "Work at Home" = "biz_work_home",
                                      "Oxford Closing Workplaces" = "ox_workplace_close")
+
+biz_rhat <- id_plot_rhats(biz_mod) +
+  ggtitle("") +
+  labs(caption="")
+
+saveRDS(biz_rhat,"coronanet/biz_rhat.rds")
 
 biz <- get_all_discrim %>% 
   ggplot(aes(y=mean,x=reorder(id_rec,mean))) +
@@ -72,6 +80,8 @@ biz <- get_all_discrim %>%
   ggtitle("Business")
 
 biz
+
+saveRDS(biz,"coronanet/biz_discrim_object.rds")
 
 ggsave("biz_discrim.png")
 
@@ -117,6 +127,8 @@ biz_time <- biz_time_data_scaled %>%
 
 biz_time
 
+saveRDS(biz_time,"coronanet/biz_mod_plot_object.rds")
+
 ggsave("biz_mod_plot.png")
 
 biz_time_single <- biz_time_data_scaled %>% 
@@ -134,12 +146,16 @@ biz_time_single <- biz_time_data_scaled %>%
 
 biz_time_single
 
+saveRDS(biz_time_single,"coronanet/biz_mod_plot_single_object.rds")
+
 ggsave("biz_mod_plot_single.png")
+
+rm(biz_mod)
 
 
 # Mask --------------------------------------------------------------------
 
-mask_mod <- readRDS("coronanet/activity_fit_rwmask_random_walk.rds")
+mask_mod <- readRDS("coronanet/activity_fit_rwmask_random_walk_run_1.rds")
 
 get_all_discrim <- filter(mask_mod@summary,grepl(x=variable,pattern="reg\\_full"))
 
@@ -158,6 +174,12 @@ get_all_discrim$id_rec <- fct_recode(get_all_discrim$id,
                                      "Oxford Mask" = "ox_mask"
 )
 
+mask_rhat <- id_plot_rhats(mask_mod) +
+  ggtitle("") +
+  labs(caption="")
+
+saveRDS(mask_rhat,"coronanet/mask_rhat.rds")
+
 mask <- get_all_discrim %>% 
   ggplot(aes(y=mean,x=reorder(id_rec,mean))) +
   geom_pointrange(aes(ymin=lower,ymax=upper)) +
@@ -168,6 +190,8 @@ mask <- get_all_discrim %>%
   ggtitle("Masks")
 
 mask
+
+saveRDS(mask,"coronanet/mask_discrim_object.rds")
 
 ggsave("mask_discrim.png")
 
@@ -197,7 +221,7 @@ saveRDS(mask_time_data_scaled,"indices/mask_time_data_scaled.rds")
 write_csv(mask_time_data,"indices/mask_time_data.csv")
 write_csv(mask_time_data_scaled,"indices/mask_time_data_scaled.csv")
 
-sample_plot_dates <- group_by(mask_time_data_scaled_scaled,country) %>% 
+sample_plot_dates <- group_by(mask_time_data_scaled,country) %>% 
   sample_n(1)
 
 mask_time <- mask_time_data_scaled %>% 
@@ -212,6 +236,8 @@ mask_time <- mask_time_data_scaled %>%
   theme(axis.text.x=element_blank())
 
 mask_time
+
+saveRDS(mask_time,"coronanet/mask_plot_object.rds")
 
 ggsave("mask_mod_plot.png")
 
@@ -230,7 +256,11 @@ mask_time_single <- mask_time_data_scaled %>%
 
 mask_time_single
 
+saveRDS(mask_time_single,"coronanet/mask_plot_single_object.rds")
+
 ggsave("mask_mod_plot_single.png")
+
+rm(mask_mod)
 
 
 # Health management -------------------------------------------------------
@@ -264,6 +294,12 @@ get_all_discrim$id_rec <- fct_recode(get_all_discrim$id,
                                      "Phone Calls" = "hm_telephone"
 )
 
+hm_rhat <- id_plot_rhats(hm_mod) +
+  ggtitle("") +
+  labs(caption="")
+
+saveRDS(hm_rhat,"coronanet/hm_rhat.rds")
+
 hm <- get_all_discrim %>% 
   ggplot(aes(y=mean,x=reorder(id_rec,mean))) +
   geom_pointrange(aes(ymin=lower,ymax=upper)) +
@@ -274,6 +310,8 @@ hm <- get_all_discrim %>%
   ggtitle("Health Monitoring")
 
 hm
+
+saveRDS(hm,"coronanet/hm_discrim_object.rds")
 
 ggsave("hm_discrim.png")
 
@@ -318,6 +356,8 @@ hm_time <- hm_time_data_scaled %>%
 
 hm_time
 
+saveRDS(hm_time,"coronanet/hm_plot_object.rds")
+
 ggsave("hm_mod_plot.png")
 
 hm_time_single <- hm_time_data_scaled %>% 
@@ -334,11 +374,15 @@ hm_time_single <- hm_time_data_scaled %>%
 
 hm_time_single
 
+saveRDS(hm_time_single,"coronanet/hm_plot_single_object.rds")
+
 ggsave("hm_mod_plot_single.png")
+
+rm(hm_mod)
 
 # Health tech -------------------------------------------------------------
 
-ht_mod <- readRDS("coronanet/activity_fit_rwht_random_walk.rds")
+ht_mod <- readRDS("coronanet/activity_fit_rwht_random_walk_run_1.rds")
 
 get_all_discrim <- filter(ht_mod@summary,grepl(x=variable,pattern="reg\\_full"))
 
@@ -375,6 +419,12 @@ get_all_discrim$id_rec <- fct_recode(get_all_discrim$id,
                                      "PCR" = "ht_type_pcr",
                                      "Oxford Test" = "ox_test")
 
+ht_rhat <- id_plot_rhats(ht_mod) +
+  ggtitle("") +
+  labs(caption="")
+
+saveRDS(ht_rhat,"coronanet/ht_rhat.rds")
+
 ht <- get_all_discrim %>% 
   ggplot(aes(y=mean,x=reorder(id_rec,mean))) +
   geom_pointrange(aes(ymin=lower,ymax=upper)) +
@@ -385,6 +435,8 @@ ht <- get_all_discrim %>%
   ggtitle("Health Testing")
 
 ht
+
+saveRDS(ht,"coronanet/ht_discrim_object.rds")
 
 ggsave("ht_discrim.png")
 
@@ -430,6 +482,8 @@ ht_time <- ht_time_data_scaled %>%
 
 ht_time
 
+saveRDS(ht_time,"coronanet/ht_plot_object.rds")
+
 ggsave("ht_mod_plot.png")
 
 ht_time_single <- ht_time_data_scaled %>% 
@@ -447,11 +501,15 @@ ht_time_single <- ht_time_data_scaled %>%
 
 ht_time_single
 
+saveRDS(ht_time_single,"coronanet/ht_plot_single_object.rds")
+
 ggsave("ht_mod_plot_single.png")
+
+rm(ht_mod)
 
 # social distance ---------------------------------------------------------
 
-sd_mod <- readRDS("coronanet/activity_fit_rwsd_random_walk.rds")
+sd_mod <- readRDS("coronanet/activity_fit_rwsd_random_walk_run_1.rds")
 
 get_all_discrim <- filter(sd_mod@summary,grepl(x=variable,pattern="reg\\_full"))
 
@@ -486,6 +544,12 @@ get_all_discrim$id_rec <- fct_recode(get_all_discrim$id,
                                      "Stay at Home" = "social_distance",
                                      "Distancing in Subways" = "subways")
 
+sd_rhat <- id_plot_rhats(sd_mod) +
+  ggtitle("") +
+  labs(caption="")
+
+saveRDS(sd_rhat,"coronanet/sd_rhat.rds")
+
 sd <- get_all_discrim %>% 
   ggplot(aes(y=mean,x=reorder(id_rec,mean))) +
   geom_pointrange(aes(ymin=lower,ymax=upper)) +
@@ -496,6 +560,8 @@ sd <- get_all_discrim %>%
   ggtitle("Social Distancing")
 
 sd
+
+saveRDS(sd,"coronanet/sd_discrim_object.rds")
 
 ggsave("sd_discrim.png")
 
@@ -540,6 +606,8 @@ sd_time <- sd_time_data_scaled %>%
 
 sd_time
 
+saveRDS(sd_time,"coronanet/sd_plot_object.rds")
+
 ggsave("sd_mod_plot.png")
 
 sd_time_single <- sd_time_data_scaled %>% 
@@ -556,12 +624,16 @@ sd_time_single <- sd_time_data_scaled %>%
 
 sd_time_single
 
+saveRDS(sd_time_single,"coronanet/sd_plot_single_object.rds")
+
 ggsave("sd_mod_plot_single.png")
+
+rm(sd_mod)
 
 
 # schools -----------------------------------------------------------------
 
-school_mod <- readRDS("coronanet/activity_fit_rwschool_random_walk.rds")
+school_mod <- readRDS("coronanet/activity_fit_rwschool_random_walk_run_1.rds")
 
 get_all_discrim <- filter(school_mod@summary,grepl(x=variable,pattern="reg\\_full"))
 
@@ -585,6 +657,12 @@ get_all_discrim$id_rec <- fct_recode(get_all_discrim$id,
                                      "Only Certain Students" = "school_type_pers",
                                      "Secondary School" = "secondary_school")
 
+school_rhat <- id_plot_rhats(school_mod) +
+  ggtitle("") +
+  labs(caption="")
+
+saveRDS(school_rhat,"coronanet/school_rhat.rds")
+
 school <- get_all_discrim %>% 
   ggplot(aes(y=mean,x=reorder(id_rec,mean))) +
   geom_pointrange(aes(ymin=lower,ymax=upper)) +
@@ -595,6 +673,8 @@ school <- get_all_discrim %>%
   ggtitle("Schools")
 
 school
+
+saveRDS(school,"coronanet/school_discrim_object.rds")
 
 ggsave("school_discrim.png")
 
@@ -639,6 +719,8 @@ school_time <- school_time_data_scaled %>%
 
 school_time
 
+saveRDS(school_time,"coronanet/school_plot_object.rds")
+
 ggsave("school_mod_plot.png")
 
 school_time_single <- school_time_data_scaled %>% 
@@ -655,10 +737,12 @@ school_time_single <- school_time_data_scaled %>%
 
 school_time_single
 
+saveRDS(school_time_single,"coronanet/school_plot_single_object.rds")
+
 ggsave("school_mod_plot_single.png")
 
 
-
+rm(school_mod)
 
 # health resources --------------------------------------------------------
 
@@ -781,3 +865,9 @@ ggsave("discrim1.png")
 (sd + biz) 
 
 ggsave("discrim2.png")
+
+(mask_rhat + ht_rhat + biz_rhat) / (hm_rhat + school_rhat + sd_rhat)
+
+ggsave("combine_plot_single.png")
+
+

@@ -112,6 +112,10 @@ restrict_list <- switch(model_type,
                     var=case_when((item %in% un_vals$item[un_vals$model_id==9 & un_vals$n_un<20])  & max(var)<1.5 ~ round(var),
                                   TRUE~var))
   
+  # non-zero entries
+  
+  sum(to_make$var!=0)
+  
   # check country scores
   
   country_score <- group_by(to_make,country,date_policy) %>% 
@@ -122,18 +126,44 @@ restrict_list <- switch(model_type,
     arrange(country,date_policy) %>% 
     mutate(score_diff=score - lag(score))
   
+  #country_score %>% ggplot(aes(y=score_diff,x=date_policy)) + geom_line(aes(group=country))
+  
+  sum(country_score$score_diff>0,na.rm=T)/length(unique(to_make$country))
+  
+  
+  # countries that show no change over time
+  
+  no_change <- ungroup(country_score) %>% 
+    group_by(country) %>% 
+    filter(all(score_diff==0,na.rm=T)) %>% 
+    distinct(country)
+  
+  low_change <- ungroup(country_score) %>% 
+    group_by(country) %>% 
+    filter(sum(score_diff[score_diff>0],na.rm=T)<3) %>% 
+    distinct(country)
+  
+  days_no_change <- group_by(country_score,date_policy) %>% 
+    filter(all(score_diff==0,na.rm=T)) %>% 
+    distinct(date_policy) %>% 
+    filter(date_policy>ymd("2020-01-01"))
+  
+  
   # filter out no changes
   
-  check_items <- group_by(to_make,country,date_policy) %>% 
+  check_items <- group_by(to_make,date_policy) %>% 
     mutate(all_min=all(ifelse(model_id==9,min_item==var_cont,
                                  min_item==var))) %>% 
     group_by(item) %>% 
     mutate(all_equal=ifelse(model_id==9,length(unique(var_cont))==1,
                                 length(unique(var))==1))
   
+  check_days <- distinct(check_items,date_policy,all_min)
+  
   # remove countries that aren't in the Oxford data
   
   to_ideal <- to_make %>% 
+    anti_join(days_no_change,by="date_policy") %>% 
     distinct %>% 
     mutate(var=as.integer(var)) %>% 
     filter(!(country %in% c("Samoa","Solomon Islands","Saint Kitts and Nevis",

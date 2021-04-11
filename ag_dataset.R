@@ -400,8 +400,6 @@ index <- filter(
     hr_ventilator = as.numeric(grepl(x = type_sub_cat, pattern =
                                        "Ventilators")),
     hr_test_kit = as.numeric(grepl(x = type_sub_cat, pattern = "Test Kits")),
-    hr_test_kit = as.numeric(grepl(x = type_sub_cat, pattern = "Test Kits")),
-    hr_test_kit = as.numeric(grepl(x = type_sub_cat, pattern = "Test Kits")),
     hr_target_staff = as.numeric(grepl(x = target_who_what, pattern =
                                          "Health Staff")),
     hr_target_supply = as.numeric(grepl(x = target_who_what, pattern =
@@ -552,7 +550,6 @@ index <- filter(
       type_sub_cat == "Restrictions on  private vehicles in public circulation"
     ),
     subways = as.numeric(type_sub_cat == "Restrictions on ridership of subways and trams"),
-    buses = as.numeric(type_sub_cat == "Restrictions on ridership of trains"),
     distance_other = as.numeric(
       type_sub_cat == "Keep a distance of some other distance not listed above. Please note the distance in meters in the text entry."
     ),
