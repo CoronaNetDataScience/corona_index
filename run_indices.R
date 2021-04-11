@@ -63,7 +63,7 @@ restrict_list <- switch(model_type,
                         biz=c("biz_hours","biz_meeting"),
                         ht=c("ht_type_pcr","ht_portal_sms"),
                         hm=c("hm_home_visit","hm_telephone"),
-                        mask=c("mask_public","mask_transport"),
+                        mask=c("ox_mask","mask_transport"),
                         hr=c("hr_ventilator","hr_syringe"),
                         school=c("primary_school","school_clean"))
 
@@ -77,7 +77,8 @@ restrict_list <- switch(model_type,
   #                "Norway","Venezuela")
   
   to_make <- index_long %>% 
-    filter(item %in% filter_list) %>% 
+    filter(item %in% filter_list,
+           item!="mask_preschool") %>% 
     #filter(country %in% countries) %>% 
            #date_policy<ymd("2020-05-01")) %>% 
     group_by(item) %>% 
@@ -151,12 +152,9 @@ restrict_list <- switch(model_type,
   
   # filter out no changes
   
-  check_items <- group_by(to_make,date_policy) %>% 
-    mutate(all_min=all(ifelse(model_id==9,min_item==var_cont,
-                                 min_item==var))) %>% 
-    group_by(item) %>% 
-    mutate(all_equal=ifelse(model_id==9,length(unique(var_cont))==1,
-                                length(unique(var))==1))
+  check_items <- group_by(to_make,item) %>% 
+    summarize(n_country_cont=length(unique(country[(var_cont>0)])),
+              n_country_var=length(unique(country[(var>0)])))
   
   check_days <- distinct(check_items,date_policy,all_min)
   
