@@ -63,7 +63,7 @@ restrict_list <- switch(model_type,
                         biz=c("biz_hours","biz_meeting"),
                         ht=c("ht_type_pcr","ht_portal_sms"),
                         hm=c("hm_home_visit","hm_telephone"),
-                        mask=c("mask_everywhere","mask_transport"),
+                        mask=c("mask_public","mask_transport"),
                         hr=c("hr_ventilator","hr_syringe"),
                         school=c("primary_school","school_clean"))
 
@@ -170,7 +170,7 @@ restrict_list <- switch(model_type,
                             "Liechtenstein","Montenegro","Northern Cyprus",
                             "North Macedonia","Nauru","Equatorial Guinea",
                             "Luxembourg","Malta","North Korea")),
-           date_policy <ymd("2021-01-15"),
+           date_policy < ymd("2021-01-15"),
            !(item %in% c("allow_ann_event","postpone_rec_event"))) %>% 
     distinct %>% 
             id_make(
