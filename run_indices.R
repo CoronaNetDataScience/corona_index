@@ -56,6 +56,18 @@ filter_list <- switch(model_type,
                       hr=hr_items,
                       school=school_items)
 
+# whether to use boundary-avoiding prior
+
+if(model_type %in% c("ht","hm","hr","mask")) {
+  
+  boundary_prior <- list(beta=2)
+  
+} else {
+  
+  boundary_prior <- NULL
+  
+}
+
 # which items to restrict for each model -- generally just one up
 
 restrict_list <- switch(model_type,
@@ -156,8 +168,6 @@ restrict_list <- switch(model_type,
     summarize(n_country_cont=length(unique(country[(var_cont>0)])),
               n_country_var=length(unique(country[(var>0)])))
   
-  check_days <- distinct(check_items,date_policy,all_min)
-  
   # remove countries that aren't in the Oxford data
   
   to_ideal <- to_make %>% 
@@ -198,13 +208,14 @@ restrict_list <- switch(model_type,
                     id_estimate(vary_ideal_pts=time,
                               ncores=parallel::detectCores(),
                               nchains=as.numeric(nchains),niters=400,
+                              save_warmup=TRUE,
                               warmup=300,grainsize = grainsize,
+                              boundary_prior=boundary_prior,
                               gpu=FALSE,save_files = "/scratch/rmk7/coronanet_csvs",
                               fixtype="prefix",pos_discrim = F,
                               restrict_ind_high=restrict_list[1],
                               restrict_ind_low=restrict_list[2],
                               restrict_sd_low=3,
-                              mpi_export=getwd(),
                               map_over_id = "persons",
                               max_treedepth=10,het_var = T,
                               fix_high=1,
