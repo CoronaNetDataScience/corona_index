@@ -226,7 +226,7 @@ restrict_list <- switch(model_type,
                               id_refresh = 100,
                               const_type="items") 
   
-  saveRDS(activity_fit,paste0("/scratch/rmk7/coronanet_csvs/activity_fit_rw",model_type,"_",time,"_run_",run,".rds"))
+  saveRDS(activity_fit,paste0("/scratch/rmk7/coronanet/activity_fit_rw",model_type,"_",time,"_run_",run,".rds"))
   
   get_all_discrim <- filter(activity_fit@summary,grepl(x=variable,pattern="reg\\_full"))
   
@@ -240,13 +240,13 @@ restrict_list <- switch(model_type,
     labs(x="Items",y="Level of Discrimination") +
     ggtitle("Discrimination parameters from model")
   
-  ggsave(paste0("/scratch/rmk7/coronanet_csvs/discrim_",model_type,"_",time,"_run_",run,".png"))
+  ggsave(paste0("/scratch/rmk7/coronanet/discrim_",model_type,"_",time,"_run_",run,".png"))
   
   id_plot_legis_dyn(activity_fit,use_ci=T) + ylab(paste0(model_type," Index")) + guides(color="none") +
     ggtitle("CoronaNet Social Distancing Index",
             subtitle="Posterior Median Estimates with 5% - 95% Intervals")
   
-  ggsave(paste0("/scratch/rmk7/coronanet_csvs/index_",model_type,"_",time,"_run_",run,".png"))
+  ggsave(paste0("/scratch/rmk7/coronanet/index_",model_type,"_",time,"_run_",run,".png"))
   
   range01 <- function(x){(x-min(x))/(max(x)-min(x))}
   
@@ -268,7 +268,7 @@ restrict_list <- switch(model_type,
            distancing_index_low_est="low_est",
            distancing_index_high_est="high_est")
   
-  write_csv(country_est,paste0("/scratch/rmk7/coronanet_csvs/",model_type,"_",time,"_run_",run,"_index_est.csv"))
+  write_csv(country_est,paste0("/scratch/rmk7/coronanet/",model_type,"_",time,"_run_",run,"_index_est.csv"))
 
     
     # country_names <- read_xlsx("data/ISO WORLD COUNTRIES.xlsx",sheet = "ISO-names")
