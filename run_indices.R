@@ -55,8 +55,7 @@ if(compile_data) {
     
     index_long <- readRDS(paste0("coronanet/index_long_model_",model_type,".rds"))
   }
-  
-  
+
 }
 
 source("create_items_long.R")
