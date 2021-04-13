@@ -852,7 +852,7 @@ require(patchwork)
 
 ggsave("combine_plot.png")
 
-(mask_time + ht_time + biz_time) / (hm_time + school_time + sd_time)
+(mask_time_single + ht_time_single + biz_time_single) / (hm_time_single + school_time_single + sd_time_single)
 
 ggsave("combine_plot_single.png")
 
@@ -868,6 +868,6 @@ ggsave("discrim2.png")
 
 (mask_rhat + ht_rhat + biz_rhat) / (hm_rhat + school_rhat + sd_rhat)
 
-ggsave("combine_plot_single.png")
+ggsave("rhat.png")
 
 

@@ -20,6 +20,9 @@ ht_items <- c(unique(index_long$item)[grepl(x=unique(index_long$item),
 hm_items <- unique(index_long$item)[grepl(x=unique(index_long$item),
                                           pattern="hm\\_")]
 
+hm2_items <- c(unique(index_long$item)[grepl(x=unique(index_long$item),
+                                            pattern="hm\\_|ht\\_")],"ox_test")
+
 mask_items <- c(unique(index_long$item)[grepl(x=unique(index_long$item),
                                               pattern="mask\\_")],"ox_mask")
 

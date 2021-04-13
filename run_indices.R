@@ -18,6 +18,7 @@ libpaths <- switch(model_type,
                       biz="/home/rmk7/other_R_libs_cor2",
                       ht="/home/rmk7/other_R_libs_cor3",
                       hm="/home/rmk7/other_R_libs_cor4",
+                   hm2="/home/rmk7/other_R_libs_cor4",
                       mask="/home/rmk7/other_R_libs_cor5",
                       hr="/home/rmk7/other_R_libs_cor6",
                       school="/home/rmk7/other_R_libs_cor7")
@@ -52,15 +53,16 @@ filter_list <- switch(model_type,
                       biz=biz_items,
                       ht=ht_items,
                       hm=hm_items,
+                      hm2=hm2_items,
                       mask=mask_items,
                       hr=hr_items,
                       school=school_items)
 
 # whether to use boundary-avoiding prior
 
-if(model_type %in% c("ht","hm","hr","mask")) {
+if(model_type %in% c("ht","hm","hm2","hr","mask")) {
   
-  boundary_prior <- list(beta=2)
+  boundary_prior <- list(beta=5)
   
 } else {
   
@@ -75,6 +77,7 @@ restrict_list <- switch(model_type,
                         biz=c("biz_hours","biz_meeting"),
                         ht=c("ht_type_pcr","ht_portal_sms"),
                         hm=c("hm_home_visit","hm_telephone"),
+                        hm2=c("ht_type_pcr","ht_portal_sms"),
                         mask=c("ox_mask","mask_transport"),
                         hr=c("hr_ventilator","hr_syringe"),
                         school=c("primary_school","school_clean"))
@@ -217,7 +220,8 @@ restrict_list <- switch(model_type,
                               restrict_ind_low=restrict_list[2],
                               restrict_sd_low=3,
                               map_over_id = "persons",
-                              max_treedepth=10,het_var = T,
+                              adapt_delta=0.95,
+                              max_treedepth=11,het_var = T,
                               fix_high=1,
                               fix_low=0,
                               restrict_var = T,time_center_cutoff = 50,
