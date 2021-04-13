@@ -210,7 +210,7 @@ restrict_list <- switch(model_type,
   activity_fit <- to_ideal %>% 
                     id_estimate(vary_ideal_pts=time,
                               ncores=parallel::detectCores(),
-                              nchains=as.numeric(nchains),niters=400,
+                              nchains=as.numeric(nchains),niters=300,
                               save_warmup=TRUE,
                               warmup=300,grainsize = grainsize,
                               boundary_prior=boundary_prior,
