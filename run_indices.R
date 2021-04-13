@@ -43,7 +43,20 @@ compile_data <- F
 if(compile_data) {
   source("RCode/ag_dataset.R")
 } else {
-  index_long <- readRDS(paste0("coronanet/index_long_model_",model_type,".rds"))
+  
+  if(model_type=="hm2") {
+    
+    # collapse categories
+    
+    index_long <- bind_rows(readRDS(paste0("coronanet/index_long_model_hm.rds")),
+                            readRDS(paste0("coronanet/index_long_model_ht.rds")))
+    
+  } else {
+    
+    index_long <- readRDS(paste0("coronanet/index_long_model_",model_type,".rds"))
+  }
+  
+  
 }
 
 source("create_items_long.R")
