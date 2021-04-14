@@ -8,7 +8,7 @@
 
 # the type of index we are creating
 
-model_type <- "mask"
+model_type <- "hm2"
 nchains <- 1
 time <- "random_walk"
 run <- 1
@@ -30,8 +30,21 @@ compile_data <- F
 if(compile_data) {
   source("RCode/ag_dataset.R")
 } else {
-  index_long <- readRDS(paste0("coronanet/index_long_model_",model_type,".rds"))
+  
+  if(model_type=="hm2") {
+    
+    # collapse categories
+    
+    index_long <- bind_rows(readRDS(paste0("coronanet/index_long_model_hm.rds")),
+                            readRDS(paste0("coronanet/index_long_model_ht.rds")))
+    
+  } else {
+    
+    index_long <- readRDS(paste0("coronanet/index_long_model_",model_type,".rds"))
+  }
+  
 }
+
 
 source("create_items_long.R")
 
@@ -40,6 +53,7 @@ filter_list <- switch(model_type,
                       biz=biz_items,
                       ht=ht_items,
                       hm=hm_items,
+                      hm2=hm2_items,
                       mask=mask_items,
                       hr=hr_items,
                       school=school_items)
@@ -50,10 +64,21 @@ restrict_list <- switch(model_type,
                         sd=c("social_distance","number_mass"),
                         biz=c("biz_hours","biz_meeting"),
                         ht=c("ht_type_pcr","ht_portal_sms"),
+                        hm2=c("ht_type_pcr","ht_portal_sms"),
                         hm=c("hm_home_visit","hm_telephone"),
                         mask=c("mask_public","mask_everywhere"),
                         hr=c("hr_ventilator","hr_syringe"),
                         school=c("primary_school","school_clean"))
+
+if(model_type %in% c("ht","hm","hm2","hr","mask")) {
+  
+  boundary_prior <- list(beta=5)
+  
+} else {
+  
+  boundary_prior <- NULL
+  
+}
 
   #pos_discrim <- model_type %in% c("biz","mask","hm")
 
@@ -185,7 +210,7 @@ restrict_list <- switch(model_type,
                               ncores=parallel::detectCores(),
                               nchains=as.numeric(nchains),niters=1,
                               warmup=1,grainsize = grainsize,
-                              boundary_prior=list(beta=5),
+                              boundary_prior=boundary_prior,
                               gpu=FALSE,save_files = ".",
                               fixtype="prefix",pos_discrim = F,
                               restrict_ind_high=restrict_list[1],

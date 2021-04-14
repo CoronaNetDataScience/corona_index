@@ -76,7 +76,17 @@ if(model_type %in% c("ht","hm","hm2","hr","mask")) {
   
   boundary_prior <- list(beta=5)
   
+  max_treedepth <- 11
+  
+} else if(model_type=="mask") {
+  
+  boundary_prior <- list(beta=20)
+  
+  max_treedepth <- 12
+  
 } else {
+  
+  max_treedepth <- 11
   
   boundary_prior <- NULL
   
@@ -233,7 +243,7 @@ restrict_list <- switch(model_type,
                               restrict_sd_low=3,
                               map_over_id = "persons",
                               adapt_delta=0.95,
-                              max_treedepth=11,het_var = T,
+                              max_treedepth=max_treedepth,het_var = T,
                               fix_high=1,
                               fix_low=0,
                               restrict_var = T,time_center_cutoff = 50,
