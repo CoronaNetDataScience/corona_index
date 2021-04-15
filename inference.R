@@ -42,7 +42,7 @@ if(load_data) {
   # load in our goodies
   
   cross_sections <- readRDS("indices/merged_predictors.rds") %>% 
-    select(country,area:state_fragility) %>% 
+    select(country,area:pop_tot_log) %>% 
     distinct
   
   time_vary_fb <- read_csv("indices/fb_surv.csv") %>% 
@@ -59,7 +59,8 @@ if(load_data) {
   # merge into one dataset and probably impute
   
   combine_data <- left_join(time_vary_fb,google,by=c("country","date_policy")) %>% 
-    left_join(cross_sections,by="country")
+    left_join(cross_sections,by="country") %>% 
+    left_join(all_mods_med,by=c("country","date_policy"))
   
   # need to merge in indices to impute
   
