@@ -82,11 +82,11 @@ if(model_type %in% c("ht","hm","hm2","hr","mask")) {
   
   boundary_prior <- list(beta=20)
   
-  max_treedepth <- 12
+  max_treedepth <- 15
   
 } else {
   
-  max_treedepth <- 11
+  max_treedepth <- 12
   
   boundary_prior <- NULL
   
@@ -131,7 +131,8 @@ restrict_list <- switch(model_type,
     mutate(ra_num=as.numeric(scale(ra_num))) %>% 
     group_by(item) %>% 
     mutate(var=ifelse(is.na(var) & !grepl(x=item,pattern="ox"),min(var,na.rm=T),var),
-           var_cont=ifelse(is.na(var_cont) & item!="ox_health_invest",min(var_cont,na.rm=T),var_cont)) %>% 
+           var_cont=ifelse(is.na(var_cont) & item!="ox_health_invest",min(var_cont,na.rm=T),var_cont),
+           var_cont=ifelse(item=="ox_health_invest",as.numeric(scale(var_cont)),var_cont)) %>% 
     group_by(country,item,date_policy) %>% 
     mutate(n_dup=n()) %>% 
     ungroup
@@ -204,7 +205,8 @@ restrict_list <- switch(model_type,
                             "North Macedonia","Nauru","Equatorial Guinea",
                             "Luxembourg","Malta","North Korea")),
            date_policy < ymd("2021-01-15"),
-           !(item %in% c("allow_ann_event","postpone_rec_event"))) %>% 
+           !(item %in% c("allow_ann_event","postpone_rec_event",
+                         "mask_public"))) %>% 
     distinct %>% 
             id_make(
             outcome_disc="var",
@@ -232,9 +234,9 @@ restrict_list <- switch(model_type,
   activity_fit <- to_ideal %>% 
                     id_estimate(vary_ideal_pts=time,
                               ncores=parallel::detectCores(),
-                              nchains=as.numeric(nchains),niters=300,
+                              nchains=as.numeric(nchains),niters=200,
                               save_warmup=TRUE,
-                              warmup=400,grainsize = grainsize,
+                              warmup=500,grainsize = grainsize,
                               boundary_prior=boundary_prior,
                               gpu=FALSE,save_files = "/scratch/rmk7/coronanet_csvs",
                               fixtype="prefix",pos_discrim = F,
