@@ -72,11 +72,11 @@ filter_list <- switch(model_type,
 
 # whether to use boundary-avoiding prior
 
-if(model_type %in% c("ht","hm","hm2","hr","mask")) {
+if(model_type %in% c("ht","hm","hm2","hr")) {
   
   boundary_prior <- list(beta=5)
   
-  max_treedepth <- 11
+  max_treedepth <- 12
   
 } else if(model_type=="mask") {
   
