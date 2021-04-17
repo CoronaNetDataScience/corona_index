@@ -48,8 +48,11 @@ if(compile_data) {
     
     # collapse categories
     
-    index_long <- bind_rows(readRDS(paste0("coronanet/index_long_model_hm.rds")),
-                            readRDS(paste0("coronanet/index_long_model_ht.rds")))
+    index_long <- bind_rows(filter(readRDS("coronanet/index_long_model_hm.rds")),
+                            filter(readRDS("coronanet/index_long_model_ht.rds"),
+                                           item!="ox_test",
+                                           !(country %in% c("European Union",
+                                                            "Liechtenstein"))))
     
   } else {
     
@@ -114,8 +117,7 @@ restrict_list <- switch(model_type,
   #                "Norway","Venezuela")
   
   to_make <- index_long %>% 
-    filter(item %in% filter_list,
-           item!="mask_preschool") %>% 
+    filter(item %in% filter_list) %>% 
     #filter(country %in% countries) %>% 
            #date_policy<ymd("2020-05-01")) %>% 
     group_by(item) %>% 
