@@ -91,7 +91,7 @@ if(model_type %in% c("ht","hm","hm2","hr")) {
   
   max_treedepth <- 12
   
-  boundary_prior <- NULL
+  boundary_prior <- list(beta=5)
   
 }
 
@@ -236,7 +236,7 @@ restrict_list <- switch(model_type,
   activity_fit <- to_ideal %>% 
                     id_estimate(vary_ideal_pts=time,
                               ncores=parallel::detectCores(),
-                              nchains=as.numeric(nchains),niters=200,
+                              nchains=as.numeric(nchains),niters=400,
                               save_warmup=TRUE,
                               warmup=500,grainsize = grainsize,
                               boundary_prior=boundary_prior,
@@ -246,7 +246,7 @@ restrict_list <- switch(model_type,
                               restrict_ind_low=restrict_list[2],
                               restrict_sd_low=3,
                               map_over_id = "persons",
-                              adapt_delta=0.95,
+                              #adapt_delta=0.95,
                               max_treedepth=max_treedepth,het_var = T,
                               fix_high=1,
                               fix_low=0,
