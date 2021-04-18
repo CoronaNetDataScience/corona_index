@@ -252,7 +252,7 @@ restrict_list <- switch(model_type,
                               fix_low=0,
                               restrict_var = T,time_center_cutoff = 50,
                               time_sd=.1,
-                              restrict_sd_high=.0001,
+                              restrict_sd_high=.00001,
                               id_refresh = 100,
                               const_type="items") 
   
