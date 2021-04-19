@@ -103,7 +103,7 @@ restrict_list <- switch(model_type,
                         ht=c("ht_type_pcr","ht_portal_sms"),
                         hm=c("hm_home_visit","hm_telephone"),
                         hm2=c("ht_type_pcr","ht_portal_sms"),
-                        mask=c("ox_mask","mask_transport"),
+                        mask=c("mask_public","mask_transport"),
                         hr=c("hr_ventilator","hr_syringe"),
                         school=c("primary_school","school_clean"))
 
@@ -196,6 +196,14 @@ restrict_list <- switch(model_type,
     summarize(n_country_cont=length(unique(country[(var_cont>0)])),
               n_country_var=length(unique(country[(var>0)])))
   
+  # if masks, remove countries with no changes
+  
+  if(model_type=="mask") {
+    
+    to_make <- anti_join(to_make,no_change, by="country")
+
+  }
+  
   # remove countries that aren't in the Oxford data
   
   to_ideal <- to_make %>% 
@@ -207,8 +215,7 @@ restrict_list <- switch(model_type,
                             "North Macedonia","Nauru","Equatorial Guinea",
                             "Luxembourg","Malta","North Korea")),
            date_policy < ymd("2021-01-15"),
-           !(item %in% c("allow_ann_event","postpone_rec_event",
-                         "mask_public"))) %>% 
+           !(item %in% c("allow_ann_event","postpone_rec_event","mask_preschool"))) %>% 
     distinct %>% 
             id_make(
             outcome_disc="var",
@@ -250,7 +257,7 @@ restrict_list <- switch(model_type,
                               max_treedepth=max_treedepth,het_var = T,
                               fix_high=1,
                               fix_low=0,
-                              restrict_var = T,time_center_cutoff = 50,
+                              restrict_var = (model_type!="mask"),time_center_cutoff = 50,
                               time_sd=.1,
                               restrict_sd_high=.00001,
                               id_refresh = 100,

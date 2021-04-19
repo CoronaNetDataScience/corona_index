@@ -7,6 +7,7 @@ require(ggthemes)
 require(cmdstanr)
 require(posterior)
 require(stringr)
+require(posterior)
 
 plot_countries <- c("United States of America","Brazil","China","United Arab Emirates",
                     "South Africa","Turkey","Singapore","South Korea",
@@ -171,7 +172,27 @@ rm(biz_mod)
 
 mask_mod <- readRDS("coronanet/activity_fit_rwmask_random_walk_run_1.rds")
 
-get_all_discrim <- filter(mask_mod@summary,grepl(x=variable,pattern="reg\\_full"))
+all_mods <- lapply(list.files(path = "coronanet/",
+                              pattern="mask\\_random\\_walk\\_run\\_[0-4].*rds",
+                              full.names=T),readRDS)
+
+all_mods_mat <-  lapply(all_mods, function(c) c@stan_samples$draws())
+
+mask_draws <- do.call(bind_draws, c(all_mods_mat,list(along="chain")))
+
+mask_sum <- summarize_draws(mask_draws,"median","quantile2",posterior::rhat)
+
+all_mods_mat <-  lapply(all_mods, function(c) as_draws_array(c@time_varying))
+
+rm(all_mods)
+
+mask_time <- do.call(bind_draws, c(all_mods_mat,list(along="chain")))
+
+rm(all_mods_mat)
+
+gc()
+
+get_all_discrim <- filter(mask_sum,grepl(x=variable,pattern="reg\\_full"))
 
 get_all_discrim$id <- levels(mask_mod@score_data@score_matrix$item_id)
 
@@ -188,15 +209,17 @@ get_all_discrim$id_rec <- fct_recode(get_all_discrim$id,
                                      "Oxford Mask" = "ox_mask"
 )
 
-mask_rhat <- id_plot_rhats(mask_mod) +
-  ggtitle("") +
-  labs(caption="")
+mask_rhat <- mask_sum %>% 
+  ggplot(aes(x=`posterior::rhat`)) +
+  geom_histogram() +
+  theme_tufte() +
+  labs(x="",y="")
 
 saveRDS(mask_rhat,"coronanet/mask_rhat.rds")
 
 mask <- get_all_discrim %>% 
-  ggplot(aes(y=mean,x=reorder(id_rec,mean))) +
-  geom_pointrange(aes(ymin=lower,ymax=upper)) +
+  ggplot(aes(y=median,x=reorder(id_rec,median))) +
+  geom_pointrange(aes(ymin=q5,ymax=q95)) +
   theme_tufte() +
   geom_hline(yintercept=1,linetype=2) +
   coord_flip() +
@@ -209,7 +232,7 @@ saveRDS(mask,"coronanet/mask_discrim_object.rds")
 
 ggsave("mask_discrim.png")
 
-mask_time_data_scaled <- mask_mod@time_varying %>% as_draws_df() %>% 
+mask_time_data_scaled <- mask_time %>% as_draws_df() %>% 
   gather(key="variable",value="estimate",-.chain,-.iteration,-.draw) %>% 
   mutate(estimate=plogis(scale(estimate))*100,
          country=levels(mask_mod@score_data@score_matrix$person_id)[as.numeric(str_extract(variable,"[0-9]+(?=\\])"))],
@@ -220,7 +243,7 @@ mask_time_data_scaled <- mask_mod@time_varying %>% as_draws_df() %>%
             low_est=quantile(estimate,.05),
             sd_est=sd(estimate))
 
-mask_time_data <- mask_mod@time_varying %>% as_draws_df() %>% 
+mask_time_data <- mask_time %>% as_draws_df() %>% 
   gather(key="variable",value="estimate",-.chain,-.iteration,-.draw) %>% 
   mutate(country=levels(mask_mod@score_data@score_matrix$person_id)[as.numeric(str_extract(variable,"[0-9]+(?=\\])"))],
          date_policy=unique(mask_mod@score_data@score_matrix$time_id)[as.numeric(str_extract(variable,"(?<=\\[)[0-9]+"))]) %>% 
@@ -538,7 +561,27 @@ rm(sd_mod)
 
 school_mod <- readRDS("coronanet/activity_fit_rwschool_random_walk_run_1.rds")
 
-get_all_discrim <- filter(school_mod@summary,grepl(x=variable,pattern="reg\\_full"))
+all_mods <- lapply(list.files(path = "coronanet/",
+                              pattern="school\\_random\\_walk\\_run\\_[0-4].*rds",
+                              full.names=T),readRDS)
+
+all_mods_mat <-  lapply(all_mods, function(c) c@stan_samples$draws())
+
+school_draws <- do.call(bind_draws, c(all_mods_mat,list(along="chain")))
+
+school_sum <- summarize_draws(school_draws,"median","quantile2",posterior::rhat)
+
+all_mods_mat <-  lapply(all_mods, function(c) as_draws_array(c@time_varying))
+
+rm(all_mods)
+
+school_time <- do.call(bind_draws, c(all_mods_mat,list(along="chain")))
+
+rm(all_mods_mat)
+
+gc()
+
+get_all_discrim <- filter(school_sum,grepl(x=variable,pattern="reg\\_full"))
 
 get_all_discrim$id <- levels(school_mod@score_data@score_matrix$item_id)
 
@@ -554,21 +597,25 @@ get_all_discrim$id_rec <- fct_recode(get_all_discrim$id,
                                      "Masks" = "school_mask",
                                      "Maximum Number Students" = "school_num",
                                      "Other" = "school_other",
+                                     "School Event"="school_event",
+                                     "School Hours"="school_hours",
                                      "Provisions for Students" = "school_special_student",
                                      "Provisions for Teachers" = "school_special_teacher",
                                      "Temperature Checks" = "school_temp",
                                      "Only Certain Students" = "school_type_pers",
                                      "Secondary School" = "secondary_school")
 
-school_rhat <- id_plot_rhats(school_mod) +
-  ggtitle("") +
-  labs(caption="")
-
+school_rhat <- school_sum %>% 
+  ggplot(aes(x=`posterior::rhat`)) +
+  geom_histogram() +
+  theme_tufte() +
+  labs(x="",y="")
+ 
 saveRDS(school_rhat,"coronanet/school_rhat.rds")
 
 school <- get_all_discrim %>% 
-  ggplot(aes(y=mean,x=reorder(id_rec,mean))) +
-  geom_pointrange(aes(ymin=lower,ymax=upper)) +
+  ggplot(aes(y=median,x=reorder(id_rec,median))) +
+  geom_pointrange(aes(ymin=q5,ymax=q95)) +
   theme_tufte() +
   geom_hline(yintercept=1,linetype=2) +
   coord_flip() +
@@ -581,7 +628,7 @@ saveRDS(school,"coronanet/school_discrim_object.rds")
 
 ggsave("school_discrim.png")
 
-school_time_data_scaled <- school_mod@time_varying %>% as_draws_df() %>% 
+school_time_data_scaled <- school_time %>% as_draws_df %>% 
   gather(key="variable",value="estimate",-.chain,-.iteration,-.draw) %>% 
   mutate(estimate=plogis(scale(estimate))*100,
          country=levels(school_mod@score_data@score_matrix$person_id)[as.numeric(str_extract(variable,"[0-9]+(?=\\])"))],
@@ -592,7 +639,7 @@ school_time_data_scaled <- school_mod@time_varying %>% as_draws_df() %>%
             low_est=quantile(estimate,.05),
             sd_est=sd(estimate))
 
-school_time_data <- school_mod@time_varying %>% as_draws_df() %>% 
+school_time_data <- school_time %>% as_draws_df %>% 
   gather(key="variable",value="estimate",-.chain,-.iteration,-.draw) %>% 
   mutate(country=levels(school_mod@score_data@score_matrix$person_id)[as.numeric(str_extract(variable,"[0-9]+(?=\\])"))],
          date_policy=unique(school_mod@score_data@score_matrix$time_id)[as.numeric(str_extract(variable,"(?<=\\[)[0-9]+"))]) %>% 
@@ -646,47 +693,85 @@ ggsave("school_mod_plot_single.png")
 
 
 rm(school_mod)
+rm(school_time)
+rm(school_time_data)
+rm(school_time_data_scaled)
+rm(school_sum)
+rm(school)
+rm(school_draws)
+
+gc()
 
 # health resources --------------------------------------------------------
 
 hr_mod <- readRDS("coronanet/activity_fit_rwhr_random_walk_run_1.rds")
 
-get_all_discrim <- filter(hr_mod@summary,grepl(x=variable,pattern="reg\\_full"))
+all_mods <- lapply(list.files(path = "coronanet/",
+                              pattern="hr\\_random\\_walk\\_run\\_[0-4].*rds",
+                              full.names=T),readRDS)
+
+all_mods_mat <-  lapply(all_mods, function(c) c@stan_samples$draws())
+
+hr_draws <- do.call(bind_draws, c(all_mods_mat,list(along="chain")))
+
+hr_sum <- summarize_draws(hr_draws,"median","quantile2",posterior::rhat)
+
+all_mods_mat <-  lapply(all_mods, function(c) as_draws_array(c@time_varying))
+
+rm(all_mods)
+
+hr_time <- do.call(bind_draws, c(all_mods_mat,list(along="chain")))
+
+rm(all_mods_mat)
+
+gc()
+
+get_all_discrim <- filter(hr_sum,grepl(x=variable,pattern="reg\\_full"))
 
 get_all_discrim$id <- levels(hr_mod@score_data@score_matrix$item_id)
 
 get_all_discrim$id_rec <- fct_recode(get_all_discrim$id,
-                                     "Higher Ed" = "higher_ed",
-                                     "Oxford School Close" = "ox_school_close",
-                                     "Preschool" = "preschool",
-                                     "Primary School" = "primary_school",
-                                     "Sanitation" = "school_clean",
-                                     "Social Distancing" = "school_distance",
-                                     "Health Monitoring" = "school_health_monitoring",
-                                     "Health Questionnaire" = "school_health_q",
-                                     "Masks" = "school_mask",
-                                     "Maximum Number Students" = "school_num",
-                                     "Other" = "school_other",
-                                     "Provisions for Students" = "school_special_student",
-                                     "Provisions for Teachers" = "school_special_teacher",
-                                     "Temperature Checks" = "school_temp",
-                                     "Only Certain Students" = "school_type_pers",
-                                     "Secondary School" = "secondary_school")
+                                     "Cold Storage" = "hr_cold_storage",
+                                     "Doctors" = "hr_doctors",
+                                     "Pharmaceuticals" = "hr_drugs",
+                                     "Dry Ice" = "hr_dry_ice",
+                                     "Other Facilities" = "hr_facilities",
+                                     "Hospitals" = "hr_hospitals",
+                                     "Health Insurance" = "hr_insurance",
+                                     "Mask Production" = "hr_masks",
+                                     "Nurses" = "hr_nurses",
+                                     "Other Infrastructure" = "hr_other_infra",
+                                     "Other Materials" = "hr_other_mat",
+                                     "Other Staff" = "hr_other_staff",
+                                     "PCR Test Production" = "hr_pcr",
+                                     "PPE" = "hr_ppe",
+                                     "Quarantine Funding" = "hr_quarantine",
+                                     "Sanitizer" = "hr_sanitizer",
+                                     "Syringe Production" = "hr_syringe",
+                                     "Targeted at Staff" = "hr_target_staff",
+                                     "Targeted at Supply" = "hr_target_supply",
+                                     "Test Kits" = "hr_test_kit",
+                                     "General Testing" = "hr_testing",
+                                     "Ventilators" = "hr_ventilator",
+                                     "Recruiting Volunteers" = "hr_volunteers",
+                                     "Oxford Health Investment" = "ox_health_invest")
 
-hr_rhat <- id_plot_rhats(hr_mod) +
-  ggtitle("") +
-  labs(caption="")
+hr_rhat <- hr_sum %>% 
+  ggplot(aes(x=`posterior::rhat`)) +
+  geom_histogram() +
+  theme_tufte() +
+  labs(x="",y="")
 
 saveRDS(hr_rhat,"coronanet/hr_rhat.rds")
 
 hr <- get_all_discrim %>% 
-  ggplot(aes(y=mean,x=reorder(id_rec,mean))) +
-  geom_pointrange(aes(ymin=lower,ymax=upper)) +
+  ggplot(aes(y=median,x=reorder(id_rec,median))) +
+  geom_pointrange(aes(ymin=q5,ymax=q95)) +
   theme_tufte() +
   geom_hline(yintercept=1,linetype=2) +
   coord_flip() +
   labs(x="",y="Level of Discrimination") +
-  ggtitle("Health Monitoring")
+  ggtitle("Health Resources")
 
 hr
 
@@ -694,7 +779,7 @@ saveRDS(hr,"coronanet/hr_discrim_object.rds")
 
 ggsave("hr_discrim.png")
 
-hr_time_data_scaled <- hr_mod@time_varying %>% as_draws_df() %>% 
+hr_time_data_scaled <- hr_time %>% as_draws_df() %>% 
   gather(key="variable",value="estimate",-.chain,-.iteration,-.draw) %>% 
   mutate(estimate=plogis(scale(estimate))*100,
          country=levels(hr_mod@score_data@score_matrix$person_id)[as.numeric(str_extract(variable,"[0-9]+(?=\\])"))],
@@ -705,7 +790,7 @@ hr_time_data_scaled <- hr_mod@time_varying %>% as_draws_df() %>%
             low_est=quantile(estimate,.05),
             sd_est=sd(estimate))
 
-hr_time_data <- hr_mod@time_varying %>% as_draws_df() %>% 
+hr_time_data <- hr_time %>% as_draws_df() %>% 
   gather(key="variable",value="estimate",-.chain,-.iteration,-.draw) %>% 
   mutate(country=levels(hr_mod@score_data@score_matrix$person_id)[as.numeric(str_extract(variable,"[0-9]+(?=\\])"))],
          date_policy=unique(hr_mod@score_data@score_matrix$time_id)[as.numeric(str_extract(variable,"(?<=\\[)[0-9]+"))]) %>% 
@@ -739,7 +824,7 @@ hr_time <- hr_time_data_scaled %>%
             data=sample_plot_dates,check_overlap = T,size=2) +
   theme_tufte() +
   labs(x="",y="Index Score") +
-  ggtitle("Health Monitoring")
+  ggtitle("Health Resources")
 
 hr_time
 
@@ -757,7 +842,7 @@ hr_time_single <- hr_time_data_scaled %>%
             check_overlap = T,size=2) +
   theme_tufte() +
   labs(x="",y="Index Score") +
-  ggtitle("Health Monitoring")
+  ggtitle("Health Resources")
 
 hr_time_single
 
@@ -766,6 +851,14 @@ saveRDS(hr_time_single,"coronanet/hr_plot_single_object.rds")
 ggsave("hr_mod_plot_single.png")
 
 rm(hr_mod)
+rm(hr_time)
+rm(hr_time_data)
+rm(hr_time_data_scaled)
+rm(hr_sum)
+rm(hr)
+rm(hr_draws)
+
+gc()
 
 # combine plots -----------------------------------------------------------
 
