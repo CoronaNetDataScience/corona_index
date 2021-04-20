@@ -116,28 +116,29 @@ restrict_list <- switch(model_type,
   #                #"Nigeria","Egypt","United Arab Emirates",
   #                "Norway","Venezuela")
   
-  to_make <- index_long %>% 
-    filter(item %in% filter_list) %>% 
-    #filter(country %in% countries) %>% 
-           #date_policy<ymd("2020-05-01")) %>% 
-    group_by(item) %>% 
-    mutate(model_id=case_when(item=="ox_health_invest"~9,
-                              grepl(x=item,pattern="ox")~5,
-                              TRUE~9),
-           var_cont=ifelse(model_id>5,pop_out,0)) %>% 
-    group_by(item) %>% 
-    mutate(var=ifelse(model_id==5 & min(var,na.rm=T)==0,var+1,var),
-           min_item=ifelse(model_id==9,min(var_cont,na.rm=T),
-                           min(var,na.rm=T))) %>% 
-    ungroup %>% 
-    mutate(ra_num=as.numeric(scale(ra_num))) %>% 
-    group_by(item) %>% 
-    mutate(var=ifelse(is.na(var) & !grepl(x=item,pattern="ox"),min(var,na.rm=T),var),
-           var_cont=ifelse(is.na(var_cont) & item!="ox_health_invest",min(var_cont,na.rm=T),var_cont),
-           var_cont=ifelse(item=="ox_health_invest",as.numeric(scale(var_cont)),var_cont)) %>% 
-    group_by(country,item,date_policy) %>% 
-    mutate(n_dup=n()) %>% 
-    ungroup
+to_make <- index_long %>% 
+  filter(item %in% filter_list) %>% 
+  #filter(country %in% countries) %>% 
+  #date_policy<ymd("2020-05-01")) %>% 
+  group_by(item) %>% 
+  mutate(model_id=case_when(item=="ox_health_invest"~9,
+                            model_type=="sd" & grepl(x=item,pattern="ox")~5,
+                            grepl(x=item,pattern="ox")~3,
+                            TRUE~9),
+         var_cont=ifelse(model_id>5,pop_out,0)) %>% 
+  group_by(item) %>% 
+  mutate(var=ifelse(model_id %in% c(3,5) & min(var,na.rm=T)==0,var+1,var),
+         min_item=ifelse(model_id==9,min(var_cont,na.rm=T),
+                         min(var,na.rm=T))) %>% 
+  ungroup %>% 
+  mutate(ra_num=as.numeric(scale(ra_num))) %>% 
+  group_by(item) %>% 
+  mutate(var=ifelse(is.na(var) & !grepl(x=item,pattern="ox"),min(var,na.rm=T),var),
+         var_cont=ifelse(is.na(var_cont) & item!="ox_health_invest",min(var_cont,na.rm=T),var_cont),
+         var_cont=ifelse(item=="ox_health_invest",as.numeric(scale(var_cont)),var_cont)) %>% 
+  group_by(country,item,date_policy) %>% 
+  mutate(n_dup=n()) %>% 
+  ungroup
   
   # check for unique values
   
