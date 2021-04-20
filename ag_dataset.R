@@ -17,22 +17,11 @@ require(RPostgres)
 # what type of model to run
 model_type <- Sys.getenv("MODELTYPE")
 
-# load datasets
-
-# con <- dbConnect("PostgreSQL",dbname="master",
-#                  host="niehaususer.ccecwurg6k9l.us-east-2.rds.amazonaws.com",
-#                  user= "corona",
-#                  password="Corona7et")
-
-# download.file("https://www.ecdc.europa.eu/sites/default/files/documents/COVID-19-geographic-disbtribution-worldwide-2020-06-24.xlsx",
-#               "/scratch/rmk7/coronanet/ecdc.xlsx")
-
-ecdc <- read_xlsx("coronanet/ecdc.xlsx")
-
-# load cleaned file
+# load CoronaNet Data in long form
 
 clean <- readRDS("coronanet/coronanet_internal_allvars.RDS")
 
+# number cleaning function
 
 clean_mass <- function(col) {
   
@@ -719,7 +708,7 @@ province_pop <- bind_rows(province_pop,miss_prov) %>%
 
 # merge city and province population data
 
-wb_pop_country <- read_csv("wb_country_pop.csv") %>% 
+wb_pop_country <- read_csv("data/wb_country_pop.csv") %>% 
   select(country="Country Name",
          country_pop="2015 [YR2015]") %>% 
   filter(country_pop!="...") %>% 
@@ -778,27 +767,6 @@ index_long <- group_by(index_long,country,item,date_policy,init_country_level) %
 
 # need to calculate proportions of provinces/cities
 
-# province_data <- read_csv("country_region_clean.csv") %>% 
-#   mutate(Country=recode(Country,
-#                         `United States`="United States of America",
-#                         `Paletsine`="Palestine")) %>% 
-#   gather(key="prov_num",value="province",-ISO2,-Country) %>% 
-#   group_by(Country) %>% 
-#   summarize(n_prov=length(unique(province)))
-# 
-# city_data <- read_csv("world-cities_csv.csv") %>% 
-#   mutate(country=recode(country,
-#                         `United States`="United States of America",
-#                         `Czech Republic`="Czechia",
-#                         Macedonia="North Macedonia",
-#                         `Palestinian Territory`="Palestine",
-#                         Swaziland="Eswatini")) %>% 
-#   group_by(country) %>% 
-#   summarize(n_city=length(unique(geonameid)))
-# 
-# index_long <- left_join(index_long,province_data,by=c("country"="Country")) %>% 
-#   left_join(city_data)
-
 index_long <- mutate(ungroup(index_long),
                      population=case_when(init_country_level=="Municipal"~population/country_pop,
                                           init_country_level=="Provincial"~population/country_pop,
@@ -832,7 +800,7 @@ index_long <- left_join(ungroup(expand_index),
 
 # merge in RA work data
 
-ra_work <- read_csv("certificate.csv") %>% 
+ra_work <- read_csv("data/certificate.csv") %>% 
   mutate(length_work=end-start)
 
 # need to make table with total RAs per country
@@ -856,6 +824,7 @@ index_long <- left_join(index_long,ra_country,by="country")
 index_long <- distinct(index_long)
 
 # add in oxford tracker data
+# github repository for OxCGRT (covid-policy-tracker) must be located in home folder
 
 oxford <- read_csv("~/covid-policy-tracker/data/OxCGRT_latest.csv") %>% 
   filter(Jurisdiction=="NAT_TOTAL") %>% 
