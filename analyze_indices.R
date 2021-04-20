@@ -18,7 +18,27 @@ plot_countries <- c("United States of America","Brazil","China","United Arab Emi
 
 biz_mod <- readRDS("coronanet/activity_fit_rwbiz_random_walk_run_1.rds")
 
-get_all_discrim <- filter(biz_mod@summary,grepl(x=variable,pattern="reg\\_full"))
+all_mods <- lapply(list.files(path = "coronanet/",
+                              pattern="biz\\_random\\_walk\\_run\\_[3-4].*rds",
+                              full.names=T),readRDS)
+
+all_mods_mat <-  lapply(all_mods, function(c) c@stan_samples$draws())
+
+biz_draws <- do.call(bind_draws, c(all_mods_mat,list(along="chain")))
+
+biz_sum <- summarize_draws(biz_draws,"median","quantile2",posterior::rhat)
+
+all_mods_mat <-  lapply(all_mods, function(c) as_draws_array(c@time_varying))
+
+rm(all_mods)
+
+biz_time <- do.call(bind_draws, c(all_mods_mat,list(along="chain")))
+
+rm(all_mods_mat)
+
+gc()
+
+get_all_discrim <- filter(biz_sum,grepl(x=variable,pattern="reg\\_full"))
 
 get_all_discrim$id <- levels(biz_mod@score_data@score_matrix$item_id)
 
@@ -65,15 +85,17 @@ get_all_discrim$id_rec <- fct_recode(get_all_discrim$id,
                                      "Work at Home" = "biz_work_home",
                                      "Oxford Closing Workplaces" = "ox_workplace_close")
 
-biz_rhat <- id_plot_rhats(biz_mod) +
-  ggtitle("") +
-  labs(caption="")
+biz_rhat <- biz_sum %>% 
+  ggplot(aes(x=`posterior::rhat`)) +
+  geom_histogram() +
+  theme_tufte() +
+  labs(x="",y="")
 
 saveRDS(biz_rhat,"coronanet/biz_rhat.rds")
 
 biz <- get_all_discrim %>% 
-  ggplot(aes(y=mean,x=reorder(id_rec,mean))) +
-  geom_pointrange(aes(ymin=lower,ymax=upper)) +
+  ggplot(aes(y=median,x=reorder(id_rec,median))) +
+  geom_pointrange(aes(ymin=q5,ymax=q95)) +
   theme_tufte() +
   geom_hline(yintercept=1,linetype=2) +
   coord_flip() +
@@ -84,9 +106,9 @@ biz
 
 saveRDS(biz,"coronanet/biz_discrim_object.rds")
 
-ggsave("biz_discrim.png")
+ggsave("plots/biz_discrim.png")
 
-biz_time_data_scaled <- biz_mod@time_varying %>% as_draws_df() %>% 
+biz_time_data_scaled <- biz_time %>% as_draws_df() %>% 
   gather(key="variable",value="estimate",-.chain,-.iteration,-.draw) %>% 
   mutate(estimate=plogis(scale(estimate))*100,
          country=levels(biz_mod@score_data@score_matrix$person_id)[as.numeric(str_extract(variable,"[0-9]+(?=\\])"))],
@@ -97,7 +119,7 @@ biz_time_data_scaled <- biz_mod@time_varying %>% as_draws_df() %>%
             low_est=quantile(estimate,.05),
             sd_est=sd(estimate))
 
-biz_time_data <- biz_mod@time_varying %>% as_draws_df() %>% 
+biz_time_data <- biz_time %>% as_draws_df() %>% 
   gather(key="variable",value="estimate",-.chain,-.iteration,-.draw) %>% 
   mutate(country=levels(biz_mod@score_data@score_matrix$person_id)[as.numeric(str_extract(variable,"[0-9]+(?=\\])"))],
          date_policy=unique(biz_mod@score_data@score_matrix$time_id)[as.numeric(str_extract(variable,"(?<=\\[)[0-9]+"))]) %>% 
@@ -144,7 +166,7 @@ biz_time
 
 saveRDS(biz_time,"coronanet/biz_mod_plot_object.rds")
 
-ggsave("biz_mod_plot.png")
+ggsave("plots/biz_mod_plot.png")
 
 biz_time_single <- biz_time_data_scaled %>% 
   filter(country %in% plot_countries) %>% 
@@ -163,7 +185,7 @@ biz_time_single
 
 saveRDS(biz_time_single,"coronanet/biz_mod_plot_single_object.rds")
 
-ggsave("biz_mod_plot_single.png")
+ggsave("plots/biz_mod_plot_single.png")
 
 rm(biz_mod)
 
@@ -230,7 +252,7 @@ mask
 
 saveRDS(mask,"coronanet/mask_discrim_object.rds")
 
-ggsave("mask_discrim.png")
+ggsave("plots/mask_discrim.png")
 
 mask_time_data_scaled <- mask_time %>% as_draws_df() %>% 
   gather(key="variable",value="estimate",-.chain,-.iteration,-.draw) %>% 
@@ -284,7 +306,7 @@ mask_time
 
 saveRDS(mask_time,"coronanet/mask_plot_object.rds")
 
-ggsave("mask_mod_plot.png")
+ggsave("plots/mask_mod_plot.png")
 
 mask_time_single <- mask_time_data_scaled %>% 
   filter(country %in% plot_countries) %>% 
@@ -303,7 +325,7 @@ mask_time_single
 
 saveRDS(mask_time_single,"coronanet/mask_plot_single_object.rds")
 
-ggsave("mask_mod_plot_single.png")
+ggsave("plots/mask_mod_plot_single.png")
 
 rm(mask_mod)
 
@@ -358,7 +380,7 @@ hm2
 
 saveRDS(hm2,"coronanet/hm2_discrim_object.rds")
 
-ggsave("hm2_discrim.png")
+ggsave("plots/hm2_discrim.png")
 
 hm2_time_data_scaled <- hm2_mod@time_varying %>% as_draws_df() %>%
   gather(key="variable",value="estimate",-.chain,-.iteration,-.draw) %>%
@@ -411,7 +433,7 @@ hm2_time
 
 saveRDS(hm2_time,"coronanet/hm2_plot_object.rds")
 
-ggsave("hm2_mod_plot.png")
+ggsave("plots/hm2_mod_plot.png")
 
 hm2_time_single <- hm2_time_data_scaled %>%
   filter(country %in% plot_countries) %>%
@@ -429,7 +451,7 @@ hm2_time_single
 
 saveRDS(hm2_time_single,"coronanet/hm2_plot_single_object.rds")
 
-ggsave("hm2_mod_plot_single.png")
+ggsave("plots/hm2_mod_plot_single.png")
 
 rm(hm2_mod)
 
@@ -489,7 +511,7 @@ sd
 
 saveRDS(sd,"coronanet/sd_discrim_object.rds")
 
-ggsave("sd_discrim.png")
+ggsave("plots/sd_discrim.png")
 
 sd_time_data_scaled <- sd_mod@time_varying %>% as_draws_df() %>% 
   gather(key="variable",value="estimate",-.chain,-.iteration,-.draw) %>% 
@@ -534,7 +556,7 @@ sd_time
 
 saveRDS(sd_time,"coronanet/sd_plot_object.rds")
 
-ggsave("sd_mod_plot.png")
+ggsave("plots/sd_mod_plot.png")
 
 sd_time_single <- sd_time_data_scaled %>% 
   filter(country %in% plot_countries) %>% 
@@ -552,7 +574,7 @@ sd_time_single
 
 saveRDS(sd_time_single,"coronanet/sd_plot_single_object.rds")
 
-ggsave("sd_mod_plot_single.png")
+ggsave("plots/sd_mod_plot_single.png")
 
 rm(sd_mod)
 
@@ -626,7 +648,7 @@ school
 
 saveRDS(school,"coronanet/school_discrim_object.rds")
 
-ggsave("school_discrim.png")
+ggsave("plots/school_discrim.png")
 
 school_time_data_scaled <- school_time %>% as_draws_df %>% 
   gather(key="variable",value="estimate",-.chain,-.iteration,-.draw) %>% 
@@ -671,7 +693,7 @@ school_time
 
 saveRDS(school_time,"coronanet/school_plot_object.rds")
 
-ggsave("school_mod_plot.png")
+ggsave("plots/school_mod_plot.png")
 
 school_time_single <- school_time_data_scaled %>% 
   filter(country %in% plot_countries) %>% 
@@ -689,7 +711,7 @@ school_time_single
 
 saveRDS(school_time_single,"coronanet/school_plot_single_object.rds")
 
-ggsave("school_mod_plot_single.png")
+ggsave("plots/school_mod_plot_single.png")
 
 
 rm(school_mod)
@@ -777,7 +799,7 @@ hr
 
 saveRDS(hr,"coronanet/hr_discrim_object.rds")
 
-ggsave("hr_discrim.png")
+ggsave("plots/hr_discrim.png")
 
 hr_time_data_scaled <- hr_time %>% as_draws_df() %>% 
   gather(key="variable",value="estimate",-.chain,-.iteration,-.draw) %>% 
@@ -830,7 +852,7 @@ hr_time
 
 saveRDS(hr_time,"coronanet/hr_plot_object.rds")
 
-ggsave("hr_mod_plot.png")
+ggsave("plots/hr_mod_plot.png")
 
 hr_time_single <- hr_time_data_scaled %>% 
   filter(country %in% plot_countries) %>% 
@@ -848,7 +870,7 @@ hr_time_single
 
 saveRDS(hr_time_single,"coronanet/hr_plot_single_object.rds")
 
-ggsave("hr_mod_plot_single.png")
+ggsave("plots/hr_mod_plot_single.png")
 
 rm(hr_mod)
 rm(hr_time)
@@ -868,24 +890,24 @@ require(patchwork)
 
 (mask_time + hm2_time + biz_time) / (hr_time + school_time + sd_time)
 
-ggsave("combine_plot.png")
+ggsave("plots/combine_plot.png")
 
 (mask_time_single + hm2_time_single + biz_time_single) / (hr_time_single + school_time_single + sd_time_single)
 
-ggsave("combine_plot_single.png")
+ggsave("plots/combine_plot_single.png")
 
 # and discimrinations
 
 (mask + hm2) / (hr + school)
 
-ggsave("discrim1.png")
+ggsave("plots/discrim1.png")
 
 (sd + biz) 
 
-ggsave("discrim2.png")
+ggsave("plots/discrim2.png")
 
 (mask_rhat + hm2_rhat + biz_rhat) / (hr_rhat + school_rhat + sd_rhat)
 
-ggsave("rhat.png")
+ggsave("plots/rhat.png")
 
 
