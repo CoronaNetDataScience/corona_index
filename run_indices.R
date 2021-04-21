@@ -79,17 +79,17 @@ if(model_type %in% c("ht","hm","hm2","hr")) {
   
   boundary_prior <- list(beta=5)
   
-  max_treedepth <- 12
+  max_treedepth <- 11
   
 } else if(model_type=="mask") {
   
   boundary_prior <- list(beta=20)
   
-  max_treedepth <- 15
+  max_treedepth <- 11
   
 } else {
   
-  max_treedepth <- 12
+  max_treedepth <- 11
   
   boundary_prior <- list(beta=5)
   
@@ -142,17 +142,18 @@ to_make <- index_long %>%
   
   # check for unique values
   
-  un_vals <- group_by(to_make,item) %>% 
-    summarize(n_un=length(unique(var_cont)),
-              model_id=model_id[1])
-  
-  # convert to binary if number of unique values less than 20
-  
-  to_make <- group_by(to_make,item) %>% 
-    mutate(model_id=case_when((item %in% un_vals$item[un_vals$model_id==9 & un_vals$n_un<20]) & max(var)<1.5 ~ 1,
-                                                TRUE~model_id),
-                    var=case_when((item %in% un_vals$item[un_vals$model_id==9 & un_vals$n_un<20])  & max(var)<1.5 ~ round(var),
-                                  TRUE~var))
+un_vals <- group_by(to_make,item) %>% 
+  summarize(n_un=length(unique(var_cont)),
+            n_vals=sum(var>0)/n(),
+            model_id=model_id[1])
+
+# convert to binary if number of unique values less than 20
+
+to_make <- group_by(to_make,item) %>% 
+  mutate(model_id=case_when((item %in% un_vals$item[un_vals$model_id==9 & un_vals$n_vals<.1]) & max(var_cont)<1.5 ~ 1,
+                            TRUE~model_id),
+         var=case_when((item %in% un_vals$item[un_vals$model_id==9 & un_vals$n_vals<.1])  & max(var_cont)<1.5 ~ round(var_cont),
+                       TRUE~var))
   
   # non-zero entries
   
