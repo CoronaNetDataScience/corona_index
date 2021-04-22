@@ -79,17 +79,17 @@ if(model_type %in% c("ht","hm","hm2","hr")) {
   
   boundary_prior <- list(beta=5)
   
-  max_treedepth <- 11
+  max_treedepth <- 12
   
 } else if(model_type=="mask") {
   
-  boundary_prior <- list(beta=20)
+  boundary_prior <- list(beta=5)
   
-  max_treedepth <- 11
+  max_treedepth <- 12
   
 } else {
   
-  max_treedepth <- 11
+  max_treedepth <- 12
   
   boundary_prior <- list(beta=5)
   
