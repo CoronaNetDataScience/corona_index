@@ -142,18 +142,19 @@ to_make <- index_long %>%
   
   # check for unique values
   
-un_vals <- group_by(to_make,item) %>% 
-  summarize(n_un=length(unique(var_cont)),
-            n_vals=sum(var>0)/n(),
-            model_id=model_id[1])
-
-# convert to binary if number of unique values less than 20
-
-to_make <- group_by(to_make,item) %>% 
-  mutate(model_id=case_when((item %in% un_vals$item[un_vals$model_id==9 & un_vals$n_vals<.1]) & max(var_cont)<1.5 ~ 1,
-                            TRUE~model_id),
-         var=case_when((item %in% un_vals$item[un_vals$model_id==9 & un_vals$n_vals<.1])  & max(var_cont)<1.5 ~ round(var_cont),
-                       TRUE~var))
+# un_vals <- group_by(to_make,item) %>% 
+#   summarize(n_un=length(unique(var_cont)),
+#             n_vals=sum(var>0)/n(),
+#             model_id=model_id[1])
+# 
+# # convert to binary if number of unique values less than 20
+# 
+# to_make <- group_by(to_make,item) %>% 
+#   mutate(model_id=case_when((item %in% un_vals$item[un_vals$model_id==9 & un_vals$n_vals<.001]) & max(var_cont)<1.5 ~ 1,
+#                             TRUE~model_id),
+#          var=case_when((item %in% un_vals$item[un_vals$model_id==9 & un_vals$n_vals<.001])  & max(var_cont)<1.5 ~ round(var_cont),
+#                        TRUE~var),
+#          var_cont=ifelse(model_id==9,as.numeric(scale(var_cont)),var_cont))
   
   # non-zero entries
   
@@ -256,12 +257,12 @@ to_make <- group_by(to_make,item) %>%
                               restrict_sd_low=3,
                               map_over_id = "persons",
                               #adapt_delta=0.95,
-                              max_treedepth=max_treedepth,het_var = T,
+                              max_treedepth=max_treedepth,het_var = F,
                               fix_high=1,
                               fix_low=0,
                               restrict_var = (model_type!="mask"),time_center_cutoff = 50,
                               time_sd=.1,
-                              restrict_sd_high=.001,
+                              restrict_sd_high=.01,
                               id_refresh = 100,
                               const_type="items") 
   
