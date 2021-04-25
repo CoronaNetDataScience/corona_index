@@ -13,26 +13,33 @@ plot_countries <- c("United States of America","Brazil","China","United Arab Emi
                     "South Africa","Turkey","Singapore","South Korea",
                     "Australia")
 
+source('apply_draws.R')
+source('summarize_draws_mc.R')
+
 
 # Business ----------------------------------------------------------------
 
 biz_mod <- readRDS("coronanet/activity_fit_rwbiz_random_walk_run_1.rds")
 
 all_mods <- lapply(list.files(path = "coronanet/",
-                              pattern="biz\\_random\\_walk\\_run\\_[3-4].*rds",
+                              pattern="biz\\_random\\_walk\\_run\\_[1-4].*rds",
                               full.names=T),readRDS)
 
 all_mods_mat <-  lapply(all_mods, function(c) c@stan_samples$draws())
 
 biz_draws <- do.call(bind_draws, c(all_mods_mat,list(along="chain")))
 
-biz_sum <- summarize_draws(biz_draws,"median","quantile2",posterior::rhat)
+biz_sum <- summarize_draws_mc(biz_draws,"median","quantile2",posterior::rhat)
 
 all_mods_mat <-  lapply(all_mods, function(c) as_draws_array(c@time_varying))
 
 rm(all_mods)
 
 biz_time <- do.call(bind_draws, c(all_mods_mat,list(along="chain")))
+
+biz_time <- apply_draws(biz_time,FUN=function(c) as.numeric(scale(c)),MARGIN=c(1:2))
+
+sum_time <- summarize_draws_mc(biz_time,"median","quantile2",posterior::rhat)
 
 rm(all_mods_mat)
 
@@ -85,11 +92,14 @@ get_all_discrim$id_rec <- fct_recode(get_all_discrim$id,
                                      "Work at Home" = "biz_work_home",
                                      "Oxford Closing Workplaces" = "ox_workplace_close")
 
-biz_rhat <- biz_sum %>% 
+biz_rhat <- sum_time %>% 
+  #filter(grepl(x=variable,pattern="sigma\\_reg|L\\_tp1")) %>% 
   ggplot(aes(x=`posterior::rhat`)) +
   geom_histogram() +
+  geom_vline(xintercept=1.2,linetype=2,colour="blue") +
   theme_tufte() +
-  labs(x="",y="")
+  labs(x="",y="") +
+  ggtitle("Business Restrictions")
 
 saveRDS(biz_rhat,"coronanet/biz_rhat.rds")
 
@@ -110,7 +120,8 @@ ggsave("plots/biz_discrim.png")
 
 biz_time_data_scaled <- biz_time %>% as_draws_df() %>% 
   gather(key="variable",value="estimate",-.chain,-.iteration,-.draw) %>% 
-  mutate(estimate=plogis(scale(estimate))*100,
+  group_by(.iteration) %>% 
+  mutate(estimate=plogis(estimate)*100,
          country=levels(biz_mod@score_data@score_matrix$person_id)[as.numeric(str_extract(variable,"[0-9]+(?=\\])"))],
          date_policy=unique(biz_mod@score_data@score_matrix$time_id)[as.numeric(str_extract(variable,"(?<=\\[)[0-9]+"))]) %>% 
   group_by(date_policy,country) %>% 
@@ -202,13 +213,17 @@ all_mods_mat <-  lapply(all_mods, function(c) c@stan_samples$draws())
 
 mask_draws <- do.call(bind_draws, c(all_mods_mat,list(along="chain")))
 
-mask_sum <- summarize_draws(mask_draws,"median","quantile2",posterior::rhat)
+mask_sum <- summarize_draws_mc(mask_draws,"median","quantile2",posterior::rhat)
 
 all_mods_mat <-  lapply(all_mods, function(c) as_draws_array(c@time_varying))
 
 rm(all_mods)
 
 mask_time <- do.call(bind_draws, c(all_mods_mat,list(along="chain")))
+
+mask_time <- apply_draws(mask_time,FUN=function(c) as.numeric(scale(c)),MARGIN=c(1:2))
+
+sum_time <- summarize_draws_mc(mask_time,"median","quantile2",posterior::rhat)
 
 rm(all_mods_mat)
 
@@ -231,11 +246,15 @@ get_all_discrim$id_rec <- fct_recode(get_all_discrim$id,
                                      "Oxford Mask" = "ox_mask"
 )
 
-mask_rhat <- mask_sum %>% 
+mask_rhat <- sum_time %>% 
+  #filter(grepl(x=variable,pattern="sigma\\_reg|L\\_tp1")) %>% 
   ggplot(aes(x=`posterior::rhat`)) +
   geom_histogram() +
+  geom_vline(xintercept=1.2,linetype=2,colour="blue") +
   theme_tufte() +
-  labs(x="",y="")
+  labs(x="",y="") +
+  ggtitle("Masks")
+
 
 saveRDS(mask_rhat,"coronanet/mask_rhat.rds")
 
@@ -256,7 +275,8 @@ ggsave("plots/mask_discrim.png")
 
 mask_time_data_scaled <- mask_time %>% as_draws_df() %>% 
   gather(key="variable",value="estimate",-.chain,-.iteration,-.draw) %>% 
-  mutate(estimate=plogis(scale(estimate))*100,
+  group_by(.iteration) %>% 
+  mutate(estimate=plogis(estimate)*100,
          country=levels(mask_mod@score_data@score_matrix$person_id)[as.numeric(str_extract(variable,"[0-9]+(?=\\])"))],
          date_policy=unique(mask_mod@score_data@score_matrix$time_id)[as.numeric(str_extract(variable,"(?<=\\[)[0-9]+"))]) %>% 
   group_by(date_policy,country) %>% 
@@ -330,9 +350,33 @@ ggsave("plots/mask_mod_plot_single.png")
 rm(mask_mod)
 
 
-# Health management -------------------------------------------------------
+# Health monitoring -------------------------------------------------------
 
 hm2_mod <- readRDS("coronanet/activity_fit_rwhm2_random_walk_run_1.rds")
+
+all_mods <- lapply(list.files(path = "coronanet/",
+                              pattern="hm2\\_random\\_walk\\_run\\_[1-4].*rds",
+                              full.names=T),readRDS)
+
+all_mods_mat <-  lapply(all_mods, function(c) c@stan_samples$draws())
+
+hm2_draws <- do.call(bind_draws, c(all_mods_mat,list(along="chain")))
+
+hm2_sum <- summarize_draws_mc(hm2_draws,"median","quantile2",posterior::rhat)
+
+all_mods_mat <-  lapply(all_mods, function(c) as_draws_array(c@time_varying))
+
+rm(all_mods)
+
+hm2_time <- do.call(bind_draws, c(all_mods_mat,list(along="chain")))
+
+hm2_time <- apply_draws(hm2_time,FUN=function(c) as.numeric(scale(c)),MARGIN=c(1:2))
+
+sum_time <- summarize_draws_mc(hm2_time,"median","quantile2",posterior::rhat)
+
+rm(all_mods_mat)
+
+gc()
 
 get_all_discrim <- filter(hm2_mod@summary,grepl(x=variable,pattern="reg\\_full"))
 
@@ -361,9 +405,13 @@ get_all_discrim$id_rec <- fct_recode(get_all_discrim$id,
                                      "Phone Calls" = "hm2_telephone"
 )
 
-hm2_rhat <- id_plot_rhats(hm2_mod) +
-  ggtitle("") +
-  labs(caption="")
+hm2_rhat <- sum_time %>% 
+  ggplot(aes(x=`posterior::rhat`)) +
+  geom_histogram() +
+  geom_vline(xintercept=1.2,linetype=2,colour="blue") +
+  theme_tufte() +
+  labs(x="",y="") +
+  ggtitle("Health Monitoring")
 
 saveRDS(hm2_rhat,"coronanet/hm2_rhat.rds")
 
@@ -382,9 +430,10 @@ saveRDS(hm2,"coronanet/hm2_discrim_object.rds")
 
 ggsave("plots/hm2_discrim.png")
 
-hm2_time_data_scaled <- hm2_mod@time_varying %>% as_draws_df() %>%
+hm2_time_data_scaled <- hm2_time %>% as_draws_df() %>%
   gather(key="variable",value="estimate",-.chain,-.iteration,-.draw) %>%
-  mutate(estimate=plogis(scale(estimate))*100,
+  group_by(.iteration) %>% 
+  mutate(estimate=plogis(estimate)*100,
          country=levels(hm2_mod@score_data@score_matrix$person_id)[as.numeric(str_extract(variable,"[0-9]+(?=\\])"))],
          date_policy=unique(hm2_mod@score_data@score_matrix$time_id)[as.numeric(str_extract(variable,"(?<=\\[)[0-9]+"))]) %>%
   group_by(date_policy,country) %>%
@@ -393,7 +442,7 @@ hm2_time_data_scaled <- hm2_mod@time_varying %>% as_draws_df() %>%
             low_est=quantile(estimate,.05),
             sd_est=sd(estimate))
 
-hm2_time_data <- hm2_mod@time_varying %>% as_draws_df() %>%
+hm2_time_data <- hm2_time %>% as_draws_df() %>%
   gather(key="variable",value="estimate",-.chain,-.iteration,-.draw) %>%
   mutate(country=levels(hm2_mod@score_data@score_matrix$person_id)[as.numeric(str_extract(variable,"[0-9]+(?=\\])"))],
          date_policy=unique(hm2_mod@score_data@score_matrix$time_id)[as.numeric(str_extract(variable,"(?<=\\[)[0-9]+"))]) %>%
@@ -459,7 +508,32 @@ rm(hm2_mod)
 
 sd_mod <- readRDS("coronanet/activity_fit_rwsd_random_walk_run_1.rds")
 
-get_all_discrim <- filter(sd_mod@summary,grepl(x=variable,pattern="reg\\_full"))
+all_mods <- lapply(list.files(path = "coronanet/",
+                              pattern="sd\\_random\\_walk\\_run\\_[1-4].*rds",
+                              full.names=T),readRDS)
+
+all_mods_mat <-  lapply(all_mods, function(c) c@stan_samples$draws())
+
+sd_draws <- do.call(bind_draws, c(all_mods_mat,list(along="chain")))
+
+sd_sum <- summarize_draws_mc(sd_draws,"median","quantile2",posterior::rhat)
+
+all_mods_mat <-  lapply(all_mods, function(c) as_draws_array(c@time_varying))
+
+rm(all_mods)
+
+sd_time <- do.call(bind_draws, c(all_mods_mat,list(along="chain")))
+
+sd_time <- apply_draws(sd_time,FUN=function(c) as.numeric(scale(c)),MARGIN=c(1:2))
+
+sum_time <- summarize_draws_mc(sd_time,"median","quantile2",posterior::rhat)
+
+rm(all_mods_mat)
+
+gc()
+
+get_all_discrim <- filter(sd_sum,grepl(x=variable,pattern="reg\\_full"))
+
 
 get_all_discrim$id <- levels(sd_mod@score_data@score_matrix$item_id)
 
@@ -492,15 +566,19 @@ get_all_discrim$id_rec <- fct_recode(get_all_discrim$id,
                                      "Stay at Home" = "social_distance",
                                      "Distancing in Subways" = "subways")
 
-sd_rhat <- id_plot_rhats(sd_mod) +
-  ggtitle("") +
-  labs(caption="")
+sd_rhat <- sum_time %>% 
+  ggplot(aes(x=`posterior::rhat`)) +
+  geom_histogram() +
+  geom_vline(xintercept=1.2,linetype=2,colour="blue") +
+  theme_tufte() +
+  labs(x="",y="") +
+  ggtitle("Social Distancing")
 
 saveRDS(sd_rhat,"coronanet/sd_rhat.rds")
 
 sd <- get_all_discrim %>% 
-  ggplot(aes(y=mean,x=reorder(id_rec,mean))) +
-  geom_pointrange(aes(ymin=lower,ymax=upper)) +
+  ggplot(aes(y=median,x=reorder(id_rec,median))) +
+  geom_pointrange(aes(ymin=q5,ymax=q95)) +
   theme_tufte() +
   geom_hline(yintercept=1,linetype=2) +
   coord_flip() +
@@ -513,9 +591,10 @@ saveRDS(sd,"coronanet/sd_discrim_object.rds")
 
 ggsave("plots/sd_discrim.png")
 
-sd_time_data_scaled <- sd_mod@time_varying %>% as_draws_df() %>% 
+sd_time_data_scaled <- sd_time %>% as_draws_df() %>% 
   gather(key="variable",value="estimate",-.chain,-.iteration,-.draw) %>% 
-  mutate(estimate=plogis(scale(estimate))*100,
+  group_by(.iteration) %>% 
+  mutate(estimate=plogis(estimate)*100,
          country=levels(sd_mod@score_data@score_matrix$person_id)[as.numeric(str_extract(variable,"[0-9]+(?=\\])"))],
          date_policy=unique(sd_mod@score_data@score_matrix$time_id)[as.numeric(str_extract(variable,"(?<=\\[)[0-9]+"))]) %>% 
   group_by(date_policy,country) %>% 
@@ -524,7 +603,7 @@ sd_time_data_scaled <- sd_mod@time_varying %>% as_draws_df() %>%
             low_est=quantile(estimate,.05),
             sd_est=sd(estimate))
 
-sd_time_data <- sd_mod@time_varying %>% as_draws_df() %>% 
+sd_time_data <- sd_time %>% as_draws_df() %>% 
   gather(key="variable",value="estimate",-.chain,-.iteration,-.draw) %>% 
   mutate(country=levels(sd_mod@score_data@score_matrix$person_id)[as.numeric(str_extract(variable,"[0-9]+(?=\\])"))],
          date_policy=unique(sd_mod@score_data@score_matrix$time_id)[as.numeric(str_extract(variable,"(?<=\\[)[0-9]+"))]) %>% 
@@ -591,13 +670,19 @@ all_mods_mat <-  lapply(all_mods, function(c) c@stan_samples$draws())
 
 school_draws <- do.call(bind_draws, c(all_mods_mat,list(along="chain")))
 
-school_sum <- summarize_draws(school_draws,"median","quantile2",posterior::rhat)
+school_sum <- summarize_draws_mc(school_draws,"median","quantile2",posterior::rhat)
 
-all_mods_mat <-  lapply(all_mods, function(c) as_draws_array(c@time_varying))
+all_mods_mat <-  lapply(all_mods, function(c) as_draws_array(c@time_varying)) 
 
 rm(all_mods)
 
 school_time <- do.call(bind_draws, c(all_mods_mat,list(along="chain")))
+
+# standardize by iteration
+
+school_time <- apply_draws(school_time,FUN=function(c) as.numeric(scale(c)),MARGIN=c(1:2))
+
+sum_time <- summarize_draws_mc(school_time,"median","quantile2",posterior::rhat)
 
 rm(all_mods_mat)
 
@@ -627,11 +712,13 @@ get_all_discrim$id_rec <- fct_recode(get_all_discrim$id,
                                      "Only Certain Students" = "school_type_pers",
                                      "Secondary School" = "secondary_school")
 
-school_rhat <- school_sum %>% 
+school_rhat <- sum_time %>% 
   ggplot(aes(x=`posterior::rhat`)) +
   geom_histogram() +
   theme_tufte() +
-  labs(x="",y="")
+  labs(x="",y="") +
+  ggtitle("School Restrictions")
+
  
 saveRDS(school_rhat,"coronanet/school_rhat.rds")
 
@@ -652,7 +739,8 @@ ggsave("plots/school_discrim.png")
 
 school_time_data_scaled <- school_time %>% as_draws_df %>% 
   gather(key="variable",value="estimate",-.chain,-.iteration,-.draw) %>% 
-  mutate(estimate=plogis(scale(estimate))*100,
+  group_by(.iteration) %>% 
+  mutate(estimate=plogis(estimate)*100,
          country=levels(school_mod@score_data@score_matrix$person_id)[as.numeric(str_extract(variable,"[0-9]+(?=\\])"))],
          date_policy=unique(school_mod@score_data@score_matrix$time_id)[as.numeric(str_extract(variable,"(?<=\\[)[0-9]+"))]) %>% 
   group_by(date_policy,country) %>% 
@@ -736,13 +824,17 @@ all_mods_mat <-  lapply(all_mods, function(c) c@stan_samples$draws())
 
 hr_draws <- do.call(bind_draws, c(all_mods_mat,list(along="chain")))
 
-hr_sum <- summarize_draws(hr_draws,"median","quantile2",posterior::rhat)
+hr_sum <- summarize_draws_mc(hr_draws,"median","quantile2",posterior::rhat)
 
 all_mods_mat <-  lapply(all_mods, function(c) as_draws_array(c@time_varying))
 
 rm(all_mods)
 
 hr_time <- do.call(bind_draws, c(all_mods_mat,list(along="chain")))
+
+school_time <- apply_draws(hr_time,FUN=function(c) as.numeric(scale(c)),MARGIN=c(1:2))
+
+sum_time <- summarize_draws_mc(hr_time,"median","quantile2",posterior::rhat)
 
 rm(all_mods_mat)
 
@@ -778,11 +870,13 @@ get_all_discrim$id_rec <- fct_recode(get_all_discrim$id,
                                      "Recruiting Volunteers" = "hr_volunteers",
                                      "Oxford Health Investment" = "ox_health_invest")
 
-hr_rhat <- hr_sum %>% 
+hr_rhat <- hr_time %>% 
   ggplot(aes(x=`posterior::rhat`)) +
   geom_histogram() +
+  geom_vline(xintercept=1.2,linetype=2,colour="blue") +
   theme_tufte() +
-  labs(x="",y="")
+  labs(x="",y="") +
+  ggtitle("Health Resources")
 
 saveRDS(hr_rhat,"coronanet/hr_rhat.rds")
 
@@ -803,7 +897,8 @@ ggsave("plots/hr_discrim.png")
 
 hr_time_data_scaled <- hr_time %>% as_draws_df() %>% 
   gather(key="variable",value="estimate",-.chain,-.iteration,-.draw) %>% 
-  mutate(estimate=plogis(scale(estimate))*100,
+  group_by(.iteration) %>% 
+  mutate(estimate=plogis(estimate)*100,
          country=levels(hr_mod@score_data@score_matrix$person_id)[as.numeric(str_extract(variable,"[0-9]+(?=\\])"))],
          date_policy=unique(hr_mod@score_data@score_matrix$time_id)[as.numeric(str_extract(variable,"(?<=\\[)[0-9]+"))]) %>% 
   group_by(date_policy,country) %>% 
