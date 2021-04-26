@@ -211,6 +211,7 @@ to_make <- index_long %>%
   
   to_ideal <- to_make %>% 
     anti_join(days_no_change,by="date_policy") %>% 
+    anti_join(no_change,by="country") %>% 
     distinct %>% 
     mutate(var=as.integer(var)) %>% 
     filter(!(country %in% c("Samoa","Solomon Islands","Saint Kitts and Nevis",
@@ -246,9 +247,9 @@ to_make <- index_long %>%
   activity_fit <- to_ideal %>% 
                     id_estimate(vary_ideal_pts=time,
                               ncores=parallel::detectCores(),
-                              nchains=as.numeric(nchains),niters=400,
+                              nchains=as.numeric(nchains),niters=300,
                               save_warmup=TRUE,
-                              warmup=500,grainsize = grainsize,
+                              warmup=250,grainsize = grainsize,
                               boundary_prior=boundary_prior,
                               gpu=FALSE,save_files = "/scratch/rmk7/coronanet_csvs",
                               fixtype="prefix",pos_discrim = F,
@@ -262,7 +263,7 @@ to_make <- index_long %>%
                               fix_low=0,
                               restrict_var = (model_type!="mask"),time_center_cutoff = 50,
                               time_sd=.1,
-                              restrict_sd_high=.01,
+                              restrict_sd_high=.001,
                               id_refresh = 100,
                               const_type="items") 
   
