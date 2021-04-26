@@ -58,7 +58,8 @@ if(compile_data) {
              "ht_cost_partly_free","ht_loc_pharamcy",
              'ht_portal_email','ht_portal_paper','hm_q',
              'ht_portal_app','ht_portal_phone','ht_portal_sms',
-             'hm_tech_qr','ht_cost_free_subset','ht_loc_private')))
+             'hm_tech_qr','ht_cost_free_subset','ht_loc_private'))) %>% 
+      distinct
     
   } else {
     
@@ -67,7 +68,7 @@ if(compile_data) {
                           "biz_health_cert",
                           'allow_ann_event',"event_no_audience",'postpone_rec_event',
                           'prison_pop','hr_cold_storage','hr_dry_ice','hr_pcr','hr_syringe',
-                          'hr_target_staff')))
+                          'hr_target_staff',"school_health_q")))
   }
 
 }
