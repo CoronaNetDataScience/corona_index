@@ -52,11 +52,22 @@ if(compile_data) {
                             filter(readRDS("coronanet/index_long_model_ht.rds"),
                                            item!="ox_test",
                                            !(country %in% c("European Union",
-                                                            "Liechtenstein"))))
+                                                            "Liechtenstein")))) %>% 
+      filter(! (item %in% c("hm_cert","hm_loc_nursing",
+             'hm_tech_bluetooth',"hm_tech_gps",'hm_telephone',
+             "ht_cost_partly_free","ht_loc_pharamcy",
+             'ht_portal_email','ht_portal_paper','hm_q',
+             'ht_portal_app','ht_portal_phone','ht_portal_sms',
+             'hm_tech_qr','ht_cost_free_subset','ht_loc_private')))
     
   } else {
     
-    index_long <- readRDS(paste0("coronanet/index_long_model_",model_type,".rds"))
+    index_long <- readRDS(paste0("coronanet/index_long_model_",model_type,".rds")) %>% 
+      filter(! (item %in% c("biz_takeaway","biz_delivery","biz_health_q",
+                          "biz_health_cert",
+                          'allow_ann_event',"event_no_audience",'postpone_rec_event',
+                          'prison_pop','hr_cold_storage','hr_dry_ice','hr_pcr','hr_syringe',
+                          'hr_target_staff')))
   }
 
 }
@@ -118,8 +129,9 @@ restrict_list <- switch(model_type,
   
 to_make <- index_long %>% 
   filter(item %in% filter_list) %>% 
-  #filter(country %in% countries) %>% 
-  #date_policy<ymd("2020-05-01")) %>% 
+  group_by(country,item) %>% 
+  arrange(country,item,date_policy) %>% 
+  mutate(ox_health_invest=cumsum(ox_health_invest)) %>% 
   group_by(item) %>% 
   mutate(model_id=case_when(item=="ox_health_invest"~9,
                             model_type=="sd" & grepl(x=item,pattern="ox")~5,
@@ -138,8 +150,7 @@ to_make <- index_long %>%
          var_cont=ifelse(item=="ox_health_invest",as.numeric(scale(var_cont)),var_cont)) %>% 
   group_by(country,item,date_policy) %>% 
   mutate(n_dup=n()) %>% 
-  ungroup
-  
+  ungroup  
   # check for unique values
   
 # un_vals <- group_by(to_make,item) %>% 

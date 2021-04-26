@@ -4,7 +4,7 @@ library(dplyr)
 
 obj <- example_draws()
 
-summarize_draws_mc <- function(obj, cores=parallel::detectCores(), ...) {
+summarize_draws_mc <- function(obj,  ...,cores=parallel::detectCores()) {
   
   varlist <- dimnames(obj)$variable
   
