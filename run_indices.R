@@ -114,7 +114,7 @@ restrict_list <- switch(model_type,
                         biz=c("biz_hours","biz_meeting"),
                         ht=c("ht_type_pcr","ht_portal_sms"),
                         hm=c("hm_home_visit","hm_telephone"),
-                        hm2=c("ht_type_pcr","ht_portal_sms"),
+                        hm2=c("ht_type_pcr","ht_loc_clinic"),
                         mask=c("mask_public","mask_transport"),
                         hr=c("hr_ventilator","hr_syringe"),
                         school=c("primary_school","school_clean"))
@@ -132,7 +132,7 @@ to_make <- index_long %>%
   filter(item %in% filter_list) %>% 
   group_by(country,item) %>% 
   arrange(country,item,date_policy) %>% 
-  mutate(ox_health_invest=cumsum(ox_health_invest)) %>% 
+  mutate(pop_out=ifelse(item=="ox_health_invest",cumsum(pop_out),pop_out)) %>% 
   group_by(item) %>% 
   mutate(model_id=case_when(item=="ox_health_invest"~9,
                             model_type=="sd" & grepl(x=item,pattern="ox")~5,
