@@ -132,7 +132,7 @@ if(model_type=="hr") {
   
   # convert health resources to per capita
   
-  wb_pop_country <- read_csv("wb_country_pop.csv") %>% 
+  wb_pop_country <- read_csv("data/wb_country_pop.csv") %>% 
     select(country="Country Name",
            country_pop="2015 [YR2015]") %>% 
     filter(country_pop!="...") %>% 
