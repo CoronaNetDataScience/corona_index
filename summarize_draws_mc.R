@@ -13,9 +13,16 @@ summarize_draws_mc <- function(obj,  ...,cores=parallel::detectCores()) {
   var_break <- floor(length(varlist)/cores)
   var_extra <- length(varlist) %% cores
   
-  var_splits <- c(rep(1:cores,each=var_break),
-                  1:var_extra)
-  
+  if(var_extra>0) {
+    
+    var_splits <- c(rep(1:cores,each=var_break),
+                    1:var_extra)
+    
+  } else {
+    
+    var_splits <- rep(1:cores,each=var_break)
+    
+  }
   
   over_vars <- parallel::mclapply(1:cores, function(c,...){
     
