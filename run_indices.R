@@ -127,6 +127,57 @@ restrict_list <- switch(model_type,
   #                #"Italy","Argentina","Brazil","Russia","United Kingdom",
   #                #"Nigeria","Egypt","United Arab Emirates",
   #                "Norway","Venezuela")
+
+if(model_type="hr") {
+  
+  # convert health resources to per capita
+  
+  wb_pop_country <- read_csv("wb_country_pop.csv") %>% 
+    select(country="Country Name",
+           country_pop="2015 [YR2015]") %>% 
+    filter(country_pop!="...") %>% 
+    mutate(country_pop=as.numeric(country_pop),
+           country=recode(country,
+                          `United States`="United States of America",
+                          `Brunei Darussalam`="Brunei",
+                          `Cabo Verde`="Cape Verde",
+                          `Congo, Dem. Rep.`="Democratic Republic of the Congo",
+                          `Gambia, The`="Gambia",
+                          `Iran, Islamic Rep.`="Iran",
+                          `Korea, Dem. People’s Rep.`="North Korea",
+                          `Czech Republic`="Czechia",
+                          `Russian Federation`="Russia",
+                          `St. Kitts and Nevis`="Saint Kitts and Nevis",
+                          `Korea, Rep.`="South Korea",
+                          `Timor-Leste`="Timor Leste",
+                          `Venezuela, RB`="Venezuela",
+                          `Kyrgyz Republic`="Kyrgyzstan",
+                          `Bahamas, The`="Bahamas",
+                          `Hong Kong SAR, China`="Hong Kong",
+                          `Cote d'Ivoire`="Ivory Coast",
+                          `Lao PDR`="Laos",
+                          `Micronesia, Fed. Sts.`="Micronesia",
+                          `West Bank and Gaza`="Palestine",
+                          `Congo, Rep.`="Republic of the Congo",
+                          `St. Lucia`="Saint Lucia",
+                          `Egypt, Arab Rep.`="Egypt",
+                          `St. Vincent and the Grenadines`="Saint Vincent and the Grenadines",
+                          `Slovak Republic`="Slovakia",
+                          `Syrian Arab Republic`="Syria",
+                          `Yemen, Rep.`="Yemen")) %>% 
+    bind_rows(tibble(country=c("Taiwan","Vatican","Macau","Northern Cyprus"),
+                     country_pop=c(23816775,
+                                   825,
+                                   640445,
+                                   326000)))
+  
+  index_long <- left_join(index_long,wb_pop_country,by="country") %>% 
+    ungroup %>% 
+    mutate(pop_out=ifelse(item=="ox_health_invest",pop_out/scale(country_pop),pop_out))
+  
+}
+
+
   
 to_make <- index_long %>% 
   filter(item %in% filter_list) %>% 
@@ -147,8 +198,8 @@ to_make <- index_long %>%
   mutate(ra_num=as.numeric(scale(ra_num))) %>% 
   group_by(item) %>% 
   mutate(var=ifelse(is.na(var) & !grepl(x=item,pattern="ox"),min(var,na.rm=T),var),
-         var_cont=ifelse(is.na(var_cont) & item!="ox_health_invest",min(var_cont,na.rm=T),var_cont),
-         var_cont=ifelse(item=="ox_health_invest",as.numeric(scale(var_cont)),var_cont)) %>% 
+         var_cont=ifelse(is.na(var_cont) & item!="ox_health_invest",min(var_cont,na.rm=T),var_cont)) %>% 
+         #var_cont=ifelse(item=="ox_health_invest",as.numeric(scale(var_cont)),var_cont)) %>% 
   group_by(country,item,date_policy) %>% 
   mutate(n_dup=n()) %>% 
   ungroup  
