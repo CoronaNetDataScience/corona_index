@@ -128,7 +128,7 @@ restrict_list <- switch(model_type,
   #                #"Nigeria","Egypt","United Arab Emirates",
   #                "Norway","Venezuela")
 
-if(model_type="hr") {
+if(model_type=="hr") {
   
   # convert health resources to per capita
   
