@@ -130,6 +130,8 @@ restrict_list <- switch(model_type,
 
 if(model_type=="hr") {
   
+  require(zoo)
+  
   # convert health resources to per capita
   # need to de-scale oxford first
   
@@ -177,7 +179,9 @@ if(model_type=="hr") {
   index_long <- left_join(index_long,wb_pop_country,by="country") %>% 
     group_by(country,item) %>% 
     arrange(country,item,date_policy) %>% 
-    mutate(pop_out=ifelse(item=="ox_health_invest",cumsum(var),pop_out)) %>% 
+    mutate(invest=ifelse(var>0,1,0),
+      var=ifelse(item=="ox_health_invest" & country=="Seychelles",var*.0076,var),
+      pop_out=ifelse(item=="ox_health_invest",rollapplyr(var, width = 30, FUN = sum, partial = TRUE),pop_out)) %>% 
     ungroup %>% 
     mutate(pop_out=ifelse(item=="ox_health_invest",pop_out/country_pop,pop_out)) %>% 
     group_by(item) %>% 
