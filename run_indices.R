@@ -128,11 +128,12 @@ restrict_list <- switch(model_type,
   #                #"Nigeria","Egypt","United Arab Emirates",
   #                "Norway","Venezuela")
 
-if(model_type="hr") {
+if(model_type=="hr") {
   
   # convert health resources to per capita
+  # need to de-scale oxford first
   
-  wb_pop_country <- read_csv("wb_country_pop.csv") %>% 
+  wb_pop_country <- read_csv("data/wb_country_pop.csv") %>% 
     select(country="Country Name",
            country_pop="2015 [YR2015]") %>% 
     filter(country_pop!="...") %>% 
@@ -165,15 +166,23 @@ if(model_type="hr") {
                           `Slovak Republic`="Slovakia",
                           `Syrian Arab Republic`="Syria",
                           `Yemen, Rep.`="Yemen")) %>% 
-    bind_rows(tibble(country=c("Taiwan","Vatican","Macau","Northern Cyprus"),
+    bind_rows(tibble(country=c("Taiwan","Vatican","Macau","Northern Cyprus","Eritrea"),
                      country_pop=c(23816775,
                                    825,
                                    640445,
-                                   326000)))
+                                   326000,
+                                   3214000))) %>% 
+    filter(!is.na(country_pop))
   
   index_long <- left_join(index_long,wb_pop_country,by="country") %>% 
+    group_by(country,item) %>% 
+    arrange(country,item,date_policy) %>% 
+    mutate(pop_out=ifelse(item=="ox_health_invest",cumsum(var),pop_out)) %>% 
     ungroup %>% 
-    mutate(pop_out=ifelse(item=="ox_health_invest",pop_out/scale(country_pop),pop_out))
+    mutate(pop_out=ifelse(item=="ox_health_invest",pop_out/country_pop,pop_out)) %>% 
+    group_by(item) %>% 
+    mutate(pop_out=as.numeric(scale(pop_out)))
+
   
 }
 
@@ -181,9 +190,6 @@ if(model_type="hr") {
   
 to_make <- index_long %>% 
   filter(item %in% filter_list) %>% 
-  group_by(country,item) %>% 
-  arrange(country,item,date_policy) %>% 
-  mutate(pop_out=ifelse(item=="ox_health_invest",cumsum(pop_out),pop_out)) %>% 
   group_by(item) %>% 
   mutate(model_id=case_when(item=="ox_health_invest"~9,
                             model_type=="sd" & grepl(x=item,pattern="ox")~5,
