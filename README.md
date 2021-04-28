@@ -24,7 +24,7 @@ To identify a particular index, the `INDEX` codes are as follows:
 - `school`: School Restrictions
 - `mask`: Mask Policies
 
-The file `all_indices.csv` has all of the indices appended by row with an additional column `Index` to identify each index.
+The file `all_indices.csv` has all of the indices appended by row with an additional column `Index` to identify each index. If you do not want to bother with the Github repository, you can also download this file in CSV form from [this link]().
 
 ## Indicators
 
