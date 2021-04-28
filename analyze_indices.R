@@ -17,6 +17,11 @@ plot_countries <- c("United States of America","Brazil","China","United Arab Emi
 source('apply_draws.R')
 source('summarize_draws_mc.R')
 
+# whether to load and summarize data (will take some time)
+
+sum_data <- T
+
+if(sum_data) {
 
 # Business ----------------------------------------------------------------
 
@@ -30,7 +35,7 @@ all_mods_mat <-  lapply(all_mods, function(c) c@stan_samples$draws())
 
 biz_draws <- do.call(bind_draws, c(all_mods_mat,list(along="chain")))
 
-biz_sum <- summarize_draws_mc(biz_draws,"median","quantile2",posterior::rhat)
+biz_sum <- summarize_draws_mc(biz_draws,"median","quantile2",posterior::rhat,cores=10)
 
 all_mods_mat <-  lapply(all_mods, function(c) as_draws_array(c@time_varying))
 
@@ -41,7 +46,7 @@ biz_time <- do.call(bind_draws, c(all_mods_mat,list(along="chain"))) %>%
 
 biz_time <- apply_draws(biz_time,FUN=function(c) as.numeric(scale(c)),MARGIN=c(1:2))
 
-sum_time <- summarize_draws_mc(biz_time,"median","quantile2",posterior::rhat)
+sum_time <- summarize_draws_mc(biz_time,"median","quantile2",posterior::rhat,cores=10)
 
 rm(all_mods_mat)
 
@@ -96,9 +101,9 @@ get_all_discrim$id_rec <- fct_recode(get_all_discrim$id,
 
 biz_rhat <- sum_time %>% 
   #filter(grepl(x=variable,pattern="sigma\\_reg|L\\_tp1")) %>% 
-  ggplot(aes(x=`posterior::rhat`)) +
+  ggplot(aes(x=rhat)) +
   geom_histogram() +
-  geom_vline(xintercept=1.2,linetype=2,colour="blue") +
+  geom_vline(xintercept=1.1,linetype=2,colour="blue") +
   theme_tufte() +
   labs(x="",y="") +
   ggtitle("Business Restrictions")
@@ -109,7 +114,7 @@ biz <- get_all_discrim %>%
   ggplot(aes(y=median,x=reorder(id_rec,median))) +
   geom_pointrange(aes(ymin=q5,ymax=q95)) +
   theme_tufte() +
-  geom_hline(yintercept=1,linetype=2) +
+
   coord_flip() +
   labs(x="",y="Level of Discrimination") +
   ggtitle("Business")
@@ -167,13 +172,14 @@ sample_plot_dates <- group_by(biz_time_data_scaled,country) %>%
 biz_time <- biz_time_data_scaled %>% 
   ggplot(aes(y=med_est,x=date_policy)) +
   geom_line(colour="#8DD3C7",aes(group=country)) +
-  geom_ribbon(aes(ymin=low_est,ymax=high_est,group=country),alpha=0.25) +
+  geom_ribbon(aes(ymin=low_est,ymax=high_est,group=country),alpha=0.1) +
   geom_text(aes(label=country),colour="#FFFFB3",fontface="bold",
             data=sample_plot_dates,check_overlap = T,size=2) +
   theme_tufte() +
   labs(x="",y="") +
   ggtitle("Business Restrictions") + 
-  theme(axis.text.x=element_blank())
+  theme(axis.text.x=element_blank(),
+        axis.ticks.x = element_blank())
 
 biz_time
 
@@ -185,14 +191,15 @@ biz_time_single <- biz_time_data_scaled %>%
   filter(country %in% plot_countries) %>% 
   ggplot(aes(y=med_est,x=date_policy)) +
   geom_line(colour="#8DD3C7",aes(group=country)) +
-  geom_ribbon(aes(ymin=low_est,ymax=high_est,group=country),alpha=0.25) +
+  geom_ribbon(aes(ymin=low_est,ymax=high_est,group=country),alpha=0.1) +
   geom_text(aes(label=country),colour="black",fontface="bold",
             data=filter(sample_plot_dates,country %in% plot_countries),
             check_overlap = T,size=2) +
   theme_tufte() +
   labs(x="",y="") +
   ggtitle("Business Restrictions") + 
-  theme(axis.text.x=element_blank())
+  theme(axis.text.x=element_blank(),
+        axis.ticks.x = element_blank())
 
 biz_time_single
 
@@ -215,7 +222,7 @@ all_mods_mat <-  lapply(all_mods, function(c) c@stan_samples$draws())
 
 mask_draws <- do.call(bind_draws, c(all_mods_mat,list(along="chain")))
 
-mask_sum <- summarize_draws_mc(mask_draws,"median","quantile2",posterior::rhat)
+mask_sum <- summarize_draws_mc(mask_draws,"median","quantile2",posterior::rhat,cores=10)
 
 all_mods_mat <-  lapply(all_mods, function(c) as_draws_array(c@time_varying))
 
@@ -226,7 +233,7 @@ mask_time <- do.call(bind_draws, c(all_mods_mat,list(along="chain"))) %>%
 
 mask_time <- apply_draws(mask_time,FUN=function(c) as.numeric(scale(c)),MARGIN=c(1:2))
 
-sum_time <- summarize_draws_mc(mask_time,"median","quantile2",posterior::rhat)
+sum_time <- summarize_draws_mc(mask_time,"median","quantile2",posterior::rhat,cores=10)
 
 rm(all_mods_mat)
 
@@ -253,7 +260,7 @@ mask_rhat <- sum_time %>%
   #filter(grepl(x=variable,pattern="sigma\\_reg|L\\_tp1")) %>%
   ggplot(aes(x=rhat)) +
   geom_histogram() +
-  geom_vline(xintercept=1.2,linetype=2,colour="blue") +
+  geom_vline(xintercept=1.1,linetype=2,colour="blue") +
   theme_tufte() +
   labs(x="",y="") +
   ggtitle("Masks")
@@ -265,7 +272,7 @@ mask <- get_all_discrim %>%
   ggplot(aes(y=median,x=reorder(id_rec,median))) +
   geom_pointrange(aes(ymin=q5,ymax=q95)) +
   theme_tufte() +
-  geom_hline(yintercept=1,linetype=2) +
+
   coord_flip() +
   labs(x="",y="Level of Discrimination") +
   ggtitle("Masks")
@@ -298,6 +305,10 @@ mask_time_data <- mask_time %>% as_draws_df() %>%
             low_est=quantile(estimate,.05),
             sd_est=sd(estimate))
 
+expand_index <- group_by(mask_time_data,country) %>% 
+  expand(date_policy=seq(ymd("2020-01-01"),max(mask_time_data$date_policy),
+                         by="1 day"))
+
 mask_time_data <- left_join(expand_index,mask_time_data,
                            by=c("country","date_policy")) %>%
   fill(med_est,high_est,low_est,sd_est,.direction="downup")
@@ -317,13 +328,14 @@ sample_plot_dates <- group_by(mask_time_data_scaled,country) %>%
 mask_time <- mask_time_data_scaled %>%
   ggplot(aes(y=med_est,x=date_policy)) +
   geom_line(colour="#8DD3C7",aes(group=country)) +
-  geom_ribbon(aes(ymin=low_est,ymax=high_est,group=country),alpha=0.25) +
+  geom_ribbon(aes(ymin=low_est,ymax=high_est,group=country),alpha=0.1) +
   geom_text(aes(label=country),colour="#FFFFB3",fontface="bold",
             data=sample_plot_dates,check_overlap = T,size=2) +
   theme_tufte() +
   labs(x="",y="Index Score") +
   ggtitle("Mask") +
-  theme(axis.text.x=element_blank())
+  theme(axis.text.x=element_blank(),
+        axis.ticks.x = element_blank())
 
 mask_time
 
@@ -335,14 +347,15 @@ mask_time_single <- mask_time_data_scaled %>%
   filter(country %in% plot_countries) %>%
   ggplot(aes(y=med_est,x=date_policy)) +
   geom_line(colour="#8DD3C7",aes(group=country)) +
-  geom_ribbon(aes(ymin=low_est,ymax=high_est,group=country),alpha=0.25) +
+  geom_ribbon(aes(ymin=low_est,ymax=high_est,group=country),alpha=0.1) +
   geom_text(aes(label=country),colour="black",fontface="bold",
             data=filter(sample_plot_dates,country %in% plot_countries),
             check_overlap = T,size=2) +
   theme_tufte() +
   labs(x="",y="Index Score") +
   ggtitle("Mask") +
-  theme(axis.text.x=element_blank())
+  theme(axis.text.x=element_blank(),
+        axis.ticks.x = element_blank())
 
 mask_time_single
 
@@ -355,158 +368,184 @@ rm(mask_mod)
 
 # Health monitoring -------------------------------------------------------
 
-# hm2_mod <- readRDS("coronanet/activity_fit_rwhm2_random_walk_run_1.rds")
-# 
-# all_mods <- lapply(list.files(path = "coronanet/",
-#                               pattern="hm2\\_random\\_walk\\_run\\_[1-4].*rds",
-#                               full.names=T),readRDS)
-# 
-# all_mods_mat <-  lapply(all_mods, function(c) c@stan_samples$draws())
-# 
-# hm2_draws <- do.call(bind_draws, c(all_mods_mat,list(along="chain")))
-# 
-# hm2_sum <- summarize_draws_mc(hm2_draws,"median","quantile2",posterior::rhat)
-# 
-# all_mods_mat <-  lapply(all_mods, function(c) as_draws_array(c@time_varying))
-# 
-# rm(all_mods)
-# 
-# hm2_time <- do.call(bind_draws, c(all_mods_mat,list(along="chain"))) %>% 
-# subset_draws(variable="tp1",regex=T)
-# 
-# hm2_time <- apply_draws(hm2_time,FUN=function(c) as.numeric(scale(c)),MARGIN=c(1:2))
-# 
-# sum_time <- summarize_draws_mc(hm2_time,"median","quantile2",posterior::rhat)
-# 
-# rm(all_mods_mat)
-# 
-# gc()
-# 
-# get_all_discrim <- filter(hm2_mod@summary,grepl(x=variable,pattern="reg\\_full"))
-# 
-# get_all_discrim$id <- levels(hm2_mod@score_data@score_matrix$item_id)
-# 
-# get_all_discrim$id_rec <- fct_recode(get_all_discrim$id,
-#                                      "Certification" = "hm2_cert",
-#                                      "Home Visits" = "hm2_home_visit",
-#                                      "Buses" = "hm2_loc_buses",
-#                                      "Nursing" = "hm2_loc_nursing",
-#                                      "Other Locations" = "hm2_loc_other",
-#                                      "Subway" = "hm2_loc_subway",
-#                                      "Trains" = "hm2_loc_trains",
-#                                      "Other Monitoring" = "hm2_other_mon",
-#                                      "Questionnaires" = "hm2_q",
-#                                      "Other In person" = "hm2_snap_other",
-#                                      "Temperature" = "hm2_snap_temp",
-#                                      "Human Contact Tracing" = "hm2_stra_contact_human",
-#                                      "Mobile Contact Tracing" = "hm2_stra_contact_phone",
-#                                      "Other Tracing" = "hm2_stra_other",
-#                                      "Wearable Tracking" = "hm2_stra_wearable",
-#                                      "Bluetooth Tracking" = "hm2_tech_bluetooth",
-#                                      "GPS Tracking" = "hm2_tech_gps",
-#                                      "QR Codes"="hm2_tech_qr",
-#                                      "Other Tracking" = "hm2_tech_other",
-#                                      "Phone Calls" = "hm2_telephone"
-# )
-# 
-# hm2_rhat <- sum_time %>% 
-#   ggplot(aes(x=`posterior::rhat`)) +
-#   geom_histogram() +
-#   geom_vline(xintercept=1.2,linetype=2,colour="blue") +
-#   theme_tufte() +
-#   labs(x="",y="") +
-#   ggtitle("Health Monitoring")
-# 
-# saveRDS(hm2_rhat,"coronanet/hm2_rhat.rds")
-# 
-# hm2 <- get_all_discrim %>%
-#   ggplot(aes(y=mean,x=reorder(id_rec,mean))) +
-#   geom_pointrange(aes(ymin=lower,ymax=upper)) +
-#   theme_tufte() +
-#   geom_hline(yintercept=1,linetype=2) +
-#   coord_flip() +
-#   labs(x="",y="Level of Discrimination") +
-#   ggtitle("Health Monitoring")
-# 
-# hm2
-# 
-# saveRDS(hm2,"coronanet/hm2_discrim_object.rds")
-# 
-# ggsave("plots/hm2_discrim.png")
-# 
-# hm2_time_data_scaled <- hm2_time %>% as_draws_df() %>%
-#   gather(key="variable",value="estimate",-.chain,-.iteration,-.draw) %>%
-#   group_by(.iteration) %>% 
-#   mutate(estimate=plogis(estimate)*100,
-#          country=levels(hm2_mod@score_data@score_matrix$person_id)[as.numeric(str_extract(variable,"[0-9]+(?=\\])"))],
-#          date_policy=unique(hm2_mod@score_data@score_matrix$time_id)[as.numeric(str_extract(variable,"(?<=\\[)[0-9]+"))]) %>%
-#   group_by(date_policy,country) %>%
-#   summarize(med_est=quantile(estimate,.5),
-#             high_est=quantile(estimate,.95),
-#             low_est=quantile(estimate,.05),
-#             sd_est=sd(estimate))
-# 
-# hm2_time_data <- hm2_time %>% as_draws_df() %>%
-#   gather(key="variable",value="estimate",-.chain,-.iteration,-.draw) %>%
-#   mutate(country=levels(hm2_mod@score_data@score_matrix$person_id)[as.numeric(str_extract(variable,"[0-9]+(?=\\])"))],
-#          date_policy=unique(hm2_mod@score_data@score_matrix$time_id)[as.numeric(str_extract(variable,"(?<=\\[)[0-9]+"))]) %>%
-#   group_by(date_policy,country) %>%
-#   summarize(med_est=quantile(estimate,.5),
-#             high_est=quantile(estimate,.95),
-#             low_est=quantile(estimate,.05),
-#             sd_est=sd(estimate))
-# 
-# hm2_time_data <- left_join(expand_index,hm2_time_data,
-#                            by=c("country","date_policy")) %>%
-#   fill(med_est,high_est,low_est,sd_est,.direction="downup")
-# 
-# hm2_time_data_scaled <- left_join(expand_index,hm2_time_data_scaled,
-#                                   by=c("country","date_policy")) %>%
-#   fill(med_est,high_est,low_est,sd_est,.direction="downup")
-# 
-# saveRDS(hm2_time_data,"indices/hm2_time_data.rds")
-# saveRDS(hm2_time_data_scaled,"indices/hm2_time_data_scaled.rds")
-# write_csv(hm2_time_data,"indices/hm2_time_data.csv")
-# write_csv(hm2_time_data_scaled,"indices/hm2_time_data_scaled.csv")
-# 
-# sample_plot_dates <- group_by(hm2_time_data_scaled,country) %>%
-#   sample_n(1)
-# 
-# hm2_time <- hm2_time_data_scaled %>%
-#   ggplot(aes(y=med_est,x=date_policy)) +
-#   geom_line(colour="#8DD3C7",aes(group=country)) +
-#   geom_ribbon(aes(ymin=low_est,ymax=high_est,group=country),alpha=0.25) +
-#   geom_text(aes(label=country),colour="#FFFFB3",fontface="bold",
-#             data=sample_plot_dates,check_overlap = T,size=2) +
-#   theme_tufte() +
-#   labs(x="",y="Index Score") +
-#   ggtitle("Health Monitoring")
-# 
-# hm2_time
-# 
-# saveRDS(hm2_time,"coronanet/hm2_plot_object.rds")
-# 
-# ggsave("plots/hm2_mod_plot.png")
-# 
-# hm2_time_single <- hm2_time_data_scaled %>%
-#   filter(country %in% plot_countries) %>%
-#   ggplot(aes(y=med_est,x=date_policy)) +
-#   geom_line(colour="#8DD3C7",aes(group=country)) +
-#   geom_ribbon(aes(ymin=low_est,ymax=high_est,group=country),alpha=0.25) +
-#   geom_text(aes(label=country),colour="black",fontface="bold",
-#             data=filter(sample_plot_dates,country %in% plot_countries),
-#             check_overlap = T,size=2) +
-#   theme_tufte() +
-#   labs(x="",y="Index Score") +
-#   ggtitle("Health Monitoring")
-# 
-# hm2_time_single
-# 
-# saveRDS(hm2_time_single,"coronanet/hm2_plot_single_object.rds")
-# 
-# ggsave("plots/hm2_mod_plot_single.png")
-# 
-# rm(hm2_mod)
+hm2_mod <- readRDS("coronanet/activity_fit_rwhm2_random_walk_run_1.rds")
+
+all_mods <- lapply(list.files(path = "coronanet/",
+                              pattern="hm2\\_random\\_walk\\_run\\_[1-4].*rds",
+                              full.names=T),readRDS)
+
+all_mods_mat <-  lapply(all_mods, function(c) c@stan_samples$draws())
+
+hm2_draws <- do.call(bind_draws, c(all_mods_mat,list(along="chain")))
+
+hm2_sum <- summarize_draws_mc(hm2_draws,"median","quantile2",posterior::rhat,cores=10)
+
+all_mods_mat <-  lapply(all_mods, function(c) as_draws_array(c@time_varying))
+
+rm(all_mods)
+
+hm2_time <- do.call(bind_draws, c(all_mods_mat,list(along="chain"))) %>%
+subset_draws(variable="tp1",regex=T)
+
+hm2_time <- apply_draws(hm2_time,FUN=function(c) as.numeric(scale(c)),MARGIN=c(1:2))
+
+sum_time <- summarize_draws_mc(hm2_time,"median","quantile2",posterior::rhat,cores=10)
+
+rm(all_mods_mat)
+
+gc()
+
+get_all_discrim <- filter(hm2_sum,grepl(x=variable,pattern="reg\\_full"))
+
+get_all_discrim$id <- levels(hm2_mod@score_data@score_matrix$item_id)
+
+get_all_discrim$id_rec <- fct_recode(get_all_discrim$id,
+                                     "Certification" = "hm_cert",
+                                     "Home Visits" = "hm_home_visit",
+                                     "Buses" = "hm_loc_buses",
+                                     "Nursing" = "hm_loc_nursing",
+                                     "Other Locations" = "hm_loc_other",
+                                     "Subway" = "hm_loc_subway",
+                                     "Trains" = "hm_loc_trains",
+                                     "Other Monitoring" = "hm_other_mon",
+                                     "Questionnaires" = "hm_q",
+                                     "Other In person" = "hm_snap_other",
+                                     "Temperature" = "hm_snap_temp",
+                                     "Human Contact Tracing" = "hm_stra_contact_human",
+                                     "Mobile Contact Tracing" = "hm_stra_contact_phone",
+                                     "Other Tracing" = "hm_stra_other",
+                                     "Wearable Tracking" = "hm_stra_wearable",
+                                     "Bluetooth Tracking" = "hm_tech_bluetooth",
+                                     "GPS Tracking" = "hm_tech_gps",
+                                     "QR Codes"="hm_tech_qr",
+                                     "Other Tracking" = "hm_tech_other",
+                                     "Phone Calls" = "hm_telephone",
+                                     "Individuals Pay" = "ht_cost_all_pay",
+                                     "Free Tests" = "ht_cost_free_all",
+                                     "Other Cost Policies" = "ht_cost_other",
+                                     "Door to Door Tests" = "ht_door2door",
+                                     "Drive-in Tests" = "ht_drivein",
+                                     "Entire Population" = "ht_entire_pop",
+                                     "Fixed Locations" = "ht_fixed",
+                                     "Testing in Clinics" = "ht_loc_clinic",
+                                     "Testing in Hospitals" = "ht_loc_hospital",
+                                     "Other Test Locations" = "ht_loc_other",
+                                     "Testing in Pharmacies" = "ht_loc_pharmacy",
+                                     "Mobile Testing" = "ht_mobile",
+                                     "Other Testing" = "ht_other",
+                                     "Other Testing Portals" = "ht_portal_other",
+                                     "Antibody Tests" = "ht_type_antibody",
+                                     "Antigen Tests" = "ht_type_antigen",
+                                     "Other Tests" = "ht_type_other",
+                                     "PCR Tests" = "ht_type_pcr",
+                                     "Oxford Tests" = "ox_test"
+)
+
+hm2_rhat <- sum_time %>%
+  ggplot(aes(x=rhat)) +
+  geom_histogram() +
+  geom_vline(xintercept=1.1,linetype=2,colour="blue") +
+  theme_tufte() +
+  labs(x="",y="") +
+  ggtitle("Health Monitoring")
+
+saveRDS(hm2_rhat,"coronanet/hm2_rhat.rds")
+
+hm2 <- get_all_discrim %>%
+  ggplot(aes(y=median,x=reorder(id_rec,median))) +
+  geom_pointrange(aes(ymin=q5,ymax=q95)) +
+  theme_tufte() +
+  coord_flip() +
+  labs(x="",y="Level of Discrimination") +
+  ggtitle("Health Monitoring")
+
+hm2
+
+saveRDS(hm2,"coronanet/hm2_discrim_object.rds")
+
+ggsave("plots/hm2_discrim.png")
+
+hm2_time_data_scaled <- hm2_time %>% as_draws_df() %>%
+  gather(key="variable",value="estimate",-.chain,-.iteration,-.draw) %>%
+  group_by(.iteration) %>%
+  mutate(estimate=plogis(estimate)*100,
+         country=levels(hm2_mod@score_data@score_matrix$person_id)[as.numeric(str_extract(variable,"[0-9]+(?=\\])"))],
+         date_policy=unique(hm2_mod@score_data@score_matrix$time_id)[as.numeric(str_extract(variable,"(?<=\\[)[0-9]+"))]) %>%
+  group_by(date_policy,country) %>%
+  summarize(med_est=quantile(estimate,.5),
+            high_est=quantile(estimate,.95),
+            low_est=quantile(estimate,.05),
+            sd_est=sd(estimate))
+
+hm2_time_data <- hm2_time %>% as_draws_df() %>%
+  gather(key="variable",value="estimate",-.chain,-.iteration,-.draw) %>%
+  mutate(country=levels(hm2_mod@score_data@score_matrix$person_id)[as.numeric(str_extract(variable,"[0-9]+(?=\\])"))],
+         date_policy=unique(hm2_mod@score_data@score_matrix$time_id)[as.numeric(str_extract(variable,"(?<=\\[)[0-9]+"))]) %>%
+  group_by(date_policy,country) %>%
+  summarize(med_est=quantile(estimate,.5),
+            high_est=quantile(estimate,.95),
+            low_est=quantile(estimate,.05),
+            sd_est=sd(estimate))
+
+expand_index <- group_by(hm2_time_data,country) %>% 
+  expand(date_policy=seq(ymd("2020-01-01"),max(hm2_time_data$date_policy),
+                         by="1 day"))
+
+hm2_time_data <- left_join(expand_index,hm2_time_data,
+                           by=c("country","date_policy")) %>%
+  fill(med_est,high_est,low_est,sd_est,.direction="downup")
+
+hm2_time_data_scaled <- left_join(expand_index,hm2_time_data_scaled,
+                                  by=c("country","date_policy")) %>%
+  fill(med_est,high_est,low_est,sd_est,.direction="downup")
+
+saveRDS(hm2_time_data,"indices/hm2_time_data.rds")
+saveRDS(hm2_time_data_scaled,"indices/hm2_time_data_scaled.rds")
+write_csv(hm2_time_data,"indices/hm2_time_data.csv")
+write_csv(hm2_time_data_scaled,"indices/hm2_time_data_scaled.csv")
+
+sample_plot_dates <- group_by(hm2_time_data_scaled,country) %>%
+  sample_n(1)
+
+hm2_time <- hm2_time_data_scaled %>%
+  ggplot(aes(y=med_est,x=date_policy)) +
+  geom_line(colour="#8DD3C7",aes(group=country)) +
+  geom_ribbon(aes(ymin=low_est,ymax=high_est,group=country),alpha=0.1) +
+  geom_text(aes(label=country),colour="#FFFFB3",fontface="bold",
+            data=sample_plot_dates,check_overlap = T,size=2) +
+  theme_tufte() +
+  labs(x="",y="Index Score") +
+  ggtitle("Health Monitoring") +
+  theme(axis.text.x=element_blank(),
+        axis.ticks.x = element_blank())
+
+hm2_time
+
+saveRDS(hm2_time,"coronanet/hm2_plot_object.rds")
+
+ggsave("plots/hm2_mod_plot.png")
+
+hm2_time_single <- hm2_time_data_scaled %>%
+  filter(country %in% plot_countries) %>%
+  ggplot(aes(y=med_est,x=date_policy)) +
+  geom_line(colour="#8DD3C7",aes(group=country)) +
+  geom_ribbon(aes(ymin=low_est,ymax=high_est,group=country),alpha=0.1) +
+  geom_text(aes(label=country),colour="black",fontface="bold",
+            data=filter(sample_plot_dates,country %in% plot_countries),
+            check_overlap = T,size=2) +
+  theme_tufte() +
+  labs(x="",y="Index Score") +
+  ggtitle("Health Monitoring") +
+  theme(axis.text.x=element_blank(),
+        axis.ticks.x = element_blank())
+
+hm2_time_single
+
+saveRDS(hm2_time_single,"coronanet/hm2_plot_single_object.rds")
+
+ggsave("plots/hm2_mod_plot_single.png")
+
+rm(hm2_mod)
 
 # social distance ---------------------------------------------------------
 
@@ -520,7 +559,7 @@ all_mods_mat <-  lapply(all_mods, function(c) c@stan_samples$draws())
 
 sd_draws <- do.call(bind_draws, c(all_mods_mat,list(along="chain")))
 
-sd_sum <- summarize_draws_mc(sd_draws,"median","quantile2",posterior::rhat)
+sd_sum <- summarize_draws_mc(sd_draws,"median","quantile2",posterior::rhat,cores=10)
 
 all_mods_mat <-  lapply(all_mods, function(c) as_draws_array(c@time_varying))
 
@@ -531,7 +570,7 @@ sd_time <- do.call(bind_draws, c(all_mods_mat,list(along="chain"))) %>%
 
 sd_time <- apply_draws(sd_time,FUN=function(c) as.numeric(scale(c)),MARGIN=c(1:2))
 
-sum_time <- summarize_draws_mc(sd_time,"median","quantile2",posterior::rhat)
+sum_time <- summarize_draws_mc(sd_time,"median","quantile2",posterior::rhat,cores=10)
 
 rm(all_mods_mat)
 
@@ -574,7 +613,7 @@ get_all_discrim$id_rec <- fct_recode(get_all_discrim$id,
 sd_rhat <- sum_time %>% 
   ggplot(aes(x=rhat)) +
   geom_histogram() +
-  geom_vline(xintercept=1.2,linetype=2,colour="blue") +
+  geom_vline(xintercept=1.1,linetype=2,colour="blue") +
   theme_tufte() +
   labs(x="",y="") +
   ggtitle("Social Distancing")
@@ -585,7 +624,7 @@ sd <- get_all_discrim %>%
   ggplot(aes(y=median,x=reorder(id_rec,median))) +
   geom_pointrange(aes(ymin=q5,ymax=q95)) +
   theme_tufte() +
-  geom_hline(yintercept=1,linetype=2) +
+
   coord_flip() +
   labs(x="",y="Level of Discrimination") +
   ggtitle("Social Distancing")
@@ -618,6 +657,18 @@ sd_time_data <- sd_time %>% as_draws_df() %>%
             low_est=quantile(estimate,.05),
             sd_est=sd(estimate))
 
+expand_index <- group_by(sd_time_data,country) %>% 
+  expand(date_policy=seq(ymd("2020-01-01"),max(sd_time_data$date_policy),
+                         by="1 day"))
+
+sd_time_data <- left_join(expand_index,sd_time_data,
+                           by=c("country","date_policy")) %>%
+  fill(med_est,high_est,low_est,sd_est,.direction="downup")
+
+sd_time_data_scaled <- left_join(expand_index,sd_time_data_scaled,
+                                  by=c("country","date_policy")) %>%
+  fill(med_est,high_est,low_est,sd_est,.direction="downup")
+
 saveRDS(sd_time_data,"indices/sd_time_data.rds")
 saveRDS(sd_time_data_scaled,"indices/sd_time_data_scaled.rds")
 write_csv(sd_time_data,"indices/sd_time_data.csv")
@@ -629,7 +680,7 @@ sample_plot_dates <- group_by(sd_time_data_scaled,country) %>%
 sd_time <- sd_time_data_scaled %>% 
   ggplot(aes(y=med_est,x=date_policy)) +
   geom_line(colour="#8DD3C7",aes(group=country)) +
-  geom_ribbon(aes(ymin=low_est,ymax=high_est,group=country),alpha=0.25) +
+  geom_ribbon(aes(ymin=low_est,ymax=high_est,group=country),alpha=0.1) +
   geom_text(aes(label=country),colour="#FFFFB3",fontface="bold",
             data=sample_plot_dates,check_overlap = T,size=2) +
   theme_tufte() +
@@ -646,7 +697,7 @@ sd_time_single <- sd_time_data_scaled %>%
   filter(country %in% plot_countries) %>% 
   ggplot(aes(y=med_est,x=date_policy)) +
   geom_line(colour="#8DD3C7",aes(group=country)) +
-  geom_ribbon(aes(ymin=low_est,ymax=high_est,group=country),alpha=0.25) +
+  geom_ribbon(aes(ymin=low_est,ymax=high_est,group=country),alpha=0.1) +
   geom_text(aes(label=country),colour="black",fontface="bold",
             data=filter(sample_plot_dates,country %in% plot_countries),
             check_overlap = T,size=2) +
@@ -675,7 +726,7 @@ all_mods_mat <-  lapply(all_mods, function(c) c@stan_samples$draws())
 
 school_draws <- do.call(bind_draws, c(all_mods_mat,list(along="chain")))
 
-school_sum <- summarize_draws_mc(school_draws,"median","quantile2",posterior::rhat)
+school_sum <- summarize_draws_mc(school_draws,"median","quantile2",posterior::rhat,cores=10)
 
 all_mods_mat <-  lapply(all_mods, function(c) as_draws_array(c@time_varying)) 
 
@@ -688,7 +739,7 @@ school_time <- do.call(bind_draws, c(all_mods_mat,list(along="chain"))) %>%
 
 school_time <- apply_draws(school_time,FUN=function(c) as.numeric(scale(c)),MARGIN=c(1:2))
 
-sum_time <- summarize_draws_mc(school_time,"median","quantile2",posterior::rhat)
+sum_time <- summarize_draws_mc(school_time,"median","quantile2",posterior::rhat,cores=10)
 
 rm(all_mods_mat)
 
@@ -719,9 +770,10 @@ get_all_discrim$id_rec <- fct_recode(get_all_discrim$id,
                                      "Secondary School" = "secondary_school")
 
 school_rhat <- sum_time %>% 
-  ggplot(aes(x=`posterior::rhat`)) +
+  ggplot(aes(x=rhat)) +
   geom_histogram() +
   theme_tufte() +
+  geom_vline(xintercept=1.1,linetype=2,colour="blue") +
   labs(x="",y="") +
   ggtitle("School Restrictions")
 
@@ -732,7 +784,7 @@ school <- get_all_discrim %>%
   ggplot(aes(y=median,x=reorder(id_rec,median))) +
   geom_pointrange(aes(ymin=q5,ymax=q95)) +
   theme_tufte() +
-  geom_hline(yintercept=1,linetype=2) +
+
   coord_flip() +
   labs(x="",y="Level of Discrimination") +
   ggtitle("Schools")
@@ -765,6 +817,18 @@ school_time_data <- school_time %>% as_draws_df %>%
             low_est=quantile(estimate,.05),
             sd_est=sd(estimate))
 
+expand_index <- group_by(school_time_data,country) %>% 
+  expand(date_policy=seq(ymd("2020-01-01"),max(school_time_data$date_policy),
+                         by="1 day"))
+
+school_time_data <- left_join(expand_index,school_time_data,
+                          by=c("country","date_policy")) %>%
+  fill(med_est,high_est,low_est,sd_est,.direction="downup")
+
+school_time_data_scaled <- left_join(expand_index,school_time_data_scaled,
+                                 by=c("country","date_policy")) %>%
+  fill(med_est,high_est,low_est,sd_est,.direction="downup")
+
 saveRDS(school_time_data,"indices/school_time_data.rds")
 saveRDS(school_time_data_scaled,"indices/school_time_data_scaled.rds")
 write_csv(school_time_data,"indices/school_time_data.csv")
@@ -776,7 +840,7 @@ sample_plot_dates <- group_by(school_time_data_scaled,country) %>%
 school_time <- school_time_data_scaled %>% 
   ggplot(aes(y=med_est,x=date_policy)) +
   geom_line(colour="#8DD3C7",aes(group=country)) +
-  geom_ribbon(aes(ymin=low_est,ymax=high_est,group=country),alpha=0.25) +
+  geom_ribbon(aes(ymin=low_est,ymax=high_est,group=country),alpha=0.1) +
   geom_text(aes(label=country),colour="#FFFFB3",fontface="bold",
             data=sample_plot_dates,check_overlap = T,size=2) +
   theme_tufte() +
@@ -793,7 +857,7 @@ school_time_single <- school_time_data_scaled %>%
   filter(country %in% plot_countries) %>% 
   ggplot(aes(y=med_est,x=date_policy)) +
   geom_line(colour="#8DD3C7",aes(group=country)) +
-  geom_ribbon(aes(ymin=low_est,ymax=high_est,group=country),alpha=0.25) +
+  geom_ribbon(aes(ymin=low_est,ymax=high_est,group=country),alpha=0.1) +
   geom_text(aes(label=country),colour="black",fontface="bold",
             data=filter(sample_plot_dates,country %in% plot_countries),
             check_overlap = T,size=2) +
@@ -830,7 +894,7 @@ all_mods_mat <-  lapply(all_mods, function(c) c@stan_samples$draws())
 
 hr_draws <- do.call(bind_draws, c(all_mods_mat,list(along="chain")))
 
-hr_sum <- summarize_draws_mc(hr_draws,"median","quantile2",posterior::rhat)
+hr_sum <- summarize_draws_mc(hr_draws,"median","quantile2",posterior::rhat,cores=10)
 
 all_mods_mat <-  lapply(all_mods, function(c) as_draws_array(c@time_varying))
 
@@ -839,9 +903,9 @@ rm(all_mods)
 hr_time <- do.call(bind_draws, c(all_mods_mat,list(along="chain"))) %>% 
   subset_draws(variable="tp1",regex=T)
 
-school_time <- apply_draws(hr_time,FUN=function(c) as.numeric(scale(c)),MARGIN=c(1:2))
+hr_time <- apply_draws(hr_time,FUN=function(c) as.numeric(scale(c)),MARGIN=c(1:2))
 
-sum_time <- summarize_draws_mc(hr_time,"median","quantile2",posterior::rhat)
+sum_time <- summarize_draws_mc(hr_time,"median","quantile2",posterior::rhat,cores=10)
 
 rm(all_mods_mat)
 
@@ -877,10 +941,10 @@ get_all_discrim$id_rec <- fct_recode(get_all_discrim$id,
                                      "Recruiting Volunteers" = "hr_volunteers",
                                      "Oxford Health Investment" = "ox_health_invest")
 
-hr_rhat <- hr_time %>% 
-  ggplot(aes(x=`posterior::rhat`)) +
+hr_rhat <- sum_time %>% 
+  ggplot(aes(x=rhat)) +
   geom_histogram() +
-  geom_vline(xintercept=1.2,linetype=2,colour="blue") +
+  geom_vline(xintercept=1.1,linetype=2,colour="blue") +
   theme_tufte() +
   labs(x="",y="") +
   ggtitle("Health Resources")
@@ -891,7 +955,7 @@ hr <- get_all_discrim %>%
   ggplot(aes(y=median,x=reorder(id_rec,median))) +
   geom_pointrange(aes(ymin=q5,ymax=q95)) +
   theme_tufte() +
-  geom_hline(yintercept=1,linetype=2) +
+
   coord_flip() +
   labs(x="",y="Level of Discrimination") +
   ggtitle("Health Resources")
@@ -924,6 +988,10 @@ hr_time_data <- hr_time %>% as_draws_df() %>%
             low_est=quantile(estimate,.05),
             sd_est=sd(estimate))
 
+expand_index <- group_by(hr_time_data,country) %>% 
+  expand(date_policy=seq(ymd("2020-01-01"),max(hr_time_data$date_policy),
+                         by="1 day"))
+
 hr_time_data <- left_join(expand_index,hr_time_data,
                            by=c("country","date_policy")) %>% 
   fill(med_est,high_est,low_est,sd_est,.direction="downup")
@@ -943,7 +1011,7 @@ sample_plot_dates <- group_by(hr_time_data_scaled,country) %>%
 hr_time <- hr_time_data_scaled %>% 
   ggplot(aes(y=med_est,x=date_policy)) +
   geom_line(colour="#8DD3C7",aes(group=country)) +
-  geom_ribbon(aes(ymin=low_est,ymax=high_est,group=country),alpha=0.25) +
+  geom_ribbon(aes(ymin=low_est,ymax=high_est,group=country),alpha=0.1) +
   geom_text(aes(label=country),colour="#FFFFB3",fontface="bold",
             data=sample_plot_dates,check_overlap = T,size=2) +
   theme_tufte() +
@@ -960,7 +1028,7 @@ hr_time_single <- hr_time_data_scaled %>%
   filter(country %in% plot_countries) %>% 
   ggplot(aes(y=med_est,x=date_policy)) +
   geom_line(colour="#8DD3C7",aes(group=country)) +
-  geom_ribbon(aes(ymin=low_est,ymax=high_est,group=country),alpha=0.25) +
+  geom_ribbon(aes(ymin=low_est,ymax=high_est,group=country),alpha=0.1) +
   geom_text(aes(label=country),colour="black",fontface="bold",
             data=filter(sample_plot_dates,country %in% plot_countries),
             check_overlap = T,size=2) +
@@ -984,9 +1052,20 @@ rm(hr_draws)
 
 gc()
 
+}
+
 # combine plots -----------------------------------------------------------
 
 require(patchwork)
+
+# load all plots again if they weren't run earlier
+
+mask_time <- readRDS("coronanet/mask_plot_object.rds")
+hm2_time <- readRDS("coronanet/hm2_plot_object.rds")
+biz_time <- readRDS("coronanet/biz_mod_plot_object.rds")
+hr_time <- readRDS("coronanet/hr_plot_object.rds")
+school_time <- readRDS("coronanet/school_plot_object.rds")
+sd_time <- readRDS("coronanet/sd_plot_object.rds")
 
 # first combined all trajectories
 
@@ -994,11 +1073,25 @@ require(patchwork)
 
 ggsave("plots/combine_plot.png")
 
+mask_time_single <- readRDS("coronanet/mask_plot_object.rds")
+hm2_time_single <- readRDS("coronanet/hm2_plot_object.rds")
+biz_time_single <- readRDS("coronanet/biz_mod_plot_object.rds")
+hr_time_single <- readRDS("coronanet/hr_plot_object.rds")
+school_time_single <- readRDS("coronanet/school_plot_object.rds")
+sd_time_single <- readRDS("coronanet/sd_plot_object.rds")
+
 (mask_time_single + hm2_time_single + biz_time_single) / (hr_time_single + school_time_single + sd_time_single)
 
 ggsave("plots/combine_plot_single.png")
 
 # and discimrinations
+
+mask <- readRDS("coronanet/mask_discrim_object.rds")
+hm2 <- readRDS("coronanet/hm2_discrim_object.rds")
+biz <- readRDS("coronanet/biz_discrim_object.rds")
+school <- readRDS("coronanet/school_discrim_object.rds")
+sd <- readRDS("coronanet/sd_discrim_object.rds")
+hr <- readRDS("coronanet/hr_discrim_object.rds")
 
 (mask + hm2) / (hr + school)
 
@@ -1007,6 +1100,13 @@ ggsave("plots/discrim1.png")
 (sd + biz) 
 
 ggsave("plots/discrim2.png")
+
+mask_rhat <- readRDS("coronanet/mask_rhat.rds")
+hm2_rhat <- readRDS("coronanet/hm2_rhat.rds")
+biz_rhat <- readRDS("coronanet/biz_rhat.rds")
+school_rhat <- readRDS("coronanet/school_rhat.rds")
+sd_rhat <- readRDS("coronanet/sd_rhat.rds")
+hr_rhat <- readRDS("coronanet/hr_rhat.rds")
 
 (mask_rhat + hm2_rhat + biz_rhat) / (hr_rhat + school_rhat + sd_rhat)
 
