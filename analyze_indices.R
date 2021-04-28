@@ -1113,3 +1113,5 @@ hr_rhat <- readRDS("coronanet/hr_rhat.rds")
 ggsave("plots/rhat.png")
 
 
+
+

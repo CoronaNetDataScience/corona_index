@@ -59,8 +59,8 @@ tidy.brmsfit <- function(x,...) {
   
 }
 
-load_data <- F
-run_mod <- F
+load_data <- T
+run_mod <- T
 
 # load time-varying estimates
 
@@ -413,4 +413,16 @@ cs_fx %>%
 
 ggsave("cs_fx.png")
 
+# make a combined index file
+
+all_mods_data <- mutate(all_mods_data,
+                        modtype=fct_recode(modtype,`Business Restrictions`="biz",
+                                           `Health Monitoring`='hm2',
+                                           `Health Resources`='hr',
+                                           `Social Distancing`="sd",
+                                           `Mask Policies`="masks",
+                                           `School Restrictions`='school'))
+
+write_csv(all_mods_data,"indices/all_indices.csv")
+saveRDS(all_mods_data,'indices/all_indices.rds')
 
