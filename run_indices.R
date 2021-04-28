@@ -179,7 +179,10 @@ if(model_type=="hr") {
     arrange(country,item,date_policy) %>% 
     mutate(pop_out=ifelse(item=="ox_health_invest",cumsum(var),pop_out)) %>% 
     ungroup %>% 
-    mutate(pop_out=ifelse(item=="ox_health_invest",as.numeric(scale(pop_out/country_pop)),pop_out))
+    mutate(pop_out=ifelse(item=="ox_health_invest",pop_out/country_pop,pop_out)) %>% 
+    group_by(item) %>% 
+    mutate(pop_out=as.numeric(scale(pop_out)))
+
   
 }
 
