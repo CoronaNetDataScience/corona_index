@@ -1086,8 +1086,8 @@ ggsave("plots/combine_plot_single.png")
 
 # and discimrinations
 
-mask <- readRDS("coronanet/mask_discrim_object.rds")
-hm2 <- readRDS("coronanet/hm2_discrim_object.rds")
+mask <- readRDS("coronanet/mask_discrim_object.rds") + ylab("")
+hm2 <- readRDS("coronanet/hm2_discrim_object.rds") + ylab("")
 biz <- readRDS("coronanet/biz_discrim_object.rds")
 school <- readRDS("coronanet/school_discrim_object.rds")
 sd <- readRDS("coronanet/sd_discrim_object.rds")
@@ -1095,16 +1095,18 @@ hr <- readRDS("coronanet/hr_discrim_object.rds")
 
 (mask + hm2) / (hr + school)
 
-ggsave("plots/discrim1.png")
+ggsave("plots/discrim1.png",height=7.5,width=6)
 
 (sd + biz) 
 
-ggsave("plots/discrim2.png")
+ggsave("plots/discrim2.png",scale=1.2)
 
 mask_rhat <- readRDS("coronanet/mask_rhat.rds")
 hm2_rhat <- readRDS("coronanet/hm2_rhat.rds")
 biz_rhat <- readRDS("coronanet/biz_rhat.rds")
-school_rhat <- readRDS("coronanet/school_rhat.rds")
+school_rhat <- readRDS("coronanet/school_rhat.rds") + geom_vline(xintercept=1.1,
+                                                                 linetype=2,
+                                                                 colour="blue")
 sd_rhat <- readRDS("coronanet/sd_rhat.rds")
 hr_rhat <- readRDS("coronanet/hr_rhat.rds")
 
