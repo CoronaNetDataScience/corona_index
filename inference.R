@@ -439,5 +439,7 @@ all_inds_weighted <- all_inds %>%
   ungroup %>% 
   spread(key="item",value="pop_out")
 
+saveRDS(all_inds_weighted, "coronanet/all_inds_weighted.rds")
+write_csv(all_inds_weighted,"coronanet/all_inds_weighted.csv")
 
 

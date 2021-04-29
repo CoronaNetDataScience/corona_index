@@ -8,27 +8,29 @@ Kubinec et al. "Statistically Validated Indices for COVID-19 Public Health Polic
 
 The estimated values for each index are in the `indices` folder. They are available as both R RDS files and as CSV files. The files are of the type `INDEX_time_data` and `INDEX_time_data_scaled`, where the scaled version has a minimum value of 0 and a maximum value of 100, and the unscaled version has the original standardized model estimates. The scaled data are the data type used in the paper linked above. Each file has four columns:
 
-- `med_est`: the posterior median estimate (most likely value)
-- `high_est`: the 95% posterior quantile (upper uncertainty interval)
-- `low_est`: the 5% posterior quantile (the lower uncertainty interval)
-- `sd_est`: the standard deviation of the posterior estimate
+-   `med_est`: the posterior median estimate (most likely value)
+-   `high_est`: the 95% posterior quantile (upper uncertainty interval)
+-   `low_est`: the 5% posterior quantile (the lower uncertainty interval)
+-   `sd_est`: the standard deviation of the posterior estimate
 
-To incorporate measurement uncertainty, it is advisable to estimate models for `med_est`, `high_est`, and `low_est` to see if measurement error affects substantive results. The `sd_est` field can be used to directly incorporate measurement error via errors-in-variables models. 
+To incorporate measurement uncertainty, it is advisable to estimate models for `med_est`, `high_est`, and `low_est` to see if measurement error affects substantive results. The `sd_est` field can be used to directly incorporate measurement error via errors-in-variables models.
 
 To identify a particular index, the `INDEX` codes are as follows:
 
-- `biz`: Business Restrictions
-- `sd`: Social Distancing Policies
-- `hr`: Health Resources
-- `hm2`: Health Monitoring
-- `school`: School Restrictions
-- `mask`: Mask Policies
+-   `biz`: Business Restrictions
+-   `sd`: Social Distancing Policies
+-   `hr`: Health Resources
+-   `hm2`: Health Monitoring
+-   `school`: School Restrictions
+-   `mask`: Mask Policies
 
 The file `all_indices.csv` has all of the indices appended by row with an additional column `Index` to identify each index. If you do not want to bother with the Github repository, you can also download this file in CSV form from [this link]().
 
 ## Indicators
 
 In addition, the original indicators are available in the `coronanet` folder. Each indexes' indicators are in a separate file, `index_long_model_INDEX.rds`, where `INDEX` is a relevant code as in the list above. The files are in long form with one row for each policy - country combination, and the indicators are listed in the `item` column. Each index file also includes all of the Oxford CGRT data used in estimation, along with two additional fields: `man1` - `man3` and `voluntary`, which reflect the level of policy enforcement for CoronaNet data (i.e., `voluntary=1` if the policy did not have mandatory compliance).
+
+If you want to a download a file with all the indicators in wide form (i.e., one row per country per all policies as columns), you can use [this link](https://drive.google.com/uc?id=1lorcowHNnF0Vl6pxBjMdjTC4yPhHBLJI&export=download).
 
 ## R Code
 
