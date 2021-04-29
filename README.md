@@ -4,6 +4,8 @@ This repository hosts code and data necessary to reproduce the results in:
 
 Kubinec et al. "Statistically Validated Indices for COVID-19 Public Health Policies."
 
+For a description of the available data and indices, [please see this blog post](http://www.robertkubinec.com/post/err_in_vars/). For information about the files in this repo (which includes the data along with R code), read on.
+
 ## Indices
 
 The estimated values for each index are in the `indices` folder. They are available as both R RDS files and as CSV files. The files are of the type `INDEX_time_data` and `INDEX_time_data_scaled`, where the scaled version has a minimum value of 0 and a maximum value of 100, and the unscaled version has the original standardized model estimates. The scaled data are the data type used in the paper linked above. Each file has four columns:
@@ -24,7 +26,7 @@ To identify a particular index, the `INDEX` codes are as follows:
 -   `school`: School Restrictions
 -   `mask`: Mask Policies
 
-The file `all_indices.csv` has all of the indices appended by row with an additional column `Index` to identify each index. If you do not want to bother with the Github repository, you can also download this file in CSV form from [this link]().
+The file `all_indices.csv` has all of the indices appended by row with an additional column `Index` to identify each index. If you do not want to bother with the Github repository, you can also download this file in CSV form from [this link](https://drive.google.com/uc?export=download&id=1dMCTVPrf-tJyhv_uxr0yAQO-Elx0QOCG).
 
 ## Indicators
 
