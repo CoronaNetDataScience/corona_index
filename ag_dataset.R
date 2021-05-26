@@ -826,7 +826,7 @@ index_long <- distinct(index_long)
 # add in oxford tracker data
 # github repository for OxCGRT (covid-policy-tracker) must be located in home folder
 
-oxford <- read_csv("~/covid-policy-tracker/data/OxCGRT_latest.csv") %>% 
+oxford <- read_csv("data/OxCGRT_latest.csv") %>% 
   filter(Jurisdiction=="NAT_TOTAL") %>% 
   select(country="CountryName",
          ox_mass_gathering="C4_Restrictions on gatherings",

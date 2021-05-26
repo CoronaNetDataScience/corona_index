@@ -5,10 +5,10 @@ require(dplyr)
 require(readxl)
 require(stringr)
 
-miss_prov <- read_xlsx("need_to_code.xlsx",sheet="need_to_code") %>% 
+miss_prov <- read_xlsx("data/need_to_code.xlsx",sheet="need_to_code") %>% 
   filter(province!="NA")
 
-add_prov <- read_xlsx("need_to_code.xlsx",sheet="to_merge") %>% 
+add_prov <- read_xlsx("data/need_to_code.xlsx",sheet="to_merge") %>% 
   mutate(province=str_remove_all(province,"\\[.*"),
          province=str_trim(province,side="both"))
 

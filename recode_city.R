@@ -2,7 +2,7 @@
 
 require(forcats)
 
-  un_city_data <- read_csv("UNdata_Export_20210401_132806548.csv") %>% 
+  un_city_data <- read_csv("data/UNdata_Export_20210401_132806548.csv") %>% 
     group_by(City,`Country or Area`) %>% 
     filter(Year==max(Year),Sex=="Both Sexes") %>% 
     select(pop="Value",City) %>% 
@@ -15,7 +15,7 @@ require(forcats)
     City_rec=str_remove_all(City_rec," "))
   
   
-  un_city_table <- read_csv("table08.csv") %>% 
+  un_city_table <- read_csv("data/table08.csv") %>% 
     mutate(city2=str_extract(city,"(?<=\\().+(?=\\))|(?<=-).+")) %>% 
     select(city,city2,population) %>% 
     mutate(population=str_remove_all(population,",|\\.\\.\\."),
@@ -37,7 +37,7 @@ require(forcats)
            City_rec2=str_remove_all(City_rec2," "))
   
   
-  oecd_city_data <- read_csv("cities_oecd.csv") %>% 
+  oecd_city_data <- read_csv("data/cities_oecd.csv") %>% 
     group_by(`Metropolitan areas`) %>% 
     filter(Year==max(Year,na.rm=T),VAR=="T_T") %>% 
     mutate(City_rec=str_remove_all(`Metropolitan areas`,"\\(.+\\)|\\.|-"),
