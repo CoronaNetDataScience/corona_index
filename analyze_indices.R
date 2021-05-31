@@ -1073,16 +1073,21 @@ sd_time <- readRDS("coronanet/sd_plot_object.rds")
 
 ggsave("plots/combine_plot.png")
 
-mask_time_single <- readRDS("coronanet/mask_plot_object.rds")
-hm2_time_single <- readRDS("coronanet/hm2_plot_object.rds")
-biz_time_single <- readRDS("coronanet/biz_mod_plot_object.rds")
-hr_time_single <- readRDS("coronanet/hr_plot_object.rds")
-school_time_single <- readRDS("coronanet/school_plot_object.rds")
-sd_time_single <- readRDS("coronanet/sd_plot_object.rds")
+mask_time_single <- readRDS("coronanet/mask_plot_single_object.rds")
+hm2_time_single <- readRDS("coronanet/hm2_plot_single_object.rds")
+biz_time_single <- readRDS("coronanet/biz_mod_plot_single_object.rds")
+hr_time_single <- readRDS("coronanet/hr_plot_single_object.rds")
+school_time_single <- readRDS("coronanet/school_plot_single_object.rds")
+sd_time_single <- readRDS("coronanet/sd_plot_single_object.rds")
 
 (mask_time_single + hm2_time_single + biz_time_single) / (hr_time_single + school_time_single + sd_time_single)
 
-ggsave("plots/combine_plot_single.png")
+ggsave("plots/combine_plot_single.png",scale=1.2)
+
+(mask_time_single + hm2_time_single + biz_time_single) / (hr_time_single + school_time_single + sd_time_single) +
+  plot_annotation(title="Index Values for a Subset of Countries",
+                  subtitle="Green lines are posterior median estimates with 5% - 95% uncertainty intervals.")
+ggsave("plots/combine_plot_single_twitter.png",scale=1.2)
 
 # and discimrinations
 

@@ -291,7 +291,7 @@ to_make <- index_long %>%
                             "Liechtenstein","Montenegro","Northern Cyprus",
                             "North Macedonia","Nauru","Equatorial Guinea",
                             "Luxembourg","Malta","North Korea")),
-           date_policy < ymd("2021-01-15"),
+           date_policy < ymd("2021-04-30"),
            !(item %in% c("allow_ann_event","postpone_rec_event","mask_preschool"))) %>% 
     distinct %>% 
             id_make(

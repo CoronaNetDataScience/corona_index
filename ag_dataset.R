@@ -14,12 +14,9 @@ require(RPostgres)
 
 # setup -------------------------------------------------------------------
 
-# what type of model to run
-model_type <- Sys.getenv("MODELTYPE")
-
 # load CoronaNet Data in long form
 
-clean <- readRDS("coronanet/coronanet_internal_allvars.RDS")
+clean <- readRDS("data/coronanet_internal_allvars.RDS")
 
 # number cleaning function
 
