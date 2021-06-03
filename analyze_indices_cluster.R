@@ -25,9 +25,9 @@ if(sum_data) {
 
 # Business ----------------------------------------------------------------
 
-biz_mod <- readRDS("coronanet/from_cluster/activity_fit_rwbiz_random_walk_run_4.rds")
+biz_mod <- readRDS("/scratch/rmk7/coronanet/activity_fit_rwbiz_random_walk_run_4.rds")
 
-all_mods <- lapply(list.files(path = "coronanet/from_cluster/",
+all_mods <- lapply(list.files(path = "/scratch/rmk7/coronanet/",
                               pattern="biz\\_random\\_walk\\_run\\_[1-4].*rds",
                               full.names=T),readRDS)
 
@@ -35,7 +35,7 @@ all_mods_mat <-  lapply(all_mods, function(c) c@stan_samples$draws())
 
 biz_draws <- do.call(bind_draws, c(all_mods_mat,list(along="chain")))
 
-biz_sum <- summarize_draws_mc(biz_draws,"median","quantile2",posterior::rhat,cores=2)
+biz_sum <- summarize_draws_mc(biz_draws,"median","quantile2",posterior::rhat,cores=20)
 
 all_mods_mat <-  lapply(all_mods, function(c) as_draws_array(c@time_varying))
 
@@ -46,7 +46,7 @@ biz_time <- do.call(bind_draws, c(all_mods_mat,list(along="chain"))) %>%
 
 biz_time <- apply_draws(biz_time,FUN=function(c) as.numeric(scale(c)),MARGIN=c(1:2))
 
-sum_time <- summarize_draws_mc(biz_time,"median","quantile2",posterior::rhat,cores=2)
+sum_time <- summarize_draws_mc(biz_time,"median","quantile2",posterior::rhat,cores=20)
 
 rm(all_mods_mat)
 
@@ -123,7 +123,7 @@ biz
 
 saveRDS(biz,"coronanet/biz_discrim_object.rds")
 
-ggsave("plots/biz_discrim.png")
+ggsave("plots/biz_discrim.pdf")
 
 biz_time_data_scaled <- biz_time %>% as_draws_df() %>% 
   gather(key="variable",value="estimate",-.chain,-.iteration,-.draw) %>% 
@@ -185,7 +185,7 @@ biz_time
 
 saveRDS(biz_time,"coronanet/biz_mod_plot_object.rds")
 
-ggsave("plots/biz_mod_plot.png")
+ggsave("plots/biz_mod_plot.pdf")
 
 biz_time_single <- biz_time_data_scaled %>% 
   filter(country %in% plot_countries) %>% 
@@ -205,16 +205,16 @@ biz_time_single
 
 saveRDS(biz_time_single,"coronanet/biz_mod_plot_single_object.rds")
 
-ggsave("plots/biz_mod_plot_single.png")
+ggsave("plots/biz_mod_plot_single.pdf")
 
 rm(biz_mod)
 
 
 # Mask --------------------------------------------------------------------
 
-mask_mod <- readRDS("coronanet/from_cluster/activity_fit_rwmask_random_walk_run_4.rds")
+mask_mod <- readRDS("/scratch/rmk7/coronanet/activity_fit_rwmask_random_walk_run_4.rds")
 
-all_mods <- lapply(list.files(path = "coronanet/from_cluster/",
+all_mods <- lapply(list.files(path = "/scratch/rmk7/coronanet/",
                               pattern="mask\\_random\\_walk\\_run\\_[0-4].*rds",
                               full.names=T),readRDS)
 
@@ -222,7 +222,7 @@ all_mods_mat <-  lapply(all_mods, function(c) c@stan_samples$draws())
 
 mask_draws <- do.call(bind_draws, c(all_mods_mat,list(along="chain")))
 
-mask_sum <- summarize_draws_mc(mask_draws,"median","quantile2",posterior::rhat,cores=2)
+mask_sum <- summarize_draws_mc(mask_draws,"median","quantile2",posterior::rhat,cores=20)
 
 all_mods_mat <-  lapply(all_mods, function(c) as_draws_array(c@time_varying))
 
@@ -233,7 +233,7 @@ mask_time <- do.call(bind_draws, c(all_mods_mat,list(along="chain"))) %>%
 
 mask_time <- apply_draws(mask_time,FUN=function(c) as.numeric(scale(c)),MARGIN=c(1:2))
 
-sum_time <- summarize_draws_mc(mask_time,"median","quantile2",posterior::rhat,cores=2)
+sum_time <- summarize_draws_mc(mask_time,"median","quantile2",posterior::rhat,cores=20)
 
 rm(all_mods_mat)
 
@@ -281,7 +281,7 @@ mask
 
 saveRDS(mask,"coronanet/mask_discrim_object.rds")
 
-ggsave("plots/mask_discrim.png")
+ggsave("plots/mask_discrim.pdf")
 
 mask_time_data_scaled <- mask_time %>% as_draws_df() %>%
   gather(key="variable",value="estimate",-.chain,-.iteration,-.draw) %>%
@@ -341,7 +341,7 @@ mask_time
 
 saveRDS(mask_time,"coronanet/mask_plot_object.rds")
 
-ggsave("plots/mask_mod_plot.png")
+ggsave("plots/mask_mod_plot.pdf")
 
 mask_time_single <- mask_time_data_scaled %>%
   filter(country %in% plot_countries) %>%
@@ -361,16 +361,16 @@ mask_time_single
 
 saveRDS(mask_time_single,"coronanet/mask_plot_single_object.rds")
 
-ggsave("plots/mask_mod_plot_single.png")
+ggsave("plots/mask_mod_plot_single.pdf")
 
 rm(mask_mod)
 
 
 # Health monitoring -------------------------------------------------------
 
-hm2_mod <- readRDS("coronanet/from_cluster/activity_fit_rwhm2_random_walk_run_4.rds")
+hm2_mod <- readRDS("/scratch/rmk7/coronanet/activity_fit_rwhm2_random_walk_run_4.rds")
 
-all_mods <- lapply(list.files(path = "coronanet/from_cluster/",
+all_mods <- lapply(list.files(path = "/scratch/rmk7/coronanet/",
                               pattern="hm2\\_random\\_walk\\_run\\_[1-4].*rds",
                               full.names=T),readRDS)
 
@@ -378,7 +378,7 @@ all_mods_mat <-  lapply(all_mods, function(c) c@stan_samples$draws())
 
 hm2_draws <- do.call(bind_draws, c(all_mods_mat,list(along="chain")))
 
-hm2_sum <- summarize_draws_mc(hm2_draws,"median","quantile2",posterior::rhat,cores=2)
+hm2_sum <- summarize_draws_mc(hm2_draws,"median","quantile2",posterior::rhat,cores=20)
 
 all_mods_mat <-  lapply(all_mods, function(c) as_draws_array(c@time_varying))
 
@@ -389,7 +389,7 @@ subset_draws(variable="tp1",regex=T)
 
 hm2_time <- apply_draws(hm2_time,FUN=function(c) as.numeric(scale(c)),MARGIN=c(1:2))
 
-sum_time <- summarize_draws_mc(hm2_time,"median","quantile2",posterior::rhat,cores=2)
+sum_time <- summarize_draws_mc(hm2_time,"median","quantile2",posterior::rhat,cores=20)
 
 rm(all_mods_mat)
 
@@ -463,7 +463,7 @@ hm2
 
 saveRDS(hm2,"coronanet/hm2_discrim_object.rds")
 
-ggsave("plots/hm2_discrim.png")
+ggsave("plots/hm2_discrim.pdf")
 
 hm2_time_data_scaled <- hm2_time %>% as_draws_df() %>%
   gather(key="variable",value="estimate",-.chain,-.iteration,-.draw) %>%
@@ -523,7 +523,7 @@ hm2_time
 
 saveRDS(hm2_time,"coronanet/hm2_plot_object.rds")
 
-ggsave("plots/hm2_mod_plot.png")
+ggsave("plots/hm2_mod_plot.pdf")
 
 hm2_time_single <- hm2_time_data_scaled %>%
   filter(country %in% plot_countries) %>%
@@ -543,15 +543,15 @@ hm2_time_single
 
 saveRDS(hm2_time_single,"coronanet/hm2_plot_single_object.rds")
 
-ggsave("plots/hm2_mod_plot_single.png")
+ggsave("plots/hm2_mod_plot_single.pdf")
 
 rm(hm2_mod)
 
 # social distance ---------------------------------------------------------
 
-sd_mod <- readRDS("coronanet/from_cluster/activity_fit_rwsd_random_walk_run_4.rds")
+sd_mod <- readRDS("/scratch/rmk7/coronanet/activity_fit_rwsd_random_walk_run_4.rds")
 
-all_mods <- lapply(list.files(path = "coronanet/from_cluster/",
+all_mods <- lapply(list.files(path = "/scratch/rmk7/coronanet/",
                               pattern="sd\\_random\\_walk\\_run\\_[1-4].*rds",
                               full.names=T),readRDS)
 
@@ -559,7 +559,7 @@ all_mods_mat <-  lapply(all_mods, function(c) c@stan_samples$draws())
 
 sd_draws <- do.call(bind_draws, c(all_mods_mat,list(along="chain")))
 
-sd_sum <- summarize_draws_mc(sd_draws,"median","quantile2",posterior::rhat,cores=2)
+sd_sum <- summarize_draws_mc(sd_draws,"median","quantile2",posterior::rhat,cores=20)
 
 all_mods_mat <-  lapply(all_mods, function(c) as_draws_array(c@time_varying))
 
@@ -570,7 +570,7 @@ sd_time <- do.call(bind_draws, c(all_mods_mat,list(along="chain"))) %>%
 
 sd_time <- apply_draws(sd_time,FUN=function(c) as.numeric(scale(c)),MARGIN=c(1:2))
 
-sum_time <- summarize_draws_mc(sd_time,"median","quantile2",posterior::rhat,cores=2)
+sum_time <- summarize_draws_mc(sd_time,"median","quantile2",posterior::rhat,cores=20)
 
 rm(all_mods_mat)
 
@@ -633,7 +633,7 @@ sd
 
 saveRDS(sd,"coronanet/sd_discrim_object.rds")
 
-ggsave("plots/sd_discrim.png")
+ggsave("plots/sd_discrim.pdf")
 
 sd_time_data_scaled <- sd_time %>% as_draws_df() %>% 
   gather(key="variable",value="estimate",-.chain,-.iteration,-.draw) %>% 
@@ -691,7 +691,7 @@ sd_time
 
 saveRDS(sd_time,"coronanet/sd_plot_object.rds")
 
-ggsave("plots/sd_mod_plot.png")
+ggsave("plots/sd_mod_plot.pdf")
 
 sd_time_single <- sd_time_data_scaled %>% 
   filter(country %in% plot_countries) %>% 
@@ -709,16 +709,16 @@ sd_time_single
 
 saveRDS(sd_time_single,"coronanet/sd_plot_single_object.rds")
 
-ggsave("plots/sd_mod_plot_single.png")
+ggsave("plots/sd_mod_plot_single.pdf")
 
 rm(sd_mod)
 
 
 # schools -----------------------------------------------------------------
 
-school_mod <- readRDS("coronanet/from_cluster/activity_fit_rwschool_random_walk_run_4.rds")
+school_mod <- readRDS("/scratch/rmk7/coronanet/activity_fit_rwschool_random_walk_run_4.rds")
 
-all_mods <- lapply(list.files(path = "coronanet/from_cluster/",
+all_mods <- lapply(list.files(path = "/scratch/rmk7/coronanet/",
                               pattern="school\\_random\\_walk\\_run\\_[0-4].*rds",
                               full.names=T),readRDS)
 
@@ -726,7 +726,7 @@ all_mods_mat <-  lapply(all_mods, function(c) c@stan_samples$draws())
 
 school_draws <- do.call(bind_draws, c(all_mods_mat,list(along="chain")))
 
-school_sum <- summarize_draws_mc(school_draws,"median","quantile2",posterior::rhat,cores=2)
+school_sum <- summarize_draws_mc(school_draws,"median","quantile2",posterior::rhat,cores=20)
 
 all_mods_mat <-  lapply(all_mods, function(c) as_draws_array(c@time_varying)) 
 
@@ -739,7 +739,7 @@ school_time <- do.call(bind_draws, c(all_mods_mat,list(along="chain"))) %>%
 
 school_time <- apply_draws(school_time,FUN=function(c) as.numeric(scale(c)),MARGIN=c(1:2))
 
-sum_time <- summarize_draws_mc(school_time,"median","quantile2",posterior::rhat,cores=2)
+sum_time <- summarize_draws_mc(school_time,"median","quantile2",posterior::rhat,cores=20)
 
 rm(all_mods_mat)
 
@@ -793,7 +793,7 @@ school
 
 saveRDS(school,"coronanet/school_discrim_object.rds")
 
-ggsave("plots/school_discrim.png")
+ggsave("plots/school_discrim.pdf")
 
 school_time_data_scaled <- school_time %>% as_draws_df %>% 
   gather(key="variable",value="estimate",-.chain,-.iteration,-.draw) %>% 
@@ -851,7 +851,7 @@ school_time
 
 saveRDS(school_time,"coronanet/school_plot_object.rds")
 
-ggsave("plots/school_mod_plot.png")
+ggsave("plots/school_mod_plot.pdf")
 
 school_time_single <- school_time_data_scaled %>% 
   filter(country %in% plot_countries) %>% 
@@ -869,7 +869,7 @@ school_time_single
 
 saveRDS(school_time_single,"coronanet/school_plot_single_object.rds")
 
-ggsave("plots/school_mod_plot_single.png")
+ggsave("plots/school_mod_plot_single.pdf")
 
 
 rm(school_mod)
@@ -884,9 +884,9 @@ gc()
 
 # health resources --------------------------------------------------------
 
-hr_mod <- readRDS("coronanet/from_cluster/activity_fit_rwhr_random_walk_run_4.rds")
+hr_mod <- readRDS("/scratch/rmk7/coronanet/activity_fit_rwhr_random_walk_run_4.rds")
 
-all_mods <- lapply(list.files(path = "coronanet/from_cluster/",
+all_mods <- lapply(list.files(path = "/scratch/rmk7/coronanet/",
                               pattern="hr\\_random\\_walk\\_run\\_[0-4].*rds",
                               full.names=T),readRDS)
 
@@ -894,7 +894,7 @@ all_mods_mat <-  lapply(all_mods, function(c) c@stan_samples$draws())
 
 hr_draws <- do.call(bind_draws, c(all_mods_mat,list(along="chain")))
 
-hr_sum <- summarize_draws_mc(hr_draws,"median","quantile2",posterior::rhat,cores=2)
+hr_sum <- summarize_draws_mc(hr_draws,"median","quantile2",posterior::rhat,cores=20)
 
 all_mods_mat <-  lapply(all_mods, function(c) as_draws_array(c@time_varying))
 
@@ -905,7 +905,7 @@ hr_time <- do.call(bind_draws, c(all_mods_mat,list(along="chain"))) %>%
 
 hr_time <- apply_draws(hr_time,FUN=function(c) as.numeric(scale(c)),MARGIN=c(1:2))
 
-sum_time <- summarize_draws_mc(hr_time,"median","quantile2",posterior::rhat,cores=2)
+sum_time <- summarize_draws_mc(hr_time,"median","quantile2",posterior::rhat,cores=20)
 
 rm(all_mods_mat)
 
@@ -964,7 +964,7 @@ hr
 
 saveRDS(hr,"coronanet/hr_discrim_object.rds")
 
-ggsave("plots/hr_discrim.png")
+ggsave("plots/hr_discrim.pdf")
 
 hr_time_data_scaled <- hr_time %>% as_draws_df() %>% 
   gather(key="variable",value="estimate",-.chain,-.iteration,-.draw) %>% 
@@ -1022,7 +1022,7 @@ hr_time
 
 saveRDS(hr_time,"coronanet/hr_plot_object.rds")
 
-ggsave("plots/hr_mod_plot.png")
+ggsave("plots/hr_mod_plot.pdf")
 
 hr_time_single <- hr_time_data_scaled %>% 
   filter(country %in% plot_countries) %>% 
@@ -1040,7 +1040,7 @@ hr_time_single
 
 saveRDS(hr_time_single,"coronanet/hr_plot_single_object.rds")
 
-ggsave("plots/hr_mod_plot_single.png")
+ggsave("plots/hr_mod_plot_single.pdf")
 
 rm(hr_mod)
 rm(hr_time)
@@ -1060,64 +1060,64 @@ require(patchwork)
 
 # load all plots again if they weren't run earlier
 
-mask_time <- readRDS("coronanet/from_cluster/mask_plot_object.rds")
-hm2_time <- readRDS("coronanet/from_cluster/hm2_plot_object.rds")
-biz_time <- readRDS("coronanet/from_cluster/biz_mod_plot_object.rds")
-hr_time <- readRDS("coronanet/from_cluster/hr_plot_object.rds")
-school_time <- readRDS("coronanet/from_cluster/school_plot_object.rds")
-sd_time <- readRDS("coronanet/from_cluster/sd_plot_object.rds")
+mask_time <- readRDS("coronanet/mask_plot_object.rds")
+hm2_time <- readRDS("coronanet/hm2_plot_object.rds")
+biz_time <- readRDS("coronanet/biz_mod_plot_object.rds")
+hr_time <- readRDS("coronanet/hr_plot_object.rds")
+school_time <- readRDS("coronanet/school_plot_object.rds")
+sd_time <- readRDS("coronanet/sd_plot_object.rds")
 
 # first combined all trajectories
 
 (mask_time + hm2_time + biz_time) / (hr_time + school_time + sd_time)
 
-ggsave("plots/combine_plot.png")
+ggsave("plots/combine_plot.pdf")
 
-mask_time_single <- readRDS("coronanet/from_cluster/mask_plot_single_object.rds")
-hm2_time_single <- readRDS("coronanet/from_cluster/hm2_plot_single_object.rds")
-biz_time_single <- readRDS("coronanet/from_cluster/biz_mod_plot_single_object.rds")
-hr_time_single <- readRDS("coronanet/from_cluster/hr_plot_single_object.rds")
-school_time_single <- readRDS("coronanet/from_cluster/school_plot_single_object.rds")
-sd_time_single <- readRDS("coronanet/from_cluster/sd_plot_single_object.rds")
+mask_time_single <- readRDS("coronanet/mask_plot_single_object.rds")
+hm2_time_single <- readRDS("coronanet/hm2_plot_single_object.rds")
+biz_time_single <- readRDS("coronanet/biz_mod_plot_single_object.rds")
+hr_time_single <- readRDS("coronanet/hr_plot_single_object.rds")
+school_time_single <- readRDS("coronanet/school_plot_single_object.rds")
+sd_time_single <- readRDS("coronanet/sd_plot_single_object.rds")
 
 (mask_time_single + hm2_time_single + biz_time_single) / (hr_time_single + school_time_single + sd_time_single)
 
-ggsave("plots/combine_plot_single.png",scale=1.2)
+ggsave("plots/combine_plot_single.pdf",scale=1.2)
 
 (mask_time_single + hm2_time_single + biz_time_single) / (hr_time_single + school_time_single + sd_time_single) +
   plot_annotation(title="Index Values for a Subset of Countries",
                   subtitle="Green lines are posterior median estimates with 5% - 95% uncertainty intervals.")
-ggsave("plots/combine_plot_single_twitter.png",scale=1.2)
+ggsave("plots/combine_plot_single_twitter.pdf",scale=1.2)
 
 # and discimrinations
 
-mask <- readRDS("coronanet/from_cluster/mask_discrim_object.rds") + ylab("")
-hm2 <- readRDS("coronanet/from_cluster/hm2_discrim_object.rds") + ylab("")
-biz <- readRDS("coronanet/from_cluster/biz_discrim_object.rds")
-school <- readRDS("coronanet/from_cluster/school_discrim_object.rds")
-sd <- readRDS("coronanet/from_cluster/sd_discrim_object.rds")
-hr <- readRDS("coronanet/from_cluster/hr_discrim_object.rds")
+mask <- readRDS("coronanet/mask_discrim_object.rds") + ylab("")
+hm2 <- readRDS("coronanet/hm2_discrim_object.rds") + ylab("")
+biz <- readRDS("coronanet/biz_discrim_object.rds")
+school <- readRDS("coronanet/school_discrim_object.rds")
+sd <- readRDS("coronanet/sd_discrim_object.rds")
+hr <- readRDS("coronanet/hr_discrim_object.rds")
 
 (mask + hm2) / (hr + school)
 
-ggsave("plots/discrim1.png",height=7.5,width=6)
+ggsave("plots/discrim1.pdf",height=7.5,width=6)
 
 (sd + biz) 
 
-ggsave("plots/discrim2.png",scale=1.2)
+ggsave("plots/discrim2.pdf",scale=1.2)
 
-mask_rhat <- readRDS("coronanet/from_cluster/mask_rhat.rds")
-hm2_rhat <- readRDS("coronanet/from_cluster/hm2_rhat.rds")
-biz_rhat <- readRDS("coronanet/from_cluster/biz_rhat.rds")
-school_rhat <- readRDS("coronanet/from_cluster/school_rhat.rds") + geom_vline(xintercept=1.1,
+mask_rhat <- readRDS("coronanet/mask_rhat.rds")
+hm2_rhat <- readRDS("coronanet/hm2_rhat.rds")
+biz_rhat <- readRDS("coronanet/biz_rhat.rds")
+school_rhat <- readRDS("coronanet/school_rhat.rds") + geom_vline(xintercept=1.1,
                                                                  linetype=2,
                                                                  colour="blue")
-sd_rhat <- readRDS("coronanet/from_cluster/sd_rhat.rds")
-hr_rhat <- readRDS("coronanet/from_cluster/hr_rhat.rds")
+sd_rhat <- readRDS("coronanet/sd_rhat.rds")
+hr_rhat <- readRDS("coronanet/hr_rhat.rds")
 
 (mask_rhat + hm2_rhat + biz_rhat) / (hr_rhat + school_rhat + sd_rhat)
 
-ggsave("plots/rhat.png")
+ggsave("plots/rhat.pdf")
 
 
 
