@@ -1,13 +1,15 @@
 # load, plot and analyze indices
 
-.libPaths("/home/rmk7/other_R_libs1")
+.libPaths("/home/rmk7/other_R_libs2")
+
+require(cmdstanr)
+
 cmdstanr::set_cmdstan_path("/home/rmk7/cmdstan")
 
 require(idealstan)
 require(ggplot2)
 require(tidyverse)
 require(ggthemes)
-require(cmdstanr)
 require(posterior)
 require(stringr)
 require(posterior)
