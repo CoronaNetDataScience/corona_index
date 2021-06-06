@@ -334,7 +334,7 @@ to_make <- index_long %>%
                               max_treedepth=max_treedepth,het_var = F,
                               fix_high=1,
                               fix_low=0,
-                              restrict_var = (model_type!="mask"),time_center_cutoff = 50,
+                              time_center_cutoff = 50,
                               time_sd=.1,
                               restrict_sd_high=.001,
                               id_refresh = 100,
