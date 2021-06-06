@@ -115,7 +115,7 @@ restrict_list <- switch(model_type,
                         ht=c("ht_type_pcr","ht_portal_sms"),
                         hm=c("hm_home_visit","hm_telephone"),
                         hm2=c("ht_type_pcr","ht_loc_clinic"),
-                        mask=c("mask_public","mask_transport"),
+                        mask=c("mask_everywhere","mask_transport"),
                         hr=c("hr_ventilator","hr_masks"),
                         school=c("primary_school","school_clean"))
 
