@@ -9,6 +9,7 @@ require(posterior)
 require(stringr)
 require(posterior)
 require(lubridate)
+require(forcats)
 
 plot_countries <- c("United States of America","Brazil","China","United Arab Emirates",
                     "South Africa","Turkey","Singapore","South Korea",
@@ -212,7 +213,7 @@ rm(biz_mod)
 
 # Mask --------------------------------------------------------------------
 
-mask_mod <- readRDS("coronanet/from_cluster/activity_fit_rwmask_random_walk_run_4.rds")
+mask_mod <- readRDS("coronanet/activity_fit_rwmask_random_walk_run_4.rds")
 
 all_mods <- lapply(list.files(path = "coronanet/from_cluster/",
                               pattern="mask\\_random\\_walk\\_run\\_[0-4].*rds",
@@ -1118,6 +1119,45 @@ hr_rhat <- readRDS("coronanet/from_cluster/hr_rhat.rds")
 (mask_rhat + hm2_rhat + biz_rhat) / (hr_rhat + school_rhat + sd_rhat)
 
 ggsave("plots/rhat.png")
+
+# make aggregates
+
+# load time-varying estimates
+
+all_mods_data <- lapply(list.files("indices/","time\\_data\\_scaled\\.rds",
+                                   full.names = T),readRDS) %>% 
+  bind_rows(.id="modtype")
+
+
+all_mods_data$modtype <- fct_recode(all_mods_data$modtype,
+                                    "biz" = "1",
+                                    "hm2" = "2",
+                                    "hr" = "3",
+                                    "masks" = "4",
+                                    "school" = "5",
+                                    "sd" = "6")
+
+# expand and fill
+
+expand_mod <- group_by(all_mods_data,country,modtype) %>% 
+  expand(date_policy=seq(ymd("2020-01-01"),max(all_mods_data$date_policy),
+                         by="1 day"))
+
+all_mods_data <- left_join(expand_mod,all_mods_data,by=c("country","modtype","date_policy")) %>% 
+  group_by(country,modtype) %>% 
+  arrange(country,date_policy) %>% 
+  fill(med_est,sd_est,high_est,low_est,.direction="down")
+
+all_mods_data <- mutate(all_mods_data,
+                        modtype=fct_recode(modtype,`Business Restrictions`="biz",
+                                           `Health Monitoring`='hm2',
+                                           `Health Resources`='hr',
+                                           `Social Distancing`="sd",
+                                           `Mask Policies`="masks",
+                                           `School Restrictions`='school'))
+
+write_csv(all_mods_data,"indices/all_indices.csv")
+saveRDS(all_mods_data,'indices/all_indices.rds')
 
 
 
