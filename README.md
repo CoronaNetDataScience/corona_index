@@ -1,5 +1,7 @@
 # Code and Data Repository for "Statistically Validated Indices for COVID-19 Public Health Policies"
 
+## NOTE: The indices have been updated to April 30th. To access the original indices used to reproduce the paper, use the index files with  `jan15` in the title in the `indices` folder.
+
 This repository hosts code and data necessary to reproduce the results in:
 
 Kubinec et al. "Statistically Validated Indices for COVID-19 Public Health Policies."
