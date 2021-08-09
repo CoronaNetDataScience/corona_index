@@ -131,7 +131,10 @@ if(load_data) {
     summarize(cases=ifelse(any(is.na(`Province/State`)),cases[is.na(`Province/State`)],
                                sum(cases)))
   
-  jhu_deaths <- read_csv("https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_deaths_global.csv") %>% 
+  # original data
+  # read_csv("https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_deaths_global.csv")
+  
+  jhu_deaths <- read_csv("indices/jhu_deaths.csv") %>% 
     mutate(country=recode(`Country/Region`,
                           `Cabo Verde`="Cape Verde",
                           `Congo (Brazzaville)`="Republic of the Congo",
