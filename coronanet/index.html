@@ -1,0 +1,592 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+<meta charset="utf-8" />
+<meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
+
+
+
+
+<title>index.utf8</title>
+
+<script src="site_libs/header-attrs-2.1/header-attrs.js"></script>
+<script src="site_libs/jquery-1.12.4/jquery.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link href="site_libs/bootstrap-3.3.5/css/bootstrap.min.css" rel="stylesheet" />
+<script src="site_libs/bootstrap-3.3.5/js/bootstrap.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/html5shiv.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/respond.min.js"></script>
+<script src="site_libs/jqueryui-1.11.4/jquery-ui.min.js"></script>
+<link href="site_libs/tocify-1.9.1/jquery.tocify.css" rel="stylesheet" />
+<script src="site_libs/tocify-1.9.1/jquery.tocify.js"></script>
+<script src="site_libs/navigation-1.1/tabsets.js"></script>
+<link href="site_libs/highlightjs-9.12.0/default.css" rel="stylesheet" />
+<script src="site_libs/highlightjs-9.12.0/highlight.js"></script>
+<script src="site_libs/htmlwidgets-1.3/htmlwidgets.js"></script>
+<link href="site_libs/datatables-css-0.0.0/datatables-crosstalk.css" rel="stylesheet" />
+<script src="site_libs/datatables-binding-0.7/datatables.js"></script>
+<link href="site_libs/dt-core-1.10.16/css/jquery.dataTables.min.css" rel="stylesheet" />
+<link href="site_libs/dt-core-1.10.16/css/jquery.dataTables.extra.css" rel="stylesheet" />
+<script src="site_libs/dt-core-1.10.16/js/jquery.dataTables.min.js"></script>
+<link href="site_libs/nouislider-7.0.10/jquery.nouislider.min.css" rel="stylesheet" />
+<script src="site_libs/nouislider-7.0.10/jquery.nouislider.min.js"></script>
+<link href="site_libs/selectize-0.12.0/selectize.bootstrap3.css" rel="stylesheet" />
+<script src="site_libs/selectize-0.12.0/selectize.min.js"></script>
+<link href="site_libs/crosstalk-1.0.0/css/crosstalk.css" rel="stylesheet" />
+<script src="site_libs/crosstalk-1.0.0/js/crosstalk.min.js"></script>
+
+<style type="text/css">code{white-space: pre;}</style>
+<style type="text/css">
+  pre:not([class]) {
+    background-color: white;
+  }
+</style>
+<script type="text/javascript">
+if (window.hljs) {
+  hljs.configure({languages: []});
+  hljs.initHighlightingOnLoad();
+  if (document.readyState && document.readyState === "complete") {
+    window.setTimeout(function() { hljs.initHighlighting(); }, 0);
+  }
+}
+</script>
+
+
+
+<style type="text/css">
+h1 {
+  font-size: 34px;
+}
+h1.title {
+  font-size: 38px;
+}
+h2 {
+  font-size: 30px;
+}
+h3 {
+  font-size: 24px;
+}
+h4 {
+  font-size: 18px;
+}
+h5 {
+  font-size: 16px;
+}
+h6 {
+  font-size: 12px;
+}
+.table th:not([align]) {
+  text-align: left;
+}
+</style>
+
+<link rel="stylesheet" href="style.css" type="text/css" />
+
+
+
+<style type = "text/css">
+.main-container {
+  max-width: 940px;
+  margin-left: auto;
+  margin-right: auto;
+}
+code {
+  color: inherit;
+  background-color: rgba(0, 0, 0, 0.04);
+}
+img {
+  max-width:100%;
+}
+.tabbed-pane {
+  padding-top: 12px;
+}
+.html-widget {
+  margin-bottom: 20px;
+}
+button.code-folding-btn:focus {
+  outline: none;
+}
+summary {
+  display: list-item;
+}
+</style>
+
+
+<style type="text/css">
+/* padding for bootstrap navbar */
+body {
+  padding-top: 51px;
+  padding-bottom: 40px;
+}
+/* offset scroll position for anchor links (for fixed navbar)  */
+.section h1 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h2 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h3 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h4 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h5 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h6 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.dropdown-submenu {
+  position: relative;
+}
+.dropdown-submenu>.dropdown-menu {
+  top: 0;
+  left: 100%;
+  margin-top: -6px;
+  margin-left: -1px;
+  border-radius: 0 6px 6px 6px;
+}
+.dropdown-submenu:hover>.dropdown-menu {
+  display: block;
+}
+.dropdown-submenu>a:after {
+  display: block;
+  content: " ";
+  float: right;
+  width: 0;
+  height: 0;
+  border-color: transparent;
+  border-style: solid;
+  border-width: 5px 0 5px 5px;
+  border-left-color: #cccccc;
+  margin-top: 5px;
+  margin-right: -10px;
+}
+.dropdown-submenu:hover>a:after {
+  border-left-color: #ffffff;
+}
+.dropdown-submenu.pull-left {
+  float: none;
+}
+.dropdown-submenu.pull-left>.dropdown-menu {
+  left: -100%;
+  margin-left: 10px;
+  border-radius: 6px 0 6px 6px;
+}
+</style>
+
+<script>
+// manage active state of menu based on current page
+$(document).ready(function () {
+  // active menu anchor
+  href = window.location.pathname
+  href = href.substr(href.lastIndexOf('/') + 1)
+  if (href === "")
+    href = "index.html";
+  var menuAnchor = $('a[href="' + href + '"]');
+
+  // mark it active
+  menuAnchor.parent().addClass('active');
+
+  // if it's got a parent navbar menu mark it active as well
+  menuAnchor.closest('li.dropdown').addClass('active');
+});
+</script>
+
+<!-- tabsets -->
+
+<style type="text/css">
+.tabset-dropdown > .nav-tabs {
+  display: inline-table;
+  max-height: 500px;
+  min-height: 44px;
+  overflow-y: auto;
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.tabset-dropdown > .nav-tabs > li.active:before {
+  content: "";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li.active:before {
+  content: "&#xe258;";
+  border: none;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open:before {
+  content: "";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs > li.active {
+  display: block;
+}
+
+.tabset-dropdown > .nav-tabs > li > a,
+.tabset-dropdown > .nav-tabs > li > a:focus,
+.tabset-dropdown > .nav-tabs > li > a:hover {
+  border: none;
+  display: inline-block;
+  border-radius: 4px;
+  background-color: transparent;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li {
+  display: block;
+  float: none;
+}
+
+.tabset-dropdown > .nav-tabs > li {
+  display: none;
+}
+</style>
+
+<!-- code folding -->
+
+
+
+<style type="text/css">
+
+#TOC {
+  margin: 25px 0px 20px 0px;
+}
+@media (max-width: 768px) {
+#TOC {
+  position: relative;
+  width: 100%;
+}
+}
+
+@media print {
+.toc-content {
+  /* see https://github.com/w3c/csswg-drafts/issues/4434 */
+  float: right;
+}
+}
+
+.toc-content {
+  padding-left: 30px;
+  padding-right: 40px;
+}
+
+div.main-container {
+  max-width: 1200px;
+}
+
+div.tocify {
+  width: 20%;
+  max-width: 260px;
+  max-height: 85%;
+}
+
+@media (min-width: 768px) and (max-width: 991px) {
+  div.tocify {
+    width: 25%;
+  }
+}
+
+@media (max-width: 767px) {
+  div.tocify {
+    width: 100%;
+    max-width: none;
+  }
+}
+
+.tocify ul, .tocify li {
+  line-height: 20px;
+}
+
+.tocify-subheader .tocify-item {
+  font-size: 0.90em;
+}
+
+.tocify .list-group-item {
+  border-radius: 0px;
+}
+
+.tocify-subheader {
+  display: inline;
+}
+.tocify-subheader .tocify-item {
+  font-size: 0.95em;
+}
+
+</style>
+
+
+
+</head>
+
+<body>
+
+
+<div class="container-fluid main-container">
+
+
+<!-- setup 3col/9col grid for toc_float and main content  -->
+<div class="row-fluid">
+<div class="col-xs-12 col-sm-4 col-md-3">
+<div id="TOC" class="tocify">
+</div>
+</div>
+
+<div class="toc-content col-xs-12 col-sm-8 col-md-9">
+
+
+
+
+<div class="navbar navbar-default  navbar-fixed-top" role="navigation">
+  <div class="container">
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar">
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      <a class="navbar-brand" href="index.html">CoronaNet Research Project</a>
+    </div>
+    <div id="navbar" class="navbar-collapse collapse">
+      <ul class="nav navbar-nav">
+        <li>
+  <a href="index.html">Introduction</a>
+</li>
+<li class="dropdown">
+  <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">
+    Data
+     
+    <span class="caret"></span>
+  </a>
+  <ul class="dropdown-menu" role="menu">
+    <li>
+      <a href="download.html">Download</a>
+    </li>
+    <li>
+      <a href="methodology.html">Methodology</a>
+    </li>
+  </ul>
+</li>
+<li>
+  <a href="working_papers.html">Working Papers</a>
+</li>
+<li>
+  <a href="about.html">About CoronaNet</a>
+</li>
+<li class="dropdown">
+  <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">
+    Policy Activity Index
+     
+    <span class="caret"></span>
+  </a>
+  <ul class="dropdown-menu" role="menu">
+    <li>
+      <a href="media.html">Media</a>
+    </li>
+    <li>
+      <a href="contact.html">Contact</a>
+    </li>
+  </ul>
+</li>
+      </ul>
+      <ul class="nav navbar-nav navbar-right">
+        
+      </ul>
+    </div><!--/.nav-collapse -->
+  </div><!--/.container -->
+</div><!--/.navbar -->
+
+<div class="fluid-row" id="header">
+
+
+
+
+</div>
+
+
+<!-- ```{js logo-js, echo=FALSE} -->
+<!-- $(document).ready(function() { -->
+<!--   $('#header').parent().prepend('<div id=\"logo\"><img src=\"img/logo_height.png"\" style=\"position:absolute; top:0; right:0; padding:20px; height:280px\"></div>'); -->
+<!--   $('#header').css('margin-right', '270px') -->
+<!-- }); -->
+<!-- ``` -->
+<p><img src="img/header_wide.png" /></p>
+<style>
+body {
+text-align: justify}
+</style>
+<hr />
+<div id="tracking-government-responses-towards-covid-19" class="section level1 unnumbered" number="">
+<h1 class="unnumbered" number="">Tracking government responses towards COVID-19</h1>
+<hr />
+<p><br></p>
+<p>Please note that - given the exceptional times - we decided to release a <strong><em>BETA version</em></strong> of the dataset that has not undergone extensive validation and reliability checks. We aim to validate and improve the data day by day but can not assure full accuracy among the policies.</p>
+<p>You can <strong>download the BETA dataset</strong> and codebook <a href="https://coronanet-project.org/download">here</a>.</p>
+<p>For further information on the methodology and analyses please download our <strong>working paper</strong> <a href="https://coronanet-project.org/working_papers">here</a>.</p>
+<hr />
+<p>The <strong>CoronaNet Research Project</strong> compiles a database on government responses to the corona virus. Our main focus is to collect as much information as we can about the various fine-grained actions governments are taking to defeat the coronavirus. This includes not only gathering information about which governments are responding to the coronavirus, but who they are targeting the policies toward (e.g. other countries), how they are doing it (e.g. travel restrictions, banning exports of masks) and when they are doing it.</p>
+<p>Together with 200 political, social and public health science scholars from all over the world, we present an initial release of a large hand-coded dataset of more than 5,000 separate policy announcements from governments around the world visible since January 1st 2020.</p>
+<p>The data yields detailed information on</p>
+<ul>
+<li><p>The level of government responding to the corona virus crisis (e.g. national, regional/state, local/municipal)</p></li>
+<li><p>Specific actions taken (e.g. travel bans, investments in the public health sector, etc.)</p></li>
+<li><p>Geographical areas targeted by these measures</p></li>
+<li><p>Who or what they are targeting (e.g. foreigners, ventilators)</p></li>
+<li><p>Compliance mechanisms (e.g. mandatory or voluntary)</p></li>
+<li><p>Timing of policy responses.</p></li>
+</ul>
+<p><br></p>
+<hr />
+<div id="citation" class="section level2 unnumbered" number="">
+<h2 class="unnumbered" number="">Citation</h2>
+<p>Please cite the project and dataset as:</p>
+<p>Cheng, Cindy, Joan Barcelo, Allison Spencer Hartnett, Robert Kubinec, and Luca Messerschmidt. 2020. “CoronaNet - Tracking Governments COVID-19 Responses”, BETAVersion 1.0. <a href="https://www.coronanet-project.org" class="uri">https://www.coronanet-project.org</a>.</p>
+<hr />
+</div>
+<div id="questions-feedback-or-joining-the-team" class="section level2 unnumbered" number="">
+<h2 class="unnumbered" number="">Questions, feedback or joining the team?</h2>
+<p>CoronaNet is an ongoing research project and we aim to publish new data versions on a daily basis. The project is supervised by senior political scientists from NYU Abu Dhabi, TU Munich and Yale University, and underlies high-standard validity and reliability checks. If you have any questions regarding the data, you find any inaccuracies, or you want to become part of our network, please contact us <a href="https://forms.gle/2Zc5Rrdq9J43b7NR9">here</a>.</p>
+<hr />
+</div>
+<div id="coronanet-research-group" class="section level2 unnumbered" number="">
+<h2 class="unnumbered" number="">CoronaNet Research Group</h2>
+<p>The project is organized and led by:</p>
+<ul>
+<li><p><a href="https://sites.google.com/view/joanbarcelo/home?authuser=1">Joan Barcelo</a> (NYU Abu Dhabi)</p></li>
+<li><p><a href="http://cindyyawencheng.com/">Cindy Cheng</a> (Hochschule für Politik at the TU Munich)</p></li>
+<li><p><a href="http://www.allisonhartnett.io/">Allison Hartnett</a> (Yale University)</p></li>
+<li><p><a href="http://www.robertkubinec.com/#about">Robert Kubinec</a> (NYU Abu Dhabi)</p></li>
+<li><p><a href="https://lumesserschmidt.github.io/aboutme/">Luca Messerschmidt</a> (Hochschule für Politik at the TU Munich)</p></li>
+</ul>
+<hr />
+<p>CoronaNet International Data Gathering Initiative on COVID-19 Testing is organized by</p>
+<ul>
+<li><p>Petr Bartoň (Charles University)</p></li>
+<li><p>Josef Montag (Charles University)</p></li>
+<li><p>Sana Mughees (Shifa College of Medicine)</p></li>
+</ul>
+<p>We are thankful for the amazing network of 200 scholars from social, political, public health, and medical sciences, coming from all continents and speaking more than 30 different languages.</p>
+<div id="htmlwidget-f9b7067e4ba52431a541" style="width:100%;height:auto;" class="datatables html-widget"></div>
+<script type="application/json" data-for="htmlwidget-f9b7067e4ba52431a541">{"x":{"filter":"top","filterHTML":"<tr>\n  <td><\/td>\n  <td data-type=\"character\" style=\"vertical-align: top;\">\n    <div class=\"form-group has-feedback\" style=\"margin-bottom: auto;\">\n      <input type=\"search\" placeholder=\"All\" class=\"form-control\" style=\"width: 100%;\"/>\n      <span class=\"glyphicon glyphicon-remove-circle form-control-feedback\"><\/span>\n    <\/div>\n  <\/td>\n  <td data-type=\"character\" style=\"vertical-align: top;\">\n    <div class=\"form-group has-feedback\" style=\"margin-bottom: auto;\">\n      <input type=\"search\" placeholder=\"All\" class=\"form-control\" style=\"width: 100%;\"/>\n      <span class=\"glyphicon glyphicon-remove-circle form-control-feedback\"><\/span>\n    <\/div>\n  <\/td>\n  <td data-type=\"character\" style=\"vertical-align: top;\">\n    <div class=\"form-group has-feedback\" style=\"margin-bottom: auto;\">\n      <input type=\"search\" placeholder=\"All\" class=\"form-control\" style=\"width: 100%;\"/>\n      <span class=\"glyphicon glyphicon-remove-circle form-control-feedback\"><\/span>\n    <\/div>\n  <\/td>\n  <td data-type=\"character\" style=\"vertical-align: top;\">\n    <div class=\"form-group has-feedback\" style=\"margin-bottom: auto;\">\n      <input type=\"search\" placeholder=\"All\" class=\"form-control\" style=\"width: 100%;\"/>\n      <span class=\"glyphicon glyphicon-remove-circle form-control-feedback\"><\/span>\n    <\/div>\n  <\/td>\n<\/tr>","caption":"<caption>Table of contributing researchers and their responsible countries<\/caption>","fillContainer":false,"data":[["1","2","3","4","5","6","7","8","9","10","11","12","13","14","15","16","17","18","19","20","21","22","23","24","25","26","27","28","29","30","31","32","33","34","35","36","37","38","39","40","41","42","43","44","45","46","47","48","49","50","51","52","53","54","55","56","57","58","59","60","61","62","63","64","65","66","67","68","69","70","71","72","73","74","75","76","77","78","79","80","81","82","83","84","85","86","87","88","89","90","91","92","93","94","95","96","97","98","99","100","101","102","103","104","105","106","107","108","109","110","111","112","113","114","115","116","117","118","119","120","121","122","123","124","125","126","127","128","129","130","131","132","133","134","135","136","137","138","139","140","141","142","143","144","145","146","147","148","149","150","151","152","153","154","155","156","157","158","159","160","161","162","163","164","165","166","167","168","169","170","171","172","173","174","175","176","177","178","179","180","181","182","183","184","185","186","187","188","189","190","191","192","193","194","195","196"],["Abhyudaya Tyagi","Adriana Poppe","Alette Mengerink","Amadeus Albrecht","Amanda Panella","Ana Acero","Anabella McElroy","Anastasia Steinbrunner","Andreas Duncan","Andres Lopez Schrader","Angad Johar","Angela Herz","Anke Horn","Anna Ludwig","Anna Sophia Körner","Anoushka Thakre","Antonia Pérez","Ariana Barrenechea","Arianna Schouten","Aysina Maria","Babrik Kushwaha","Barbora Bromová","Beatrice Di Giulio","Beatrice von Braunschweig","Borja Arrue-Astrain","Brahim Ouerghi","Brian Chesney Quartey","Bruno Ciccarini","Calvin Kaleel","Cara Kim","Caress Schenk","Carl Philip Dybwad","Carlos Velez","Carly Kimmett","Charlotte Vorbauer","Cheng-Hao SHEN","Chloë Fraser","Cornelia Marie Dybwad","Csilla Horvath","Dan Downes","Dan Wu","Daniel Boey","Daniel Martínek","Dariga Abilova","Davit Jintcharadzé","Deborah Agboola","DICK PAUL OUKO","Dominik Juling","Donia Kamel","Dorian Quelle","Dotrus Wilstic","Dylan Ollivier","Eduardo Landaeta","Elisa Seith","Elizabeth (Lizzie) Jones","Ella Pettersen","Emma Hutchinson","Esther Ollivier","Eugene Kwizera","Fabienne Lind","Fabio Kadner","Fadhilah Fitri Primandari","Farah Sadek","Felix Willuweit","Fernanda Werneck","Francis Yoon","Frank Yuxuan Sun","Frederic Denker","Gloria Mutheu","Hafsa Ahmed","Helene Paul","Helwan Felappi","Heman Asibuo","Henry Okwatch","Imogen Rickert","Ines Böhret","Isabela Russo","Isabelle Smith","Ismail Jamai Ait Hmitti","Jack Kubinec","Jakob Berg","Jane Murutu","Janice Klaiber","Janne Luise Piper","Jasmina Sowa","Jessica Johansson","Jiho Yoo","Joana Lencastre Morais","Joel Gräff","Jule Scholten","Julia Nassl","Julia Smakman","Julia Wießmann","Kadriye Nisa Başkan","Karina Lisboa Båsund","Katharina Klaunig","Kayla Schwoerer","Khoa Tran","Kojo Vandyck","Konstanze Schönfeld","Laura Cadena","Laura Williamson","Laureen Hannig","Laurent Frick","Lea Clara Frömchen-Zwick","Lena Kolb","Leonie Imberger","Lilli Tabea Albrecht","Lily Zandstra","Linlin Chen","Luise Modrakowski","Lya Cuéllar","Magdalena Strebling","Maheen Zahra","Maisa Nasirova","Maite Spel","Malina Winking","Mamle Akosua Kwao","Mara Förster","Marianne Sievers","Marius Deierl","Marlies Hofmann","Mascha Hotopp","Mats Jensen","Matthew Cottrell","Matthew Hargreaves","Maximilian Dirks","Maya Rollberg","Mehdi Bhouri","Michaela Balluff","Milan Chen","Milos Moskovljevic","Miranda Tessore Janowski","Miriam Witte","Mirjam Muller","Mona Horn","Muhannad Alramlawi","Museera Moghis","Nadja Grossenbacher","Natalia Filkina-Spreizer","Nicolas Göller","Nicole Oubre","Nida Hasan","Niklas Illenseer","Nikolina Klatt","Noelle Kubinec","Oliver Pollex","Oliver Weber","Ongun Durhan","Pablo Robles","Paula Germana","Philipp Weber","Pia Bansagi","Racha Hanine","Raquel Karl","Rebecca Beigel","Ricardo Buitrago","Richmond Silvanus Baye","Robin Fischer","Rosana Fayazzadh","Saif Khan","Salma Soliman","Samantha Reinard","Sana Moghis","Sarah Edmonds","Sau Kan Chan","Saw Eh Doh Soe","Sean-Michael Pigeon","Shruti Shukla","Simon Hüttemann","Sophia Tomany","Stefanie Mallow","Stella Dold","Su Ülkenli","Surendra Belbase","Tanja Matheis","Tasia Wagner","Tess de Rooij","Tess Martin","Tilda Nilsson Gige","Tom Seiler","Tristan Brömsen","Ursela Barteczko","Vellah Kedogo Kigwiru","Veronika Bartáková","Victor Abuor","Victoria Atanasov","Vida Han","Vinayak Rajesekhar","Winrose Njuguna","Xian Jin","Yifei Zhu","Elliot Weir","Li Cheng","Ha-Neul Yu","Josef Montag"],["NYU Abu Dhabi","University of Cologne","Teacher (German and children's righs) to people with a migration background","TU München HfP","Hertie School of Governance, Berlin, Germany","Sciences Po Paris","Dual BA Sciences Po Paris/University of British Columbia","Willy Brandt School of Public Policy/ University of Erfurt","University of Applied Forest Scienes Rottenburg","NYU Abu Dhabi","NYU Abu Dhabi","Heidelberg University","Pharmacist","Maastricht University, University of Vienna","SciencesPo Paris/FU Berlin","Dual BA Columbia University and Sciences Po Paris","Dual BA Program Sciences Po Paris/ Columbia University","Willy Brandt School of Public Policy","Research Assistant","Technische Universität München","University of Lille","University of Amsterdam","Technical University of Munich","Leuphana University Lüneburg / Université Paris-Est Créteil","Project and Policy Officer at AGE Platform Europe",null,"NYU Abu Dhabi","Communication Manager","Yale University","Technical University of Munich","Nazarbayev University","Sciences Po Paris","Yale University","University of Western Ontario","TUM Munich",null,null,"ESPOL Lille","Customer Support Specialist","TUM Munich","Sciences Po Paris","Hertie School","Institute for the Danube Region and Central Europe (IDM) Vienna","Georgia State U","NYU Abu Dhabi","New York University Abu Dhabi","SciencesPo Paris","Technical University of Munich","Paris School of Economics","Zeppelin University","IOM- Johannesburg ZA","Columbia College of Columbia University in the City of New York","Old Dominion University","Officer, NATO","LSE/Sciences Po Paris/NYU","Kenyon College","Sciences Po Paris","SciencesPo Paris","African Leadership University - Kigali","Univesity of Vienna","University Bonn","Universitas Indonesia","NYU Abu Dhabi","London School of Economics and Political Science / Sciences Po Paris","Leipzig University","FU Berlin","Technische Universität München","I followed the outbreak of the Corona-Crisis in Israel, where I completed an internship and also had to deal with some Corona regulations. I could also work on any spanish-speaking country.","The University of Nairobi, Kenya","NYU Abu Dhabi","TU Darmstadt / Policylead","Sciences Po Paris","Cornell University","Advocate of the High Court of Kenya","Policy Advisor in non-profit sector","University of Manchester, University of Passau","TU München HfP","Colorado College, SciencesPo Paris","Yale University","Cornell University","Universität Regensburg","Project Management Consultant","ESB Business School / Rollins College","Zeppelin University","University of Bochum, Germany","CIESAS","Sciences Po Paris","Technische Universität München &amp; Hochschule für Philosophie München","Technical Product Designer","Ruhr-Universität Bochum","University of Munich","University of Amsterdam (currently interning with Amnesty International)","University of Heidelberg","Yıldız Technical University","NYU Abu Dhabi","NYU Abu Dhabi","Rutgers University-Newark","NYU Abu Dhabi","NYU Abu Dhabi","Universität Leipzig / Fudan University","Rosario University of Colombia","Colorado Christian University","Universität Erfurt","Social Worker","Christian-Albrechts Universität zu Kiel","Technische Universität München (TUM)","TU Dresden","Institute of Human Rights and Peace Studies, Mahidol University, Thailand","Project Support Officer","TU München HfP","Copenhagen University","FU Berlin","Management","Lecturer, Social Policy specialist","Technical University of Munich (TUM)","University of Amsterdam","University of Amsterdam","New York University Abu Dhabi","Sciences Po Paris","Humboldt University, Berlin, Germany","LMU Munich","University of Amsterdam","Sciences Po Paris","Sciences Po Paris","University of Cologne","University of Amsterdam","University of Bochum, Germany","University of Freiburg","Technische Universität München","Gesellschaft für Internationale Zusammenarbeit (GIZ) GmbH","HfP (Munich)","City University of Hong Kong","University of Amsterdam","University of Regensburg, Germany","European Parliament","University of Freiburg, Germany","NYU Abu Dhabi","NYU Abu Dhabi","Utrecht University / University of Vienna","HfP (Munich)","Zeppelin University","Willy Brandt School of Public Policy","Dual BA Sciences Po Paris/Columbia Universiity","SciencesPo Paris/FU Berlin","Fernuniversität Hagen","English teacher","TUM Munich","University of Regensburg, Germany","University of Amsterdam","Hochschule Fresenius","Willy Brandt School of Public Policy/ University of Erfurt","Motio Gmbh &amp; Co. KG","University of Vienna","University of Oslo","Zeppelin University","Stiftung Neue Verantwortung, Project Manager International Cybersecurity Policy","Universidad de La Salle","University of Tuebingen","University of Braunschweig","University of Oslo","Technical University of Munich","NYU Abu Dhabi","San Francisco State University/On Exchange Sciences Po Reims","Shifa College of Medicine","TUM Munich","HfP (Munich)","Institute of Human Rights and Peace Studies, Mahidol University, Thailand","Yale University","Consultant, C4ED","TUM Munich","Willy Brandt School of Public Policy","Sustainable Development Consultant","Fernuniversität Hagen &amp; Universität des Saarlandes",null,"Georg August University of Göttingen","University of Kassel","Programme and special advisor","Research assistant","Sciences Po Paris","Sciences Po Paris","University of Bremen","Zeppelin University","Fernuniversität Hagen &amp; Universität des Saarlandes","Technical University of Munich","London School of Economics and Political Science","Kenyatta University","Humboldt University Berlin, Rikkyo University Tokyo","Dual BA SciencesPo Paris / Columbia University","Independent Researcher and Communications Professional","Practising Advocate, Commercial &amp; Corporate Law","Technical University of Munich","FU Berlin","Otago University","NYU Abu Dhabi","NYU Abu Dhabi","Charles University"],["Romania","Colombia, Spain","Bosnia and Herzegovina","Georgia","Cyprus","Equatorial Guinea","United States","Samoa","Vanuatu","Morocco","India","Spain: sub-national","Switzerland: sub-national","Brazil","Mexico","Kuwait","Venezuela","Spain","Canada","Greece","Nepal","Czechia, Slovakia","San Marino","Mali","Equatorinal Guinea","Lebanon","Ghana, Togo","Italy: sub-national, Italy: sub-national","Oman","Myanmar","Russia","Sweden","Liberia","Republic of the Congo","Namibia","Belize, Palau, Philippines, Saint Lucia","Guatemala","Armenia, Estonia","Bolivia","Brazil","Finland, Finland","Thailand","Czechia, Slovakia","Barbados, Lesotho","Italy: sub-national","United Kingdom","Burundi, Rwanda","Antigua and Barbuda","Comoros, Djibouti","Nicaragua, Panama","Tanzania","Gabon","Costa Rica","Luxembourg","Cameroon","Norway","Australia, Japan","Mali","Central African Republic","Austria","Palastine","Indonesia","Qatar","Ethiopia","Sao Tome and Principe","Malaysia, Malaysia, South Korea, South Korea","Malta","Niger, Nigeria","Uganda","Singapore","Germany, Netherlands","Moldova, Moldova, Montenegro, Montenegro","Sierra Leone","South Africa","United States: sub-national, Trinidad and Tobago","Kiribati","Mozambique","Madagascar","Ivory Coast","Hungary","Bulgaria","Uganda","Tonga, Tuvalu","Israel","Solomon Islands","United Kingdom","South Korea","Angola","South Africa","Jamaica","Bolivia, Peru","Poland","Latvia","Turkey","Norway, Senegal","Azerbaijan, Kazakhstan, Kyrgyzstan, Tajikistan, Turkmenistan, Uzbekistan","United States: sub-national","Vietnam","Guinea","Japan","Andorra","United States: sub-national","Chad","Eswatini","Grenada, Saint Kitts and Nevis, Saint Vincent and the Grenadines","Cabo Verde, Malawi","Australia","Cambodia","Syria","Sri Lanka","Norway","Costa Rica, El Salvador","Marshall Islands","Afghanistan, Iran","Pakistan, Tanzania","Suriname","Botswana","Mauritania","Trinidad and Tobago","Yemen","Ecuador","United States","United States","Iceland","United States","Switzerland","New Zealand","Germany: sub-national","Algeria","Eritrea","Taiwan","Maldives, Serbia","Argentina","Ireland","European Union, Latvia, Lithuania","Costa Rica","Jordan","United Arab Emirates","Gambia","Belarus, Russia","Germany","Honduras","Saudi Arabia","Austria, France, Liechtenstein","Croatia, United States","Albania, North Macedonia","Brunei","Denmark, Germany, Italy, Monaco","Turkey","Paraguay","El Salvador","Fiji","Nauru, Timor Leste","Tunisia","Cuba, Dominican Republic","Syria","Honduras","Mauritius","Dominica","Iran","Seychelles","Egypt","Bhutan, Mongolia","Bangladesh, Nepal","Papua New Guinea, United States: sub-national","China, Hong Kong, Macau","Zimbabwe","United States: sub-national","Guyana","Nigeria","Iraq, South Sudan","Portugal","Bahamas","Democratic Republic of the Congo","United States: sub-national","Benin, Indonesia","Finland: sub-national","Belgium","Micronesia","Libya","Denmark","Ukraine","Chile, Uruguay","Kenya","Slovenia, United Kingdom","Zambia","Japan: sub-national","Burkina Faso","India","Somalia, Sudan","China","North Korea","Testing Data","Testing Data","Testing Data","Testing Data"],["I am a second-year student at NYU Abu Dhabi, majoring in Political Science and Economics.","Master Student of Sociology and Social Research at the Universtiy of Cologne","Alette Mengerink has obtained a Bachelor's degree in Cultural Anthropology and a Master's degree in Conflict Studies and Human Rights.",null,"Amanda Panella is a MIA student specialising in international security studies at the Hertie School of Governance, where she graduates in June 2020.",null,"Anabella is studying political science at Sciences Po Paris and the University of British Columbia.",null,"Andy is an undergraduate student in Sustainable Regional Management.","I am a marine genetics researcher with an interest in education policy and language learning.","Sophomore at New York University Abu Dhabi","Political Science Student from Germany","Pharmacist","Recent graduate MA Global Studies, interested in Biosecurity and Governmental response to pandemics","I am currently doing my dual degree at Sciences Po Paris and FU Berlin with a focus on European Affairs and Public Policy.","A student currently enrolled in the Dual BA program between Columbia University and Sciences Po Paris interested in economics, healthcare and public policy.",null,"Master of Public Policy candidate at the Willy Brandt School","I am Canadian with an interdisciplinary Bachelor in Politics, Psychology, Law & Economics from the University of Amsterdam, and I have a specific interest in law, health policy and pharmaceutical regulation.","Grew up in Russia. I am a student at the Technical University of Munich and currently Erasmus Student an University of Pavia, Italy.","Babrik Kushwaha, BA, Graduate student of European and International Studies, Management of European Affairs Program at University of Lille / Trainee at the Institute for the Danube Region and Central (IDM).",null,null,"BA student of political science at Leuphana University Lüneburg, Germany, and Paris XII, France","Graduate in Political Science from the University of the Basque Country (Spain) and Masters in European Affairs from Sciences Po Paris, specialised in social policy advocacy.","I am a 22 years old student at the technical university of munich where i study technology and management",null,null,"A sophomore at Yale University, Calvin majors in Modern Middle Eastern Studies and is extremely excited about this project!","Medical student from Germany","Associate Professor of Political Science","Circularity Advocate with a passion for the future of electioneering.","Yale Undergraduate, Class of 2020, B.A. Political Science","Canadian. UWO Kin Grad and current BScN Nursing Student","student of political science at TUM","A political science student interested in comparative government, British politics, and cross-strait relations from the Republic of China",null,"Norwegian International Security Policy student, interested in hybrid security threats.",null,"Structural Engineer. Currently studying a Masters in Political Science.","Native Chinese studying Political Science in France and living in Austria","Columbia-Hertie MPA-MPP Dual Degree Candidate working in the intersection of environmental engineering and public policy.","Research Fellow at the Institute for the Danube Region and Central Europe (IDM), Vienna, Austria","PhD Student","NYU Abu Dhabi Psychology and Philosophy student.","I am a British-Nigerian undergraduate student at New York University Abu Dhabi","A student at SciencesPo Paris University who considers himself to be a global citizen.","Currently studying political science at the Technical University Munich and working as a free journalist.","I am currently in my first year of my Masters in Analysis and Policy in Economics at the Paris School of Economics",null,"A doctor of philosophy (Ph. D)in Education",null,"Doctoral Student in the Graduate Program in International Studies at Old Dominion University","Master Graduate from Heidelberg University, Political Science",null,"I am a first year student at Kenyon College, and an intended Political Science major.","Sciences Po Paris Masters in International Security Student","Esther Ollivier is a French-American student studying in the Columbia-SciencesPo Dual BA program, where she is double majoring in Economics and Music, with a Finance minor.",null,"I am a PhD student and work as research associate at the Computational Communication Science Lab at the University of Vienna.","I'm currently writing my master thesis in the programme 'Society, Globalization, Development' at the university of Bonn, Germany. My main research topics include migration, religion and international relations.","Final year political science student at Universitas Indonesia, with a concentration in comparative politics. Her views on Indonesian politics have previously appeared on several notable platforms, such as East Asia Forum, New Mandala, and The Diplomat.","I am an undergraduate student pursuing a degree in Social Research and Public Policy with a minor in Economics and Peace Studies at New York University Abu Dhabi.","I am a student from Germany in my 3rd year of a BSc in International Relations at the London School of Economics and Sciences Po Paris with interest in Global Governance and International Development.","I'm a researcher on International Relations and Environmental Studies and I'm currently studying the last semester of MA. Global Studies",null,"Active social commentator, interested in political science.","Undergraduate student interested in innovation and develepment economics.","LLB 1st year student who has a great passion for research and helping people access information.","A senior undergraduate social research, public policy, and public health student from New York university in Abu Dhabi, driven to tackle global policy challenges in the development field.","Graduate student in governance and public policy, working on political monitoring as a working student for Policylead.","I'm a second year Economics and Political Science student at Sciences Po Paris, on exchange at the University of Pennsylvania. I am passionate about studying, describing and better understanding our societies and the challenges they face.",null,null,"Social researcher with M.A. in Sociology from Freie Universität Berlin, B.A. from the University of Sydney and experience in providing policy analysis in the non-profit sector.","Ines has a B.A. in International Emergency and Disaster Relief and currently writes her theses for a M.Sc. in Global Health and a M.A. in Caritas Science and Value-based Management.","Born and raised in Brazil - currently studying Political Science in Germany.","Hello, my name is Isabelle Smith and I am a third year bachelors student in Political Science at Colorado College and have recently completed a year abroad with SciencesPo Paris.","Modern Middle Eastern Studies and History major at Yale University.","Jack is a freshman at Cornell University studying Government.","I am a third-year student in the field of political science at the University of Regensburg","I am a project Management Specialist Consultant",null,"I am a student of Sociology, Politics and Economics at Zeppelin University in Germany where I work as a student assistant for the Chair of International Relations.","I am Psychology student from Germany in the fourth year of my bachelors degree.","M.Sc. graduate in Politics, Economics and Philosophy from University of Hamburg, with research experience from political science research at the German Institute of Global and Area Studies (Hamburg) as well as economics research at CIESAS (Guadalajara, Mexico).","Undergraduate student in Sciences Po Paris Campus de Reims, studying Political Humanities","Politics & Technology student at the TU München.","German and South African Technical Product Design trainee in the final year","Student of Political Science and student assistant, working on a project of interest groups influence on Government decision in Germany","I am a 4th year law student at Ludwig-Maximilians-Universität, Munich with a specialization in Public International Law.","Dutch, BSc Graduate, Law major, Main interest in international law",null,"Economics Graduate from Yıldız Technical University/ Istanbul","Research Assistant at NYU Abu Dhabi's Department of Social Science","Katharina is a third year B.A. student studying Social Research and Public Policy at New York University Abu Dhabi.","PhD student at Rutgers University-Newark in the School of Public Affairs studying government transparency with a focus on ICT-enabled interactions between government and its stakeholders.","Khoa Tran is a legal studies student at New York University Abu Dhabi and a youth social entrepreneur.",null,"Global Studies student at Uni Leipzig / Fudan University, focusing on visa policy; BA in Japanese Studies from Uni Heidelberg","I have a degree in International Relations of University of Rosario of Colombia",null,"Student of International Relations and Communication Science","Graduated Sociology Student and Social Worker",null,"I study in 4th Semester of political science at TUM","3rd year Med Student from Germany; interested in Global Health and Public Health Policy","Grad student in Human Rights at the IHRP at Mahidol University, focusing on democracy and global health governance.","Recent MA graduate from Leiden University in International Relations: European Union Studies. A dynamic thinker with cross-cultural and international experience and a keen interest in project development. Experience working on research projects to bridge the gap between policy and practice.","Final year M.Sc student in the Politics and Technology program at Technical University of Munich","Master student of security risk management at Copenhagen University, originally from Dresden (DE), focusing on risk governance, poltical risk analysis, and sustainability.",null,null,"Lecturer at the Department of Development Studies, National University of Science and Technology (NUST), Pakistan","Political Science Student at Technical University of Munich","I'm a graduate in Interdisciplinary Social Sciences from the University of Amsterdam",null,null,"I am currently a first-year student at the Reims Campus of Sciences Po Paris, particularly focusing on North America and Europe.","I'm a freelance researcher, holding a BA in Sociology and Islamic Science, currently a MA student in Berlin.","Student of cultural anthropology, 22, Germany","Currently completing my BSc in PPLE (Politics, Psychology, Law and Economics) at the University of Amsterdam and looking forward to subsequently continuing my studies of law at the University of Oxford.","I am a Master 1 journalism and human rights and humanitarian action student at the Sciences Po Paris.",null,null,"A graduate in psychology, politics, law and economics from the university of Amsterdam.","I am studying Economic Policy Consulting M.Sc. at the University of Bochum.","I am a Liberal Arts and Sciences student, currently writing my Bachelor's thesis in Germany.","I am a Business/Political science student at The Technical University of Munich",null,"Doctoral researcher at the Technical University of Munich","PhD student at City University of Hong Kong","I am a graduate of Politics, Psychology, Law and Economics (PPLE) with a specialisation in International Law from the University of Amsterdam, where I graduated with an Upper 2:1. I currently live in London and will start a Master's in International Peace and Security at King's College London in September 2020.","Psychology student BSc at the University of Regensburg, scholarship holder of the Friedrich-Ebert-Foundation, lived and worked in L'Arche Ireland for 1 1/2 years.","BSc law graduate working for the Greens in the European Parliament and hoping to contribute to some good on this earth!","I am a student of geosciences at the University of Freiburg.","I am senior student studying Economics at New York University Abu Dhabi (NYUAD).","Museera is an undergraduate student at New York University Abu Dhabi, double majoring in Political Science and Social Research & Public Policy.","Nadja Grossenbacher holds a MA degree in Conflict Studies & Human Rights as well as a BA degree in Cultural & Social Anthropology and set her regional focus on Sub-Saharan Africa.","M.Sc. student of Politics and Technology at Technical University of Munich","Undergraduate student of Sociology, Politics & Economics with an interest in interdisciplinary research and Data Science.","I am a Master of Public Policy student at the Willy Brandt School of Public Policy in Erfurt, Germany.","I am an undergraduate student in the Dual BA program with Sciences Po Paris and Columbia University, passionate about working in the fields of Medicine and Public Health.","Dual Degree Master's student in Environmental Policy at Sciences Po Paris and Political Science & International Relations at FU Berlin.","Political Science student based in New York City","I am a Language and Orientation Coordinator for a non-profit and have been living in the Balkan region of Europe for 8.5 years.","B.Sc. student politics and technology TU Munich","Graduate Student at the University of Regensburg, Bachelor's Degree from the University of Mannheim","Graduate student of Political Economy at the University of Amsterdam (expected to graduate this year).","Ecuadorian Architect pursuing an International Business Masters degree","Peruvian Sociologist. Master in Public Policy Student at the Willy Brandt School of Public Policy.",null,"Erasmus Mundus Masters of Global Studies student at the University of Leipzig and University of Vienna.","First year BA student in Political Science at the University of Oslo",null,null,null,"I am into environmental and food economics research","I study Mathematics and Philosophy at the University in Braunschweig.","Oslo-based student majoring in law and economics at the University of Oslo","M.Sc. Politics and Technology student.","I am a third year student studying Economics with a Data Science Track at NYUAD.",null,"I am a young doctor who has just graduated from Shifa College of Medicine. Passionate about developing a career in Critical Care and exploring methods that revolutionalize modern healthcare.",null,"PhD student at HfP (Munich). My research focuses on transparency in Chinese governance.",null,"I'm Sean-Michael, I am a Junior at Yale University working on a double major in History and Political Science","I am a qualitative research with a global health background.","I am a Student for political science at Technical University Munich.","Sophia is a Master's student in Public Policy at the Willy Brandt School, specializing in Conflict Studies and Management.","I have a master's degree in Cultural Anthropology from Uppsala University and I am interested in inequalities in knowledge production.","Student of Political Sience","Second-year student at SciencesPo Paris, pursuing a BA in Political Humanities.","I am a Business and Social Science graduate and interest in Social entrepreneurship, Media Anthropology, Censorship and Marginalisation issues.","PhD candidate, Friedrich Ebert Foundation Fellow, writer and consultant with a background in economics, passionate about decent work in supply chains.","A passionate researcher with a strong background in international relations.",null,"Tess Martin is an American undergraduate student currently pursuing her degree in Politics & Government at Sciences Po Paris.",null,null,null,"Enthusiastic student of Political Science, Sociology, Data Science and Artificial Intelligence.","A Doctoral Research Fellow at the Technical University of Munich, Hochschule für Politik and Guest Researcher at Marx Planck Institute für Innovation and Competition, Munich Germany.","I am a student at the London School of Economics and Political Science, pursuing an MSc in Theory & History of International Relations. I am passionate about research, data, public policy and I am very excited to be a part of this project.","A data-driven young professional passionate in research, data analysis and presentation.","MA Gender Studies, Rikkyo University Tokyo/Humboldt University Berlin","I am a student in the Dual BA program between SciencesPo and Columbia University who strongly believes in the power of kindness, and is interested in sustainability, development and management.","Vinayak is an independent communications professional based in New Delhi, India. He holds a masters degree in international security from the Paris School of International Affairs, SciencesPo in Paris, France.",null,null,"I am a PhD student on political science and East Asia Studies at FU Berlin","I am an undergraduate student in my second year at Otago University in New Zealand, with a broad interest in statistical research.","I am an undergraduate student at NYU  Abu Dhabi majoring in Interactive Media.","I am an undergraduate student at New York University Abu Dhabi. I am majoring in biology with a minor in psychology and I have an interest in statistical research.","I am an Assistant Professor at the Department of Economics, Faculty of Law, Charles University in Prague, the Czech Republic. I do empirical research in fields related to law and economics."]],"container":"<table class=\"cell-border stripe\">\n  <thead>\n    <tr>\n      <th> <\/th>\n      <th>Name<\/th>\n      <th>Affiliation<\/th>\n      <th>Country<\/th>\n      <th>Vita<\/th>\n    <\/tr>\n  <\/thead>\n<\/table>","options":{"pageLength":250,"autoWidth":true,"dom":"Bfrtip","scrollX":true,"selection":"multiple","order":[],"orderClasses":false,"columnDefs":[{"orderable":false,"targets":0}],"orderCellsTop":true,"lengthMenu":[10,25,50,100,250]}},"evals":[],"jsHooks":[]}</script>
+<hr />
+<div id="partner-universities" class="section level3 unnumbered" number="">
+<h3 class="unnumbered" number="">Partner Universities</h3>
+<p><img width="20%" src="img/TUM.jpg"/> <img width="20%" src="img/TUM.png"/> <img width="20%" src="img/NYU.png"/></p>
+<hr />
+</div>
+<div id="partner-institutions" class="section level3 unnumbered" number="">
+<h3 class="unnumbered" number="">Partner Institutions</h3>
+<div style="width:100px; height:75px">
+<p><a href="https://www.jataware.com/"><img src="img/Jataware.png" alt="Starsift" /></a></p>
+</div>
+</div>
+</div>
+</div>
+
+&nbsp;
+<hr />
+<p style="text-align: center;">A work by <a href="">CoronaNet Research Project</a></p>
+<p style="text-align: center;"><span style="color: #808080;"><em>Copyright: 2020</em></span></p>
+
+<!-- Add icon library -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+
+<!-- Add font awesome icons -->
+<p style="text-align: center;">
+    <a href="https://twitter.com/CoronaNet_org" class="fa fa-twitter"></a>
+</p>
+
+&nbsp;
+
+
+</div>
+</div>
+
+</div>
+
+<script>
+
+// add bootstrap table styles to pandoc tables
+function bootstrapStylePandocTables() {
+  $('tr.header').parent('thead').parent('table').addClass('table table-condensed');
+}
+$(document).ready(function () {
+  bootstrapStylePandocTables();
+});
+
+
+</script>
+
+<!-- tabsets -->
+
+<script>
+$(document).ready(function () {
+  window.buildTabsets("TOC");
+});
+
+$(document).ready(function () {
+  $('.tabset-dropdown > .nav-tabs > li').click(function () {
+    $(this).parent().toggleClass('nav-tabs-open')
+  });
+});
+</script>
+
+<!-- code folding -->
+
+<script>
+$(document).ready(function ()  {
+
+    // move toc-ignore selectors from section div to header
+    $('div.section.toc-ignore')
+        .removeClass('toc-ignore')
+        .children('h1,h2,h3,h4,h5').addClass('toc-ignore');
+
+    // establish options
+    var options = {
+      selectors: "h1,h2,h3",
+      theme: "bootstrap3",
+      context: '.toc-content',
+      hashGenerator: function (text) {
+        return text.replace(/[.\\/?&!#<>]/g, '').replace(/\s/g, '_').toLowerCase();
+      },
+      ignoreSelector: ".toc-ignore",
+      scrollTo: 0
+    };
+    options.showAndHide = false;
+    options.smoothScroll = true;
+
+    // tocify
+    var toc = $("#TOC").tocify(options).data("toc-tocify");
+});
+</script>
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>
