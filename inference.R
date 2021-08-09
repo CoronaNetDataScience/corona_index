@@ -107,7 +107,10 @@ if(load_data) {
   
   # ecdc
   
-  jhu_cases <- read_csv("https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_confirmed_global.csv") %>% 
+  # raw data 
+  #   jhu_cases <- read_csv("https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_confirmed_global.csv") 
+  
+  jhu_cases <- read_csv("indices/jhu_cases.csv") %>% 
     #filter(is.na(`Province/State`)) %>% 
     mutate(country=recode(`Country/Region`,
                           `Cabo Verde`="Cape Verde",
