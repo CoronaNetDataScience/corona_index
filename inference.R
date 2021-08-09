@@ -15,6 +15,8 @@ require(modelsummary)
 require(readxl)
 require(kableExtra)
 
+num_cores <- parallel::detectCores()
+
 # helper functions for brms
 
 glance.brmsfit <- function(x,...) {
@@ -64,7 +66,7 @@ run_mod <- T
 
 # load time-varying estimates
 
-all_mods_data <- lapply(list.files("indices/","time\\_data\\_scaled\\.rds",
+all_mods_data <- lapply(list.files("indices/","time\\_data\\_scaledjan15\\.rds",
                                    full.names = T),readRDS) %>% 
   bind_rows(.id="modtype")
 
@@ -143,9 +145,18 @@ if(load_data) {
   
   # load in our goodies
   
-  cross_sections <- readRDS("indices/merged_predictors.rds") %>% 
-    select(country,area:pop_tot_log) %>% 
-    distinct
+  cross_sections <- readRDS("indices/predictors_with_electoraldata.rds") %>% 
+    select(country,area:pop_tot_log,gdppc2019,humanrights,lastelection,nextelection) %>% 
+    distinct %>% 
+    select(-gdp_pc) %>% 
+    mutate(lastelection=ymd(lastelection),
+           nextelection=ymd(nextelection),
+           lastelection=case_when(country=="China"~ymd("2018-01-01"),
+                                  country %in% c("Brunei","Eritrea")~min(lastelection,na.rm=T),
+                                  TRUE~lastelection),
+           nextelection=case_when(country=="China"~ymd("2023-01-01"),
+                                  country %in% c("Brunei","Eritrea","Yemen","Saudi Arabia")~max(nextelection,na.rm=T),
+                                  TRUE~nextelection))
   
   time_vary_fb <- read_csv("indices/fb_surv.csv") %>% 
     select(country,date_policy="date",
@@ -167,7 +178,46 @@ if(load_data) {
     left_join(jhu_cases,by=c("country","date_policy")) %>% 
     left_join(jhu_deaths,by=c("country","date_policy")) %>% 
     filter(!is.na(med_biz),!is.na(med_masks),!is.na(med_sd))
-    
+  
+  # indicator for days to  election
+  
+  combine_data <- group_by(combine_data,country) %>% 
+    mutate(days_to_elec=case_when((lastelection - date_policy < nextelection - date_policy) & (lastelection - date_policy >0) ~ lastelection - date_policy,
+                               (lastelection - date_policy) == 0 ~ 0,
+                               (nextelection - date_policy) == 0 ~ 0,
+                               TRUE ~ nextelection - date_policy),
+           days_to_elec=as.numeric(days_to_elec))
+  
+  
+  # need to recode instances where gender of person in power changed
+  
+  combine_data <- mutate(combine_data,
+                         woman_leader=case_when(country == "Austria" & date_policy < ymd("2020-01-07") ~ 1,
+                                                country == "Austria" & date_policy >= ymd("2020-01-07") ~ 0,
+                                                country == "Belgium" & date_policy < ymd("2020-10-01") ~  1,
+                                                country == "Belgium" & date_policy >= ymd("2020-10-01") ~  0,
+                                                country == "Bolivia" & date_policy < ymd("2020-11-08") ~ 1,
+                                                country == "Bolivia" & date_policy >= ymd("2020-11-08") ~ 0,
+                                                country == "Togo" & date_policy < ymd("2020-09-28") ~ 1,
+                                                country == "Togo" & date_policy >= ymd("2020-09-28") ~ 0,
+                                                country == "Marshall Islands" & date_policy < ymd("2020-01-13") ~ 1,
+                                                country == "Marshall Islands" & date_policy >= ymd("2020-01-13") ~ 0,
+                                                country == "Myanmar" & date_policy < ymd("2020-04-01") ~ 1,
+                                                country == "Myanmar" & date_policy >= ymd("2020-04-01") ~ 0,
+                                                country == "Estonia" & date_policy < ymd("2021-01-26") ~ 0,
+                                                country == "Estonia" & date_policy >= ymd("2021-01-26") ~ 1,
+                                                country == "Moldova" & date_policy < ymd("2020-12-24") ~ 0,
+                                                country == "Moldova" & date_policy >= ymd("2020-12-24") ~ 1,
+                                                country == "Samoa" & date_policy < ymd("2020-05-24") ~ 0,
+                                                country == "Samoa" & date_policy >= ymd("2020-05-24") ~ 1,
+                                                country == "Tanzania" & date_policy < ymd("2021-03-19") ~ 0,
+                                                country == "Tanzania" & date_policy >= ymd("2021-03-19") ~ 1,
+                                                country == "Lithuania" & date_policy < ymd("2020-12-11") ~ 0,
+                                                country == "Lithuania" & date_policy >= ymd("2020-12-11") ~ 1,
+                                                country == "Gabon" & date_policy < ymd("2020-07-16") ~ 0,
+                                                country == "Gabon" & date_policy >= ymd("2020-07-16") ~ 1,
+                                                country == "San Marino" & date_policy < ymd("2020-10-01") ~ 0.5,
+                                                country == "San Marino" & date_policy >= ymd("2020-10-01") ~ 0))
   
   # need to merge in indices to impute
   
@@ -193,15 +243,17 @@ combine_dv <- lapply(over_five, function(o) {
       left_join(all_mods_sd,
               by=c('country',"date_policy")) %>% 
       mutate(density=as.numeric(scale(exp(pop_tot_log)/area)),
-           fdi_prop=as.numeric(scale((fdi/exp(pop_tot_log))/gdp_pc)),
+           fdi_prop=as.numeric(scale((fdi/exp(pop_tot_log))/gdppc2019)),
+          gdp_pc=as.numeric(scale(gdppc2019)),
            cases_per_cap=as.numeric(scale(cases/exp(pop_tot_log))),
-           deaths_per_cap=as.numeric(scale(deaths/exp(pop_tot_log))))
+           deaths_per_cap=as.numeric(scale(deaths/exp(pop_tot_log))),
+          mean_sd = (sd_school + sd_biz + sd_sd)/3)
   
       }) 
 
 if(run_mod) {
   
-  # try out a combined model
+  # business restrictions
   
   biz_mod <- brm_multiple(brmsformula(med_biz | mi(sd_biz) ~ trade + finance + state_fragility + bureaucracy_corrupt +
                                retail_and_recreation_percent_change_from_baseline +
@@ -218,14 +270,15 @@ if(run_mod) {
                                gini +
                                 cases_per_cap +
                                  deaths_per_cap +
-                               density,decomp="QR",center=TRUE),
+                               density +
+                                 days_to_elec,decomp="QR",center=TRUE),
                  data=combine_dv,
                  backend="cmdstanr",
-                 chains=1,threads=threading(16),
+                 chains=1,threads=threading(num_cores),
                  iter=1000,
-                 cores=16)
+                 cores=num_cores)
   
-  saveRDS(biz_mod,"biz_mod.rds")
+  saveRDS(biz_mod,"biz_mod_rr.rds")
   
   school_mod <- brm_multiple(brmsformula(med_school | mi(sd_school) ~ trade + finance + state_fragility + bureaucracy_corrupt +
                                   retail_and_recreation_percent_change_from_baseline +
@@ -245,11 +298,11 @@ if(run_mod) {
                                   density,decomp="QR",center=TRUE),
                     data=combine_dv,
                     backend="cmdstanr",
-                    chains=1,threads=threading(16),
+                    chains=1,threads=threading(num_cores),
                     iter=1000,
-                    cores=16)
+                    cores=num_cores)
   
-  saveRDS(school_mod,"school_mod.rds")
+  saveRDS(school_mod,"school_mod_rr.rds")
   
   sd_mod <- brm_multiple(brmsformula(med_sd | mi(sd_sd) ~ trade + finance + state_fragility + bureaucracy_corrupt +
                               retail_and_recreation_percent_change_from_baseline +
@@ -269,17 +322,43 @@ if(run_mod) {
                               density,decomp="QR",center=TRUE),
                 data=combine_dv,
                 backend="cmdstanr",
-                chains=1,threads=threading(16),
+                chains=1,threads=threading(num_cores),
                 iter=1000,
-                cores=16)
+                cores=num_cores)
   
-  saveRDS(sd_mod,"sd_mod.rds")
+  saveRDS(sd_mod,"sd_mod_rr.rds")
+  
+  # combined model, average SDs
+  
+  sd_mod <- brm_multiple(brmsformula(mvbind(med_biz,med_school,med_sd) | mi(mean_sd) ~ trade + finance + state_fragility + bureaucracy_corrupt +
+                                       retail_and_recreation_percent_change_from_baseline +
+                                       workplaces_percent_change_from_baseline +
+                                       grocery_and_pharmacy_percent_change_from_baseline +
+                                       parks_percent_change_from_baseline +
+                                       contact + 
+                                       anxious +
+                                       gdp_pc +
+                                       fdi_prop +
+                                       pandemic_prep +
+                                       woman_leader +
+                                       polity +
+                                       gini +
+                                       cases_per_cap +
+                                       deaths_per_cap +
+                                       density,decomp="QR",center=TRUE),
+                         data=combine_dv,
+                         backend="cmdstanr",
+                         chains=1,threads=threading(num_cores),
+                         iter=1000,
+                         cores=num_cores)
+  
+  saveRDS(sd_mod,"sd_mod_rr.rds")
   
 } else {
   
-  sd_mod <- readRDS("sd_mod.rds")
-  biz_mod <- readRDS("biz_mod.rds")
-  school_mod <- readRDS("school_mod.rds")
+  sd_mod <- readRDS("sd_mod_rr.rds")
+  biz_mod <- readRDS("biz_mod_rr.rds")
+  school_mod <- readRDS("school_mod_rr.rds")
   
 }
 
@@ -307,7 +386,8 @@ modelsummary(list(Business=biz_mod,
                            "pandemic_prep"="Pandemic Preparedness",
                            "woman_leader"="Woman Leader",
                            "polity"="Polity Score",
-                           "gini"="Gini Index"),
+                           "gini"="Gini Index",
+                          "days_to_elec"="Days to Election"),
              title="Results of Regression of Social, Political and Economic Covariates on Index Scores",
              statistic="({conf.low}, {conf.high})",
              gof_map=tibble(raw=c("$R^2$","LOO-IC"),
