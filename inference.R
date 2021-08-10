@@ -1,5 +1,10 @@
 # run cross-sectional and time-varying models
 .libPaths("~/other_R_libs2")
+
+require(cmdstanr)
+
+set_cmdstan_path("/home/rmk7/cmdstan")
+
 require(dplyr)
 require(tidyr)
 require(stringr)
