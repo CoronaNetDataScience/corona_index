@@ -292,7 +292,8 @@ if(run_mod) {
                  backend="cmdstanr",
                  chains=1,threads=threading(num_cores),
                  iter=1000,
-                 cores=num_cores)
+                 cores=num_cores,
+                 max_treedepth=12)
   
   saveRDS(biz_mod,"biz_mod_rr.rds")
   
@@ -316,7 +317,8 @@ if(run_mod) {
                     backend="cmdstanr",
                     chains=1,threads=threading(num_cores),
                     iter=1000,
-                    cores=num_cores)
+                    cores=num_cores,
+                    max_treedepth=12)
   
   saveRDS(school_mod,"school_mod_rr.rds")
   
@@ -340,7 +342,8 @@ if(run_mod) {
                 backend="cmdstanr",
                 chains=1,threads=threading(num_cores),
                 iter=1000,
-                cores=num_cores)
+                cores=num_cores,
+                max_treedepth=12)
   
   saveRDS(sd_mod,"sd_mod_rr.rds")
   
@@ -366,9 +369,10 @@ if(run_mod) {
                          backend="cmdstanr",
                          chains=1,threads=threading(num_cores),
                          iter=1000,
-                         cores=num_cores)
+                         cores=num_cores,
+                         max_treedepth=12)
   
-  saveRDS(sd_mod,"sd_mod_rr.rds")
+  saveRDS(sd_mod,"multivariate_mod_rr.rds")
   
 } else {
   
