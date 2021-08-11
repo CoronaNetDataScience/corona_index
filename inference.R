@@ -287,7 +287,8 @@ if(run_mod) {
                                 cases_per_cap +
                                  deaths_per_cap +
                                density +
-                                 days_to_elec,decomp="QR",center=TRUE),
+                                 days_to_elec +
+                                 humanrights,decomp="QR",center=TRUE),
                  data=combine_dv,
                  backend="cmdstanr",
                  chains=1,threads=threading(num_cores),
@@ -312,7 +313,9 @@ if(run_mod) {
                                   gini +
                                     cases_per_cap +
                                     deaths_per_cap +
-                                  density,decomp="QR",center=TRUE),
+                                  density +
+                                    days_to_elec +
+                                    humanrights,decomp="QR",center=TRUE),
                     data=combine_dv,
                     backend="cmdstanr",
                     chains=1,threads=threading(num_cores),
@@ -337,7 +340,9 @@ if(run_mod) {
                               gini +
                                 cases_per_cap +
                                 deaths_per_cap +
-                              density,decomp="QR",center=TRUE),
+                              density +
+                                days_to_elec +
+                                humanrights,decomp="QR",center=TRUE),
                 data=combine_dv,
                 backend="cmdstanr",
                 chains=1,threads=threading(num_cores),
@@ -349,7 +354,7 @@ if(run_mod) {
   
   # combined model, average SDs
   
-  sd_mod <- brm_multiple(brmsformula(mvbind(med_biz,med_school,med_sd) | mi(mean_sd) ~ trade + finance + state_fragility + bureaucracy_corrupt +
+  mult_mod <- brm_multiple(brmsformula(mvbind(med_biz,med_school,med_sd) | mi(mean_sd) ~ trade + finance + state_fragility + bureaucracy_corrupt +
                                        retail_and_recreation_percent_change_from_baseline +
                                        workplaces_percent_change_from_baseline +
                                        grocery_and_pharmacy_percent_change_from_baseline +
@@ -364,7 +369,9 @@ if(run_mod) {
                                        gini +
                                        cases_per_cap +
                                        deaths_per_cap +
-                                       density,decomp="QR",center=TRUE),
+                                       density +
+                                         days_to_elec +
+                                         humanrights,decomp="QR",center=TRUE),
                          data=combine_dv,
                          backend="cmdstanr",
                          chains=1,threads=threading(num_cores),
@@ -372,7 +379,7 @@ if(run_mod) {
                          cores=num_cores,
                          max_treedepth=12)
   
-  saveRDS(sd_mod,"multivariate_mod_rr.rds")
+  saveRDS(mult_mod,"multivariate_mod_rr.rds")
   
 } else {
   
