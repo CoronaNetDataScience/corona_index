@@ -23,12 +23,12 @@ require(kableExtra)
 num_cores <- parallel::detectCores()
 
 # whether to generate tables/figures
-paper_output <- FALSE
+paper_output <- TRUE
 
 # run everything from scratch
 
-load_data <- T
-run_mod <- T
+load_data <- F
+run_mod <- F
 
 # helper functions for brms
 
@@ -255,9 +255,11 @@ if(load_data) {
 # bind and merge
 
 combine_dv <- lapply(over_five, function(o) {
+
     o %>% 
       left_join(all_mods_sd,
               by=c('country',"date_policy")) %>% 
+      ungroup %>% 
       mutate(density=as.numeric(scale(exp(pop_tot_log)/area)),
            fdi_prop=as.numeric(scale((fdi/exp(pop_tot_log))/gdppc2019)),
           gdp_pc=as.numeric(scale(gdppc2019)),
@@ -386,6 +388,7 @@ if(run_mod) {
   sd_mod <- readRDS("sd_mod_rr.rds")
   biz_mod <- readRDS("biz_mod_rr.rds")
   school_mod <- readRDS("school_mod_rr.rds")
+  mult_mod <- readRDS("multivariate_mod_rr.rds")
   
 }
 
@@ -414,6 +417,7 @@ if(paper_output) {
                           "woman_leader"="Woman Leader",
                           "polity"="Polity Score",
                           "gini"="Gini Index",
+                          "humanrights"="Human Rights",
                           "days_to_elec"="Days to Election"),
                title="Results of Regression of Social, Political and Economic Covariates on Index Scores",
                statistic="({conf.low}, {conf.high})",
