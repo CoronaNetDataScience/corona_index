@@ -27,7 +27,7 @@ paper_output <- F
 
 # run everything from scratch
 
-load_data <- T
+load_data <- F
 run_mod <- T
 
 # helper functions for brms
