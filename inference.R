@@ -273,86 +273,86 @@ if(run_mod) {
   
   # business restrictions
   
-  biz_mod <- brm_multiple(brmsformula(med_biz | mi(sd_biz) ~ trade + finance + state_fragility + bureaucracy_corrupt +
-                               retail_and_recreation_percent_change_from_baseline +
-                               workplaces_percent_change_from_baseline +
-                               grocery_and_pharmacy_percent_change_from_baseline +
-                               parks_percent_change_from_baseline +
-                               contact + 
-                               anxious +
-                               gdp_pc +
-                               fdi_prop +
-                               pandemic_prep +
-                               woman_leader +
-                               polity +
-                               gini +
-                                cases_per_cap +
-                                 deaths_per_cap +
-                               density +
-                                 days_to_elec +
-                                 humanrights,decomp="QR",center=TRUE),
-                 data=combine_dv,
-                 backend="cmdstanr",
-                 chains=1,threads=threading(num_cores),
-                 iter=1000,
-                 cores=num_cores,
-                 max_treedepth=12)
-  
-  saveRDS(biz_mod,"biz_mod_rr.rds")
-  
-  school_mod <- brm_multiple(brmsformula(med_school | mi(sd_school) ~ trade + finance + state_fragility + bureaucracy_corrupt +
-                                  retail_and_recreation_percent_change_from_baseline +
-                                  workplaces_percent_change_from_baseline +
-                                  grocery_and_pharmacy_percent_change_from_baseline +
-                                  parks_percent_change_from_baseline +
-                                  contact + 
-                                  anxious +
-                                  gdp_pc +
-                                  fdi_prop +
-                                  pandemic_prep +
-                                  woman_leader +
-                                  polity +
-                                  gini +
-                                    cases_per_cap +
-                                    deaths_per_cap +
-                                  density +
-                                    days_to_elec +
-                                    humanrights,decomp="QR",center=TRUE),
-                    data=combine_dv,
-                    backend="cmdstanr",
-                    chains=1,threads=threading(num_cores),
-                    iter=1000,
-                    cores=num_cores,
-                    max_treedepth=12)
-  
-  saveRDS(school_mod,"school_mod_rr.rds")
-  
-  sd_mod <- brm_multiple(brmsformula(med_sd | mi(sd_sd) ~ trade + finance + state_fragility + bureaucracy_corrupt +
-                              retail_and_recreation_percent_change_from_baseline +
-                              workplaces_percent_change_from_baseline +
-                              grocery_and_pharmacy_percent_change_from_baseline +
-                              parks_percent_change_from_baseline +
-                              contact + 
-                              anxious +
-                              gdp_pc +
-                              fdi_prop +
-                              pandemic_prep +
-                              woman_leader +
-                              polity +
-                              gini +
-                                cases_per_cap +
-                                deaths_per_cap +
-                              density +
-                                days_to_elec +
-                                humanrights,decomp="QR",center=TRUE),
-                data=combine_dv,
-                backend="cmdstanr",
-                chains=1,threads=threading(num_cores),
-                iter=1000,
-                cores=num_cores,
-                max_treedepth=12)
-  
-  saveRDS(sd_mod,"sd_mod_rr.rds")
+  # biz_mod <- brm_multiple(brmsformula(med_biz | mi(sd_biz) ~ trade + finance + state_fragility + bureaucracy_corrupt +
+  #                              retail_and_recreation_percent_change_from_baseline +
+  #                              workplaces_percent_change_from_baseline +
+  #                              grocery_and_pharmacy_percent_change_from_baseline +
+  #                              parks_percent_change_from_baseline +
+  #                              contact + 
+  #                              anxious +
+  #                              gdp_pc +
+  #                              fdi_prop +
+  #                              pandemic_prep +
+  #                              woman_leader +
+  #                              polity +
+  #                              gini +
+  #                               cases_per_cap +
+  #                                deaths_per_cap +
+  #                              density +
+  #                                days_to_elec +
+  #                                humanrights,decomp="QR",center=TRUE),
+  #                data=combine_dv,
+  #                backend="cmdstanr",
+  #                chains=1,threads=threading(num_cores),
+  #                iter=1000,
+  #                cores=num_cores,
+  #                max_treedepth=12)
+  # 
+  # saveRDS(biz_mod,"biz_mod_rr.rds")
+  # 
+  # school_mod <- brm_multiple(brmsformula(med_school | mi(sd_school) ~ trade + finance + state_fragility + bureaucracy_corrupt +
+  #                                 retail_and_recreation_percent_change_from_baseline +
+  #                                 workplaces_percent_change_from_baseline +
+  #                                 grocery_and_pharmacy_percent_change_from_baseline +
+  #                                 parks_percent_change_from_baseline +
+  #                                 contact + 
+  #                                 anxious +
+  #                                 gdp_pc +
+  #                                 fdi_prop +
+  #                                 pandemic_prep +
+  #                                 woman_leader +
+  #                                 polity +
+  #                                 gini +
+  #                                   cases_per_cap +
+  #                                   deaths_per_cap +
+  #                                 density +
+  #                                   days_to_elec +
+  #                                   humanrights,decomp="QR",center=TRUE),
+  #                   data=combine_dv,
+  #                   backend="cmdstanr",
+  #                   chains=1,threads=threading(num_cores),
+  #                   iter=1000,
+  #                   cores=num_cores,
+  #                   max_treedepth=12)
+  # 
+  # saveRDS(school_mod,"/scratch/rmk7/school_mod_rr.rds")
+  # 
+  # sd_mod <- brm_multiple(brmsformula(med_sd | mi(sd_sd) ~ trade + finance + state_fragility + bureaucracy_corrupt +
+  #                             retail_and_recreation_percent_change_from_baseline +
+  #                             workplaces_percent_change_from_baseline +
+  #                             grocery_and_pharmacy_percent_change_from_baseline +
+  #                             parks_percent_change_from_baseline +
+  #                             contact + 
+  #                             anxious +
+  #                             gdp_pc +
+  #                             fdi_prop +
+  #                             pandemic_prep +
+  #                             woman_leader +
+  #                             polity +
+  #                             gini +
+  #                               cases_per_cap +
+  #                               deaths_per_cap +
+  #                             density +
+  #                               days_to_elec +
+  #                               humanrights,decomp="QR",center=TRUE),
+  #               data=combine_dv,
+  #               backend="cmdstanr",
+  #               chains=1,threads=threading(num_cores),
+  #               iter=1000,
+  #               cores=num_cores,
+  #               max_treedepth=12)
+  # 
+  # saveRDS(sd_mod,"/scratch/rmk7/sd_mod_rr.rds")
   
   # combined model, average SDs
   
@@ -381,7 +381,7 @@ if(run_mod) {
                          cores=num_cores,
                          max_treedepth=12)
   
-  saveRDS(mult_mod,"multivariate_mod_rr.rds")
+  saveRDS(mult_mod,"/scratch/rmk7/multivariate_mod_rr.rds")
   
 } else {
   
@@ -407,6 +407,7 @@ if(paper_output) {
                           "workplaces_percent_change_from_baseline"="Workplace Mobility",
                           "grocery_and_pharmacy_percent_change_from_baseline"="Grocery Mobility",
                           "parks_percent_change_from_baseline"="Parks Mobility",
+                          "days_to_elec"="Days to Election",
                           "density"="Population Density",
                           "gdp_pc"="GDP Per Capita",
                           "fdi_prop"="FDI",
@@ -417,8 +418,7 @@ if(paper_output) {
                           "woman_leader"="Woman Leader",
                           "polity"="Polity Score",
                           "gini"="Gini Index",
-                          "humanrights"="Human Rights",
-                          "days_to_elec"="Days to Election"),
+                          "humanrights"="Human Rights"),
                title="Results of Regression of Social, Political and Economic Covariates on Index Scores",
                statistic="({conf.low}, {conf.high})",
                gof_map=tibble(raw=c("$R^2$","LOO-IC"),
@@ -430,12 +430,18 @@ if(paper_output) {
                output="latex") %>% 
     kable_styling(latex_options = c("striped","hold_position"),
                   font_size = 9) %>% 
-    pack_rows("Time-varying", 1, 18) %>%
-    pack_rows("Cross-sectional",19, 38) %>% 
-    row_spec(seq(2,38,by=2),font_size=7,italic = T) %>% 
+    pack_rows("Time-varying", 1, 20) %>%
+    pack_rows("Cross-sectional",21, 42) %>% 
+    row_spec(seq(2,40,by=2),font_size=7,italic = T) %>% 
     footnote(general="Coefficients are the posterior median values and the uncertainty intervals are the 5% to 95% posterior density intervals. Results marginalize across 5 imputed datasets.",
              threeparttable = T) %>% 
     save_kable("mod_table.tex")
+  
+  # need multivariate model
+  
+  require(gtsummary)
+  
+  c1 <- tbl_regression(multiva)
   
   
   # do some posterior predictions
