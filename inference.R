@@ -23,12 +23,12 @@ require(kableExtra)
 num_cores <- parallel::detectCores()
 
 # whether to generate tables/figures
-paper_output <- T
+paper_output <- F
 
 # run everything from scratch
 
 load_data <- F
-run_mod <- F
+run_mod <- T
 
 # helper functions for brms
 
