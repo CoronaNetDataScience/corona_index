@@ -23,12 +23,12 @@ require(kableExtra)
 num_cores <- parallel::detectCores()
 
 # whether to generate tables/figures
-paper_output <- F
+paper_output <- T
 
 # run everything from scratch
 
 load_data <- F
-run_mod <- T
+run_mod <- F
 
 # helper functions for brms
 
@@ -273,107 +273,149 @@ if(run_mod) {
   
   # business restrictions
   
-  # biz_mod <- brm_multiple(brmsformula(med_biz | mi(sd_biz) ~ trade + finance + state_fragility + bureaucracy_corrupt +
-  #                              retail_and_recreation_percent_change_from_baseline +
-  #                              workplaces_percent_change_from_baseline +
-  #                              grocery_and_pharmacy_percent_change_from_baseline +
-  #                              parks_percent_change_from_baseline +
-  #                              contact + 
-  #                              anxious +
-  #                              gdp_pc +
-  #                              fdi_prop +
-  #                              pandemic_prep +
-  #                              woman_leader +
-  #                              polity +
-  #                              gini +
-  #                               cases_per_cap +
-  #                                deaths_per_cap +
-  #                              density +
-  #                                days_to_elec +
-  #                                humanrights,decomp="QR",center=TRUE),
-  #                data=combine_dv,
-  #                backend="cmdstanr",
-  #                chains=1,threads=threading(num_cores),
-  #                iter=1000,
-  #                cores=num_cores,
-  #                max_treedepth=12)
-  # 
-  # saveRDS(biz_mod,"biz_mod_rr.rds")
-  # 
-  # school_mod <- brm_multiple(brmsformula(med_school | mi(sd_school) ~ trade + finance + state_fragility + bureaucracy_corrupt +
-  #                                 retail_and_recreation_percent_change_from_baseline +
-  #                                 workplaces_percent_change_from_baseline +
-  #                                 grocery_and_pharmacy_percent_change_from_baseline +
-  #                                 parks_percent_change_from_baseline +
-  #                                 contact + 
-  #                                 anxious +
-  #                                 gdp_pc +
-  #                                 fdi_prop +
-  #                                 pandemic_prep +
-  #                                 woman_leader +
-  #                                 polity +
-  #                                 gini +
-  #                                   cases_per_cap +
-  #                                   deaths_per_cap +
-  #                                 density +
-  #                                   days_to_elec +
-  #                                   humanrights,decomp="QR",center=TRUE),
-  #                   data=combine_dv,
-  #                   backend="cmdstanr",
-  #                   chains=1,threads=threading(num_cores),
-  #                   iter=1000,
-  #                   cores=num_cores,
-  #                   max_treedepth=12)
-  # 
-  # saveRDS(school_mod,"/scratch/rmk7/school_mod_rr.rds")
-  # 
-  # sd_mod <- brm_multiple(brmsformula(med_sd | mi(sd_sd) ~ trade + finance + state_fragility + bureaucracy_corrupt +
-  #                             retail_and_recreation_percent_change_from_baseline +
-  #                             workplaces_percent_change_from_baseline +
-  #                             grocery_and_pharmacy_percent_change_from_baseline +
-  #                             parks_percent_change_from_baseline +
-  #                             contact + 
-  #                             anxious +
-  #                             gdp_pc +
-  #                             fdi_prop +
-  #                             pandemic_prep +
-  #                             woman_leader +
-  #                             polity +
-  #                             gini +
-  #                               cases_per_cap +
-  #                               deaths_per_cap +
-  #                             density +
-  #                               days_to_elec +
-  #                               humanrights,decomp="QR",center=TRUE),
-  #               data=combine_dv,
-  #               backend="cmdstanr",
-  #               chains=1,threads=threading(num_cores),
-  #               iter=1000,
-  #               cores=num_cores,
-  #               max_treedepth=12)
-  # 
+  biz_mod <- brm_multiple(brmsformula(med_biz | mi(sd_biz) ~ trade + finance + state_fragility + bureaucracy_corrupt +
+                               retail_and_recreation_percent_change_from_baseline +
+                               workplaces_percent_change_from_baseline +
+                               grocery_and_pharmacy_percent_change_from_baseline +
+                               parks_percent_change_from_baseline +
+                               contact +
+                               anxious +
+                               gdp_pc +
+                               fdi_prop +
+                               pandemic_prep +
+                               woman_leader +
+                               polity +
+                               gini +
+                                cases_per_cap +
+                                 deaths_per_cap +
+                               density +
+                                 days_to_elec +
+                                 humanrights,decomp="QR",center=TRUE),
+                 data=combine_dv,
+                 backend="cmdstanr",
+                 chains=1,threads=threading(num_cores),
+                 iter=1000,
+                 cores=num_cores,
+                 max_treedepth=12)
+
+  saveRDS(biz_mod,"biz_mod_rr.rds")
+
+  school_mod <- brm_multiple(brmsformula(med_school | mi(sd_school) ~ trade + finance + state_fragility + bureaucracy_corrupt +
+                                  retail_and_recreation_percent_change_from_baseline +
+                                  workplaces_percent_change_from_baseline +
+                                  grocery_and_pharmacy_percent_change_from_baseline +
+                                  parks_percent_change_from_baseline +
+                                  contact +
+                                  anxious +
+                                  gdp_pc +
+                                  fdi_prop +
+                                  pandemic_prep +
+                                  woman_leader +
+                                  polity +
+                                  gini +
+                                    cases_per_cap +
+                                    deaths_per_cap +
+                                  density +
+                                    days_to_elec +
+                                    humanrights,decomp="QR",center=TRUE),
+                    data=combine_dv,
+                    backend="cmdstanr",
+                    chains=1,threads=threading(num_cores),
+                    iter=1000,
+                    cores=num_cores,
+                    max_treedepth=12)
+
+  saveRDS(school_mod,"/scratch/rmk7/school_mod_rr.rds")
+
+  sd_mod <- brm_multiple(brmsformula(med_sd | mi(sd_sd) ~ trade + finance + state_fragility + bureaucracy_corrupt +
+                              retail_and_recreation_percent_change_from_baseline +
+                              workplaces_percent_change_from_baseline +
+                              grocery_and_pharmacy_percent_change_from_baseline +
+                              parks_percent_change_from_baseline +
+                              contact +
+                              anxious +
+                              gdp_pc +
+                              fdi_prop +
+                              pandemic_prep +
+                              woman_leader +
+                              polity +
+                              gini +
+                                cases_per_cap +
+                                deaths_per_cap +
+                              density +
+                                days_to_elec +
+                                humanrights,decomp="QR",center=TRUE),
+                data=combine_dv,
+                backend="cmdstanr",
+                chains=1,threads=threading(num_cores),
+                iter=1000,
+                cores=num_cores,
+                max_treedepth=12)
+
   # saveRDS(sd_mod,"/scratch/rmk7/sd_mod_rr.rds")
   
   # combined model, average SDs
   
-  mult_mod <- brm_multiple(brmsformula(mvbind(med_biz,med_school,med_sd) | mi(mean_sd) ~ trade + finance + state_fragility + bureaucracy_corrupt +
-                                       retail_and_recreation_percent_change_from_baseline +
-                                       workplaces_percent_change_from_baseline +
-                                       grocery_and_pharmacy_percent_change_from_baseline +
-                                       parks_percent_change_from_baseline +
-                                       contact + 
-                                       anxious +
-                                       gdp_pc +
-                                       fdi_prop +
-                                       pandemic_prep +
-                                       woman_leader +
-                                       polity +
-                                       gini +
-                                       cases_per_cap +
-                                       deaths_per_cap +
-                                       density +
-                                         days_to_elec +
-                                         humanrights,decomp="QR",center=TRUE),
+  combine_form <- mvbrmsformula(bf(med_biz | mi(sd_biz) ~ trade + finance + state_fragility + bureaucracy_corrupt +
+                                  retail_and_recreation_percent_change_from_baseline +
+                                  workplaces_percent_change_from_baseline +
+                                  grocery_and_pharmacy_percent_change_from_baseline +
+                                  parks_percent_change_from_baseline +
+                                  contact + 
+                                  anxious +
+                                  gdp_pc +
+                                  fdi_prop +
+                                  pandemic_prep +
+                                  woman_leader +
+                                  polity +
+                                  gini +
+                                  cases_per_cap +
+                                  deaths_per_cap +
+                                  density +
+                                  days_to_elec +
+                                  humanrights,
+                                decomp="QR",center=TRUE),
+                                bf(med_school | mi(sd_school) ~ trade + finance + state_fragility + bureaucracy_corrupt +
+                                     retail_and_recreation_percent_change_from_baseline +
+                                     workplaces_percent_change_from_baseline +
+                                     grocery_and_pharmacy_percent_change_from_baseline +
+                                     parks_percent_change_from_baseline +
+                                     contact + 
+                                     anxious +
+                                     gdp_pc +
+                                     fdi_prop +
+                                     pandemic_prep +
+                                     woman_leader +
+                                     polity +
+                                     gini +
+                                     cases_per_cap +
+                                     deaths_per_cap +
+                                     density +
+                                     days_to_elec +
+                                     humanrights,
+                                   decomp="QR",center=TRUE),
+                          bf(med_sd | mi(sd_sd) ~ trade + finance + state_fragility + bureaucracy_corrupt +
+                               retail_and_recreation_percent_change_from_baseline +
+                               workplaces_percent_change_from_baseline +
+                               grocery_and_pharmacy_percent_change_from_baseline +
+                               parks_percent_change_from_baseline +
+                               contact + 
+                               anxious +
+                               gdp_pc +
+                               fdi_prop +
+                               pandemic_prep +
+                               woman_leader +
+                               polity +
+                               gini +
+                               cases_per_cap +
+                               deaths_per_cap +
+                               density +
+                               days_to_elec +
+                               humanrights,
+                             decomp="QR",center=TRUE),
+                          rescor=T)
+  
+  mult_mod <- brm_multiple(combine_form,
                          data=combine_dv,
                          backend="cmdstanr",
                          chains=1,threads=threading(num_cores),
@@ -440,8 +482,9 @@ if(paper_output) {
   # need multivariate model
   
   require(gtsummary)
+  require(tidybayes)
   
-  c1 <- tbl_regression(multiva)
+  tidy_out <- gather_rvars(mult_mod,`b\\_med`, regex=T)
   
   
   # do some posterior predictions
