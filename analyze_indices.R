@@ -20,7 +20,7 @@ source('summarize_draws_mc.R')
 
 # whether to load and summarize data (will take some time)
 
-sum_data <- T
+sum_data <- F
 
 if(sum_data) {
 
@@ -1061,29 +1061,31 @@ require(patchwork)
 
 # load all plots again if they weren't run earlier
 
-mask_time <- readRDS("coronanet/from_cluster/mask_plot_object.rds")
-hm2_time <- readRDS("coronanet/from_cluster/hm2_plot_object.rds")
-biz_time <- readRDS("coronanet/from_cluster/biz_mod_plot_object.rds")
-hr_time <- readRDS("coronanet/from_cluster/hr_plot_object.rds")
-school_time <- readRDS("coronanet/from_cluster/school_plot_object.rds")
-sd_time <- readRDS("coronanet/from_cluster/sd_plot_object.rds")
+mask_time <- readRDS("coronanet/mask_plot_object.rds")
+hm2_time <- readRDS("coronanet/hm2_plot_object.rds")
+biz_time <- readRDS("coronanet/biz_mod_plot_object.rds")
+hr_time <- readRDS("coronanet/hr_plot_object.rds")
+school_time <- readRDS("coronanet/school_plot_object.rds")
+sd_time <- readRDS("coronanet/sd_plot_object.rds")
 
 # first combined all trajectories
 
 (mask_time + hm2_time + biz_time) / (hr_time + school_time + sd_time)
 
 ggsave("plots/combine_plot.png")
+ggsave("plots/combine_plot.pdf")
 
-mask_time_single <- readRDS("coronanet/from_cluster/mask_plot_single_object.rds")
-hm2_time_single <- readRDS("coronanet/from_cluster/hm2_plot_single_object.rds")
-biz_time_single <- readRDS("coronanet/from_cluster/biz_mod_plot_single_object.rds")
-hr_time_single <- readRDS("coronanet/from_cluster/hr_plot_single_object.rds")
-school_time_single <- readRDS("coronanet/from_cluster/school_plot_single_object.rds")
-sd_time_single <- readRDS("coronanet/from_cluster/sd_plot_single_object.rds")
+mask_time_single <- readRDS("coronanet/mask_plot_single_object.rds")
+hm2_time_single <- readRDS("coronanet/hm2_plot_single_object.rds")
+biz_time_single <- readRDS("coronanet/biz_mod_plot_single_object.rds")
+hr_time_single <- readRDS("coronanet/hr_plot_single_object.rds")
+school_time_single <- readRDS("coronanet/school_plot_single_object.rds")
+sd_time_single <- readRDS("coronanet/sd_plot_single_object.rds")
 
 (mask_time_single + hm2_time_single + biz_time_single) / (hr_time_single + school_time_single + sd_time_single)
 
 ggsave("plots/combine_plot_single.png",scale=1.2)
+ggsave("plots/combine_plot_single.pdf",scale=1.2)
 
 (mask_time_single + hm2_time_single + biz_time_single) / (hr_time_single + school_time_single + sd_time_single) +
   plot_annotation(title="Index Values for a Subset of Countries",
@@ -1092,29 +1094,31 @@ ggsave("plots/combine_plot_single_twitter.png",scale=1.2)
 
 # and discimrinations
 
-mask <- readRDS("coronanet/from_cluster/mask_discrim_object.rds") + ylab("")
-hm2 <- readRDS("coronanet/from_cluster/hm2_discrim_object.rds") + ylab("")
-biz <- readRDS("coronanet/from_cluster/biz_discrim_object.rds")
-school <- readRDS("coronanet/from_cluster/school_discrim_object.rds")
-sd <- readRDS("coronanet/from_cluster/sd_discrim_object.rds")
-hr <- readRDS("coronanet/from_cluster/hr_discrim_object.rds")
+mask <- readRDS("coronanet/mask_discrim_object.rds") + ylab("")
+hm2 <- readRDS("coronanet/hm2_discrim_object.rds") + ylab("")
+biz <- readRDS("coronanet/biz_discrim_object.rds")
+school <- readRDS("coronanet/school_discrim_object.rds")
+sd <- readRDS("coronanet/sd_discrim_object.rds")
+hr <- readRDS("coronanet/hr_discrim_object.rds")
 
 (mask + hm2) / (hr + school)
 
 ggsave("plots/discrim1.png",height=7.5,width=6)
+ggsave("plots/discrim1.pdf",height=7.5,width=6)
 
 (sd + biz) 
 
 ggsave("plots/discrim2.png",scale=1.2)
+ggsave("plots/discrim2.pdf",scale=1.2)
 
-mask_rhat <- readRDS("coronanet/from_cluster/mask_rhat.rds")
-hm2_rhat <- readRDS("coronanet/from_cluster/hm2_rhat.rds")
-biz_rhat <- readRDS("coronanet/from_cluster/biz_rhat.rds")
-school_rhat <- readRDS("coronanet/from_cluster/school_rhat.rds") + geom_vline(xintercept=1.1,
+mask_rhat <- readRDS("coronanet/mask_rhat.rds")
+hm2_rhat <- readRDS("coronanet/hm2_rhat.rds")
+biz_rhat <- readRDS("coronanet/biz_rhat.rds")
+school_rhat <- readRDS("coronanet/school_rhat.rds") + geom_vline(xintercept=1.1,
                                                                  linetype=2,
                                                                  colour="blue")
-sd_rhat <- readRDS("coronanet/from_cluster/sd_rhat.rds")
-hr_rhat <- readRDS("coronanet/from_cluster/hr_rhat.rds")
+sd_rhat <- readRDS("coronanet/sd_rhat.rds")
+hr_rhat <- readRDS("coronanet/hr_rhat.rds")
 
 (mask_rhat + hm2_rhat + biz_rhat) / (hr_rhat + school_rhat + sd_rhat)
 

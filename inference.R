@@ -1,9 +1,9 @@
 # run cross-sectional and time-varying models
-.libPaths("~/other_R_libs2")
+#.libPaths("~/other_R_libs2")
 
 require(cmdstanr)
 
-set_cmdstan_path("/home/rmk7/cmdstan")
+#set_cmdstan_path("/home/rmk7/cmdstan")
 
 require(dplyr)
 require(tidyr)
@@ -23,12 +23,13 @@ require(kableExtra)
 num_cores <- parallel::detectCores()
 
 # whether to generate tables/figures
-paper_output <- F
+paper_output <- T
 
 # run everything from scratch
 
 load_data <- F
-run_mod <- T
+run_mod <- F
+mult_pull <- F
 
 # helper functions for brms
 
@@ -436,137 +437,270 @@ if(run_mod) {
 
 if(paper_output) {
   
-  modelsummary(list(Business=biz_mod,
-                    `Social Distancing`=sd_mod,
-                    Schools=school_mod),
-               coef_omit="Observation",
-               coef_map=c("cases_per_cap"="COVID-19 Cases",
-                          "deaths_per_cap"="COVID-19 Deaths",
-                          "contact"="Facebook Personal Contact",
-                          "finance"="Facebook Financial Anxiety",
-                          "anxious"="Facebook General Anxiety",
-                          "retail_and_recreation_percent_change_from_baseline"='Retail Mobility',
-                          "workplaces_percent_change_from_baseline"="Workplace Mobility",
-                          "grocery_and_pharmacy_percent_change_from_baseline"="Grocery Mobility",
-                          "parks_percent_change_from_baseline"="Parks Mobility",
-                          "days_to_elec"="Days to Election",
-                          "density"="Population Density",
-                          "gdp_pc"="GDP Per Capita",
-                          "fdi_prop"="FDI",
-                          "trade"="Trade",
-                          "state_fragility"="State Fragility",
-                          "bureaucracy_corrupt"="Bureaucracy Corrupt",
-                          "pandemic_prep"="Pandemic Preparedness",
-                          "woman_leader"="Woman Leader",
-                          "polity"="Polity Score",
-                          "gini"="Gini Index",
-                          "humanrights"="Human Rights"),
-               title="Results of Regression of Social, Political and Economic Covariates on Index Scores",
-               statistic="({conf.low}, {conf.high})",
-               gof_map=tibble(raw=c("$R^2$","LOO-IC"),
-                              clean=c("$R^2$","LOO-IC"),
-                              fmt=c(2,0)),
-               escape=F,
-               label="results",
-               booktabs=T,
-               output="latex") %>% 
-    kable_styling(latex_options = c("striped","hold_position"),
-                  font_size = 9) %>% 
-    pack_rows("Time-varying", 1, 20) %>%
-    pack_rows("Cross-sectional",21, 42) %>% 
-    row_spec(seq(2,40,by=2),font_size=7,italic = T) %>% 
-    footnote(general="Coefficients are the posterior median values and the uncertainty intervals are the 5% to 95% posterior density intervals. Results marginalize across 5 imputed datasets.",
-             threeparttable = T) %>% 
-    save_kable("mod_table.tex")
+  # old table/model without correlated errors
   
-  # need multivariate model
+  # modelsummary(list(Business=biz_mod,
+  #                   `Social Distancing`=sd_mod,
+  #                   Schools=school_mod),
+  #              coef_omit="Observation",
+  #              coef_map=c("cases_per_cap"="COVID-19 Cases",
+  #                         "deaths_per_cap"="COVID-19 Deaths",
+  #                         "contact"="Facebook Personal Contact",
+  #                         "finance"="Facebook Financial Anxiety",
+  #                         "anxious"="Facebook General Anxiety",
+  #                         "retail_and_recreation_percent_change_from_baseline"='Retail Mobility',
+  #                         "workplaces_percent_change_from_baseline"="Workplace Mobility",
+  #                         "grocery_and_pharmacy_percent_change_from_baseline"="Grocery Mobility",
+  #                         "parks_percent_change_from_baseline"="Parks Mobility",
+  #                         "days_to_elec"="Days to Election",
+  #                         "density"="Population Density",
+  #                         "gdp_pc"="GDP Per Capita",
+  #                         "fdi_prop"="FDI",
+  #                         "trade"="Trade",
+  #                         "state_fragility"="State Fragility",
+  #                         "bureaucracy_corrupt"="Bureaucracy Corrupt",
+  #                         "pandemic_prep"="Pandemic Preparedness",
+  #                         "woman_leader"="Woman Leader",
+  #                         "polity"="Polity Score",
+  #                         "gini"="Gini Index",
+  #                         "humanrights"="Human Rights"),
+  #              title="Results of Regression of Social, Political and Economic Covariates on Index Scores",
+  #              statistic="({conf.low}, {conf.high})",
+  #              gof_map=tibble(raw=c("$R^2$","LOO-IC"),
+  #                             clean=c("$R^2$","LOO-IC"),
+  #                             fmt=c(2,0)),
+  #              escape=F,
+  #              label="results",
+  #              booktabs=T,
+  #              output="latex") %>% 
+  #   kable_styling(latex_options = c("striped","hold_position"),
+  #                 font_size = 9) %>% 
+  #   pack_rows("Time-varying", 1, 20) %>%
+  #   pack_rows("Cross-sectional",21, 42) %>% 
+  #   row_spec(seq(2,40,by=2),font_size=7,italic = T) %>% 
+  #   footnote(general="Coefficients are the posterior median values and the uncertainty intervals are the 5% to 95% posterior density intervals. Results marginalize across 5 imputed datasets.",
+  #            threeparttable = T) %>% 
+  #   save_kable("mod_table_old.tex")
+  
+  # new multivariate model /w correlated errors
   
   require(gtsummary)
   require(tidybayes)
+  require(stringr)
   
-  tidy_out <- gather_rvars(mult_mod,`b\\_med`, regex=T)
+  if(mult_pull) {
+    
+    tidy_out <- gather_draws(mult_mod,`b_.*`, regex=T) %>% 
+      median_qi
+    
+    saveRDS(tidy_out, "data/mult_tidy_out.rds")
+    
+    mult_loo <- loo(mult_mod)
+    
+    saveRDS(mult_loo, "data/mult_loo.rds")
+    
+    mult_R2 <- bayes_R2(mult_mod)
+    
+    saveRDS(mult_R2, "data/mult_R2.rds")
+    
+  } else {
+    
+    mult_loo <- readRDS("data/mult_loo.rds")
+    mult_R2 <- readRDS("data/mult_R2.rds")
+    tidy_out <- readRDS("data/mult_tidy_out.rds")
+    
+  }
   
+  
+  
+  # make a 3 column table
+  
+  tidy_out <- mutate(tidy_out, type=str_extract(.variable,
+                                                pattern="(?<=b\\_med)[a-z]+"),
+                              .variable=str_extract(.variable,
+                                                    pattern="(?<=med[a-z]{1,6}\\_)[a-zA-Z]+|Intercept"))
+  
+  tidy_wide  <- select(tidy_out,.value, .variable,type) %>% spread(key="type",value=".value") %>% 
+    mutate(stat="coef") %>% 
+    mutate_at(c("biz","school","sd"), ~as.character(round(.,3)))
+  
+  tidy_ci <- mutate(tidy_out,.value=paste0("(",round(.lower,3),", ",round(.upper,3),")")) %>% 
+    select(.value, .variable,type) %>% spread(key="type",value=".value") %>% 
+    mutate(stat="ci")
+  
+  tidy_combine <- bind_rows(tidy_wide, tidy_ci) %>% 
+    mutate(.variable=fct_recode(.variable,
+                                "Facebook General Anxiety" = "anxious",
+                                "Bureaucracy Corrupt" = "bureaucracy",
+                                "COVID-19 Cases" = "cases",
+                                "Facebook Personal Contact" = "contact",
+                                "Days to Election" = "days",
+                                "COVID-19 Deaths" = "deaths",
+                                "Population Density" = "density",
+                                "FDI" = "fdi",
+                                "Facebook Financial Anxiety" = "finance",
+                                "GDP Per Capita" = "gdp",
+                                "Gini Index" = "gini",
+                                "Grocery Mobility" = "grocery",
+                                "Human Rights" = "humanrights",
+                                "Pandemic Preparedness" = "pandemic",
+                                "Parks Mobility" = "parks",
+                                "Polity Score" = "polity",
+                                "Retail Mobility" = "retail",
+                                "State Fragility" = "state",
+                                "Trade" = "trade",
+                                "Woman Leader" = "woman",
+                                "Workplace Mobility" = "workplaces"))
+  
+  # add loo / R2
+  
+  loo_tb <- tibble(biz=as.character(round(mult_loo$looic,0)),
+                   sd=as.character(round(mult_loo$looic,0)),
+                   school=as.character(round(mult_loo$looic,0)),
+                   .variable="LOO-IC",
+                   stat='coef')
+  
+  r2_tb <- tibble(biz=as.character(round(mult_R2[1,1],3)),
+                  sd=as.character(round(mult_R2[3,1],3)),
+                  school=as.character(round(mult_R2[2,1],3)),
+                  .variable="R2",
+                  stat='coef')
+  
+  tidy_combine <- bind_rows(tidy_combine,loo_tb) %>% 
+    bind_rows(r2_tb)
+  
+  
+  # format and export
+  
+  tidy_combine %>% 
+    mutate(.variable=fct_relevel(
+      .variable,
+      "COVID-19 Deaths", "COVID-19 Cases", "Facebook Financial Anxiety",
+      "Facebook General Anxiety", "Facebook Personal Contact", "Retail Mobility",
+      "Parks Mobility", "Grocery Mobility", "Workplace Mobility", "Days to Election",
+      "FDI", "GDP Per Capita", "Bureaucracy Corrupt", "Gini Index",
+      "Human Rights", "Pandemic Preparedness", "Polity Score", "Population Density",
+      "State Fragility", "Trade", "Woman Leader", "Intercept", "LOO-IC",
+      "R2"
+    )) %>% 
+    arrange(.variable,desc(stat)) %>% 
+    mutate(.variable=ifelse(stat=="coef",as.character(.variable),"")) %>% 
+    select(-stat,Variable=".variable",
+           `Business Restrictions`="biz",
+           `Social Distancing`="sd",
+           `School Restrictions`="school") %>% 
+    kable(caption="Results of Regression of Social, Political and Economic Covariates on Index Scores",
+          linesep = "",booktabs=T,format="latex",
+          align=c('lccc')) %>% 
+    kable_styling(latex_options = c("striped","hold_position"),
+                  font_size = 9) %>% 
+    pack_rows("Time-varying", 1, 20) %>%
+    pack_rows("Cross-sectional",21, 44) %>% 
+    row_spec(seq(2,44,by=2),font_size=7,italic = T) %>% 
+    footnote(general="Coefficients are the posterior median values and the uncertainty intervals are the 5% to 95% posterior density intervals. Results marginalize across 5 imputed datasets. LOO-IC values are identical across models due to the use of a single multivariate Normal distribution.",
+             threeparttable = T) %>% 
+    save_kable("mod_table.tex",keep_tex=T)
+  
+  # make a correlation table
+  
+  cor_dv <- VarCorr(mult_mod)$residual__$cor
+  
+  cor_dv <- cbind(cor_dv[,1,1],cor_dv[,1,2],cor_dv[,1,3])
+  
+  row.names(cor_dv) <- c("Business","Schools","Social\nDistancing")
+  
+  colnames(cor_dv) <- row.names(cor_dv)
+  
+  require(ggcorrplot)
+  
+  ggcorrplot(cor_dv,show.legend=F,lab=T)
+  
+  ggsave("mult_mod_corr.png",scale=0.7)
   
   # do some posterior predictions
   
   
   # FB Predictions ----------------------------------------------------------
   
-  fb_biz <- conditional_effects(biz_mod,c("finance","contact","anxious"))
-  fb_sd <- conditional_effects(sd_mod,c("finance","contact","anxious"))
-  fb_school <- conditional_effects(school_mod,c("finance","contact","anxious"))
+  fb_biz <- conditional_effects(mult_mod,c("finance","contact","anxious"))
   
-  fb_biz <- bind_rows(list(`Financial Anxiety`=fb_biz$finance,
-                           `Personal Contact`=fb_biz$contact,
-                           `General Anxiety`=fb_biz$anxious),.id="var")
+  finance <- bind_rows(lapply(fb_biz[1:3], select, cond="finance", estimate__, upper__, lower__),
+                       .id="index") %>% 
+    mutate(var="Financial Anxiety")
   
-  fb_sd <- bind_rows(list(`Financial Anxiety`=fb_sd$finance,
-                          `Personal Contact`=fb_sd$contact,
-                          `General Anxiety`=fb_sd$anxious),.id="var")
+  contact <- bind_rows(lapply(fb_biz[4:6], select, cond="contact", estimate__, upper__, lower__),
+                       .id="index") %>% 
+    mutate(var="Personal Contacts")
   
-  fb_school <- bind_rows(list(`Financial Anxiety`=fb_school$finance,
-                              `Personal Contact`=fb_school$contact,
-                              `General Anxiety`=fb_school$anxious),.id="var")
+  anxious <- bind_rows(lapply(fb_biz[7:9], select, cond="anxious", estimate__, upper__, lower__),
+                       .id="index") %>% 
+    mutate(var="General Anxiety")
   
-  fb_fx <- bind_rows(list(Business=fb_biz,
-                          Schools=fb_school,
-                          `Social Distancing`=fb_sd),.id="index")
+  fb_fx <- bind_rows(finance,contact,anxious) %>% 
+    mutate(index=case_when(grepl(x=index,pattern="biz")~"DV: Business",
+                           grepl(x=index,pattern="sd")~"DV: Distancing",
+                           grepl(x=index,pattern="school")~"DV: School"))
+  
+  
   
   label_value2 = function(labels) {
     label_value(labels = labels, multi_line = FALSE)
   }
   
   fb_fx %>% 
-    ggplot(aes(y=estimate__,x=effect1__)) +
+    ggplot(aes(y=estimate__,x=cond)) +
     geom_ribbon(aes(ymin=lower__,
                     ymax=upper__),alpha=0.5) +
     geom_line(colour="blue") +
     theme_tufte() +
     scale_x_continuous(labels=scales::percent_format(accuracy=1)) +
-    facet_wrap(vars(var,index),scales="free",labeller = label_value2) +
+    facet_grid(cols = vars(var),rows = vars(index),labeller = label_value2,scales = "free_x") +
     labs(x="Weighted Percent Reporting via Facebook Survey",
          y="Predicted Index Score",
          caption=str_wrap("Estimates are predictions with other variables held at their means. Shaded intervals are the 5% to 95% posterior quantiles.",
                           width=75))
   
   ggsave("fb_fx.png")
+  ggsave("fb_fx.pdf")
   
   
   
   # Cross-section Predictions -----------------------------------------------
   
-  cs_biz <- conditional_effects(biz_mod,c("gini","bureaucracy_corrupt","polity"))
-  cs_sd <- conditional_effects(sd_mod,c("gini","bureaucracy_corrupt","polity"))
-  cs_school <- conditional_effects(school_mod,c("gini","bureaucracy_corrupt","polity"))
+  cs_all <- conditional_effects(mult_mod,c("humanrights","polity","trade"))
   
-  cs_biz <- bind_rows(list(`Gini`=cs_biz$gini,
-                           `Corruption`=cs_biz$bureaucracy_corrupt,
-                           `Democracy (Polity)`=cs_biz$polity),.id="var")
   
-  cs_sd <- bind_rows(list(`Gini`=cs_sd$gini,
-                          `Corruption`=cs_sd$bureaucracy_corrupt,
-                          `Democracy (Polity)`=cs_sd$polity),.id="var")
+  days <- bind_rows(lapply(cs_all[1:3], select, cond="humanrights", estimate__, upper__, lower__),
+                       .id="index") %>% 
+    mutate(var="Human Rights")
   
-  cs_school <- bind_rows(list(`Gini`=cs_school$gini,
-                              `Corruption`=cs_school$bureaucracy_corrupt,
-                              `Democracy (Polity)`=cs_school$polity),.id="var")
+  polity <- bind_rows(lapply(cs_all[4:6], select, cond="polity", estimate__, upper__, lower__),
+                       .id="index") %>% 
+    mutate(var="Polity IV (Democracy)")
   
-  cs_fx <- bind_rows(list(Business=cs_biz,
-                          Schools=cs_school,
-                          `Social Distancing`=cs_sd),.id="index")
+  trade <- bind_rows(lapply(cs_all[7:9], select, cond="trade", estimate__, upper__, lower__),
+                       .id="index") %>% 
+    mutate(var="Trade % GDP")
+  
+  cs_fx <- bind_rows(days,trade,polity) %>% 
+    mutate(index=case_when(grepl(x=index,pattern="biz")~"DV: Business",
+                           grepl(x=index,pattern="sd")~"DV: Distancing",
+                           grepl(x=index,pattern="school")~"DV: School"))
+  
   
   label_value2 = function(labels) {
     label_value(labels = labels, multi_line = FALSE)
   }
   
   cs_fx %>% 
-    ggplot(aes(y=estimate__,x=effect1__)) +
+    ggplot(aes(y=estimate__,x=cond)) +
     geom_ribbon(aes(ymin=lower__,
                     ymax=upper__),alpha=0.5) +
     geom_line(colour="blue") +
     theme_tufte() +
-    facet_wrap(vars(var,index),scales="free_y",labeller = label_value2) +
-    labs(x="Value of Standardized Predictor",
+    #scale_x_continuous(labels=scales::percent_format(accuracy=1)) +
+    facet_grid(cols = vars(var),rows = vars(index),labeller = label_value2,scales = "free_x") +
+    labs(x="Weighted Percent Reporting via Facebook Survey",
          y="Predicted Index Score",
          caption=str_wrap("Estimates are predictions with other variables held at their means. Shaded intervals are the 5% to 95% posterior quantiles.",
                           width=75))
