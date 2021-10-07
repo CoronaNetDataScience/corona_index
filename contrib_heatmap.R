@@ -22,4 +22,5 @@ contrib %>%
         axis.ticks = element_blank())
 
 ggsave("plots/contrib_plot.png")
+ggsave("plots/figure_contribution.pdf")
 

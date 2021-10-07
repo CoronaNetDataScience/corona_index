@@ -689,7 +689,7 @@ source("recode_city.R")
 # merge in province pop data
 
 province_pop <- read_delim("coronanet/coronanet_population.csv",delim = ";") %>% 
-  select(-X1) %>% 
+  select(-`...1`) %>% 
   distinct %>% 
   filter(!is.na(province)) %>% 
   select(country,province,province_pop=population_total)
@@ -760,8 +760,12 @@ index_long <- group_by(index_long,country,item,date_policy,init_country_level) %
                               init_country_level=="National" & var>0~1,
                               TRUE~0))
 
+# save disag data
 
-
+saveRDS(index_long, paste0("coronanet/index_long_disag_",type,".rds"))
+write_csv(index_long,paste0("coronanet/index_long_disag_",type,".csv"))
+zip(paste0("coronanet/index_long_disag_",type,".zip"),
+    paste0("coronanet/index_long_disag_",type,".csv"))
 # need to calculate proportions of provinces/cities
 
 index_long <- mutate(ungroup(index_long),

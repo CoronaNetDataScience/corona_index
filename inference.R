@@ -660,8 +660,8 @@ if(paper_output) {
          caption=str_wrap("Estimates are predictions with other variables held at their means. Shaded intervals are the 5% to 95% posterior quantiles.",
                           width=75))
   
-  ggsave("fb_fx.png")
-  ggsave("fb_fx.pdf")
+  ggsave("plots/fb_fx.png")
+  ggsave("plots/extended_data_figure_5.pdf")
   
   
   
@@ -706,6 +706,7 @@ if(paper_output) {
                           width=75))
   
   ggsave("cs_fx.png")
+  ggsave("plots/extended_data_figure_6.pdf")
   
   # make a combined index file
   
