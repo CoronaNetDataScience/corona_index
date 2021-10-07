@@ -689,7 +689,7 @@ source("recode_city.R")
 # merge in province pop data
 
 province_pop <- read_delim("coronanet/coronanet_population.csv",delim = ";") %>% 
-  select(-`...1`) %>% 
+  select(-1) %>% 
   distinct %>% 
   filter(!is.na(province)) %>% 
   select(country,province,province_pop=population_total)
