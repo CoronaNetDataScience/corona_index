@@ -323,7 +323,6 @@ to_make <- index_long %>%
                               nchains=as.numeric(nchains),niters=300,
                               save_warmup=TRUE,
                               warmup=250,grainsize = grainsize,
-                              boundary_prior=boundary_prior,
                               gpu=FALSE,save_files = "/scratch/rmk7/coronanet_csvs",
                               fixtype="prefix",pos_discrim = F,
                               restrict_ind_high=restrict_list[1],
