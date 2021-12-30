@@ -335,7 +335,7 @@ to_make <- index_long %>%
                               fix_high=1,
                               fix_low=0,
                               time_center_cutoff = 50,
-                              time_sd=.1,
+                              time_var = 10,
                               restrict_sd_high=.001,
                               id_refresh = 100,
                               const_type="items") 
