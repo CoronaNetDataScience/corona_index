@@ -48,8 +48,8 @@ if(compile_data) {
     
     # collapse categories
     
-    index_long <- bind_rows(filter(readRDS("coronanet/index_long_model_hm.rds")),
-                            filter(readRDS("coronanet/index_long_model_ht.rds"),
+    index_long <- bind_rows(filter(readRDS("/scratch/rmk7/coronanet/index_long_model_hm.rds")),
+                            filter(readRDS("/scratch/rmk7/coronanet/index_long_model_ht.rds"),
                                            item!="ox_test",
                                            !(country %in% c("European Union",
                                                             "Liechtenstein")))) %>% 
@@ -63,7 +63,7 @@ if(compile_data) {
     
   } else {
     
-    index_long <- readRDS(paste0("coronanet/index_long_model_",model_type,".rds")) %>% 
+    index_long <- readRDS(paste0("/scratch/rmk7/coronanet/index_long_model_",model_type,".rds")) %>% 
       filter(! (item %in% c("biz_takeaway","biz_delivery","biz_health_q",
                           "biz_health_cert",
                           'allow_ann_event',"event_no_audience",'postpone_rec_event',
