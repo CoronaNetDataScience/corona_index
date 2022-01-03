@@ -20,15 +20,15 @@ source('summarize_draws_mc.R')
 
 # whether to load and summarize data (will take some time)
 
-sum_data <- F
+sum_data <- T
 
 if(sum_data) {
 
 # Business ----------------------------------------------------------------
 
-biz_mod <- readRDS("coronanet/from_cluster/activity_fit_rwbiz_random_walk_run_4.rds")
+biz_mod <- readRDS("coronanet/activity_fit_rwbiz_random_walk_run_4.rds")
 
-all_mods <- lapply(list.files(path = "coronanet/from_cluster/",
+all_mods <- lapply(list.files(path = "coronanet/",
                               pattern="biz\\_random\\_walk\\_run\\_[1-4].*rds",
                               full.names=T),readRDS)
 
@@ -36,7 +36,7 @@ all_mods_mat <-  lapply(all_mods, function(c) c@stan_samples$draws())
 
 biz_draws <- do.call(bind_draws, c(all_mods_mat,list(along="chain")))
 
-biz_sum <- summarize_draws_mc(biz_draws,"median","quantile2",posterior::rhat,cores=2)
+biz_sum <- summarize_draws_mc(biz_draws,"median","quantile2",posterior::rhat,cores=16)
 
 all_mods_mat <-  lapply(all_mods, function(c) as_draws_array(c@time_varying))
 
@@ -47,7 +47,7 @@ biz_time <- do.call(bind_draws, c(all_mods_mat,list(along="chain"))) %>%
 
 biz_time <- apply_draws(biz_time,FUN=function(c) as.numeric(scale(c)),MARGIN=c(1:2))
 
-sum_time <- summarize_draws_mc(biz_time,"median","quantile2",posterior::rhat,cores=2)
+sum_time <- summarize_draws_mc(biz_time,"median","quantile2",posterior::rhat,cores=16)
 
 rm(all_mods_mat)
 
@@ -215,7 +215,7 @@ rm(biz_mod)
 
 mask_mod <- readRDS("coronanet/activity_fit_rwmask_random_walk_run_4.rds")
 
-all_mods <- lapply(list.files(path = "coronanet/from_cluster/",
+all_mods <- lapply(list.files(path = "coronanet/",
                               pattern="mask\\_random\\_walk\\_run\\_[0-4].*rds",
                               full.names=T),readRDS)
 
@@ -223,7 +223,7 @@ all_mods_mat <-  lapply(all_mods, function(c) c@stan_samples$draws())
 
 mask_draws <- do.call(bind_draws, c(all_mods_mat,list(along="chain")))
 
-mask_sum <- summarize_draws_mc(mask_draws,"median","quantile2",posterior::rhat,cores=2)
+mask_sum <- summarize_draws_mc(mask_draws,"median","quantile2",posterior::rhat,cores=16)
 
 all_mods_mat <-  lapply(all_mods, function(c) as_draws_array(c@time_varying))
 
@@ -234,7 +234,7 @@ mask_time <- do.call(bind_draws, c(all_mods_mat,list(along="chain"))) %>%
 
 mask_time <- apply_draws(mask_time,FUN=function(c) as.numeric(scale(c)),MARGIN=c(1:2))
 
-sum_time <- summarize_draws_mc(mask_time,"median","quantile2",posterior::rhat,cores=2)
+sum_time <- summarize_draws_mc(mask_time,"median","quantile2",posterior::rhat,cores=16)
 
 rm(all_mods_mat)
 
@@ -369,9 +369,9 @@ rm(mask_mod)
 
 # Health monitoring -------------------------------------------------------
 
-hm2_mod <- readRDS("coronanet/from_cluster/activity_fit_rwhm2_random_walk_run_4.rds")
+hm2_mod <- readRDS("coronanet/activity_fit_rwhm2_random_walk_run_4.rds")
 
-all_mods <- lapply(list.files(path = "coronanet/from_cluster/",
+all_mods <- lapply(list.files(path = "coronanet/",
                               pattern="hm2\\_random\\_walk\\_run\\_[1-4].*rds",
                               full.names=T),readRDS)
 
@@ -379,7 +379,7 @@ all_mods_mat <-  lapply(all_mods, function(c) c@stan_samples$draws())
 
 hm2_draws <- do.call(bind_draws, c(all_mods_mat,list(along="chain")))
 
-hm2_sum <- summarize_draws_mc(hm2_draws,"median","quantile2",posterior::rhat,cores=2)
+hm2_sum <- summarize_draws_mc(hm2_draws,"median","quantile2",posterior::rhat,cores=16)
 
 all_mods_mat <-  lapply(all_mods, function(c) as_draws_array(c@time_varying))
 
@@ -390,7 +390,7 @@ subset_draws(variable="tp1",regex=T)
 
 hm2_time <- apply_draws(hm2_time,FUN=function(c) as.numeric(scale(c)),MARGIN=c(1:2))
 
-sum_time <- summarize_draws_mc(hm2_time,"median","quantile2",posterior::rhat,cores=2)
+sum_time <- summarize_draws_mc(hm2_time,"median","quantile2",posterior::rhat,cores=16)
 
 rm(all_mods_mat)
 
@@ -550,9 +550,9 @@ rm(hm2_mod)
 
 # social distance ---------------------------------------------------------
 
-sd_mod <- readRDS("coronanet/from_cluster/activity_fit_rwsd_random_walk_run_4.rds")
+sd_mod <- readRDS("coronanet/activity_fit_rwsd_random_walk_run_4.rds")
 
-all_mods <- lapply(list.files(path = "coronanet/from_cluster/",
+all_mods <- lapply(list.files(path = "coronanet/",
                               pattern="sd\\_random\\_walk\\_run\\_[1-4].*rds",
                               full.names=T),readRDS)
 
@@ -560,7 +560,7 @@ all_mods_mat <-  lapply(all_mods, function(c) c@stan_samples$draws())
 
 sd_draws <- do.call(bind_draws, c(all_mods_mat,list(along="chain")))
 
-sd_sum <- summarize_draws_mc(sd_draws,"median","quantile2",posterior::rhat,cores=2)
+sd_sum <- summarize_draws_mc(sd_draws,"median","quantile2",posterior::rhat,cores=16)
 
 all_mods_mat <-  lapply(all_mods, function(c) as_draws_array(c@time_varying))
 
@@ -571,7 +571,7 @@ sd_time <- do.call(bind_draws, c(all_mods_mat,list(along="chain"))) %>%
 
 sd_time <- apply_draws(sd_time,FUN=function(c) as.numeric(scale(c)),MARGIN=c(1:2))
 
-sum_time <- summarize_draws_mc(sd_time,"median","quantile2",posterior::rhat,cores=2)
+sum_time <- summarize_draws_mc(sd_time,"median","quantile2",posterior::rhat,cores=16)
 
 rm(all_mods_mat)
 
@@ -717,9 +717,9 @@ rm(sd_mod)
 
 # schools -----------------------------------------------------------------
 
-school_mod <- readRDS("coronanet/from_cluster/activity_fit_rwschool_random_walk_run_4.rds")
+school_mod <- readRDS("coronanet/activity_fit_rwschool_random_walk_run_4.rds")
 
-all_mods <- lapply(list.files(path = "coronanet/from_cluster/",
+all_mods <- lapply(list.files(path = "coronanet/",
                               pattern="school\\_random\\_walk\\_run\\_[0-4].*rds",
                               full.names=T),readRDS)
 
@@ -727,7 +727,7 @@ all_mods_mat <-  lapply(all_mods, function(c) c@stan_samples$draws())
 
 school_draws <- do.call(bind_draws, c(all_mods_mat,list(along="chain")))
 
-school_sum <- summarize_draws_mc(school_draws,"median","quantile2",posterior::rhat,cores=2)
+school_sum <- summarize_draws_mc(school_draws,"median","quantile2",posterior::rhat,cores=16)
 
 all_mods_mat <-  lapply(all_mods, function(c) as_draws_array(c@time_varying)) 
 
@@ -740,7 +740,7 @@ school_time <- do.call(bind_draws, c(all_mods_mat,list(along="chain"))) %>%
 
 school_time <- apply_draws(school_time,FUN=function(c) as.numeric(scale(c)),MARGIN=c(1:2))
 
-sum_time <- summarize_draws_mc(school_time,"median","quantile2",posterior::rhat,cores=2)
+sum_time <- summarize_draws_mc(school_time,"median","quantile2",posterior::rhat,cores=16)
 
 rm(all_mods_mat)
 
@@ -885,9 +885,9 @@ gc()
 
 # health resources --------------------------------------------------------
 
-hr_mod <- readRDS("coronanet/from_cluster/activity_fit_rwhr_random_walk_run_4.rds")
+hr_mod <- readRDS("coronanet/activity_fit_rwhr_random_walk_run_4.rds")
 
-all_mods <- lapply(list.files(path = "coronanet/from_cluster/",
+all_mods <- lapply(list.files(path = "coronanet/",
                               pattern="hr\\_random\\_walk\\_run\\_[0-4].*rds",
                               full.names=T),readRDS)
 
@@ -895,7 +895,7 @@ all_mods_mat <-  lapply(all_mods, function(c) c@stan_samples$draws())
 
 hr_draws <- do.call(bind_draws, c(all_mods_mat,list(along="chain")))
 
-hr_sum <- summarize_draws_mc(hr_draws,"median","quantile2",posterior::rhat,cores=2)
+hr_sum <- summarize_draws_mc(hr_draws,"median","quantile2",posterior::rhat,cores=16)
 
 all_mods_mat <-  lapply(all_mods, function(c) as_draws_array(c@time_varying))
 
@@ -906,7 +906,7 @@ hr_time <- do.call(bind_draws, c(all_mods_mat,list(along="chain"))) %>%
 
 hr_time <- apply_draws(hr_time,FUN=function(c) as.numeric(scale(c)),MARGIN=c(1:2))
 
-sum_time <- summarize_draws_mc(hr_time,"median","quantile2",posterior::rhat,cores=2)
+sum_time <- summarize_draws_mc(hr_time,"median","quantile2",posterior::rhat,cores=16)
 
 rm(all_mods_mat)
 
