@@ -48,8 +48,8 @@ if(compile_data) {
     
     # collapse categories
     
-    index_long <- bind_rows(filter(readRDS("coronanet/index_long_model_hm.rds")),
-                            filter(readRDS("coronanet/index_long_model_ht.rds"),
+    index_long <- bind_rows(filter(readRDS("/scratch/rmk7/coronanet/index_long_model_hm.rds")),
+                            filter(readRDS("/scratch/rmk7/coronanet/index_long_model_ht.rds"),
                                            item!="ox_test",
                                            !(country %in% c("European Union",
                                                             "Liechtenstein")))) %>% 
@@ -63,7 +63,7 @@ if(compile_data) {
     
   } else {
     
-    index_long <- readRDS(paste0("coronanet/index_long_model_",model_type,".rds")) %>% 
+    index_long <- readRDS(paste0("/scratch/rmk7/coronanet/index_long_model_",model_type,".rds")) %>% 
       filter(! (item %in% c("biz_takeaway","biz_delivery","biz_health_q",
                           "biz_health_cert",
                           'allow_ann_event',"event_no_audience",'postpone_rec_event',
@@ -323,7 +323,6 @@ to_make <- index_long %>%
                               nchains=as.numeric(nchains),niters=300,
                               save_warmup=TRUE,
                               warmup=250,grainsize = grainsize,
-                              boundary_prior=boundary_prior,
                               gpu=FALSE,save_files = "/scratch/rmk7/coronanet_csvs",
                               fixtype="prefix",pos_discrim = F,
                               restrict_ind_high=restrict_list[1],
@@ -335,7 +334,7 @@ to_make <- index_long %>%
                               fix_high=1,
                               fix_low=0,
                               time_center_cutoff = 50,
-                              time_sd=.1,
+                              time_var = 10,
                               restrict_sd_high=.001,
                               id_refresh = 100,
                               const_type="items") 
