@@ -1,0 +1,468 @@
+---
+title: "COVID-19 Responses in the Middle East and North Africa in Global Perspective"
+author: "Robert Kubinec"
+institution: "New York University Abu Dhabi"
+date: "March 23, 2022"
+output: 
+  bookdown::pdf_document2:
+    extra_dependencies: "setspace"
+bibliography: references.bib
+---
+
+```{r setup, include=FALSE}
+library(dplyr)
+library(ggplot2)
+library(tidyverse)
+library(forcats)
+library(stringr)
+library(readr)
+library(ggthemes)
+library(lubridate)
+library(haven)
+library(ggrepel)
+library(extrafont)
+knitr::opts_chunk$set(echo = FALSE, warning=FALSE, message=FALSE)
+```
+
+\doublespacing
+
+In this paper I present research on the nature of the government response to the COVID-19 pandemic in the Middle East and North Africa (MENA), exploring both within-region diversity and between-region variation. On the whole, MENA governments have pursued a robust response to the pandemic when and where they have had the capability to do so. Countries that suffered from civil conflict and state failure, such as Syria, Yemen and Libya, had the the most limited COVID-19 responses and arguably suffered as a consequence, although medical data to assess the severity of the pandemic from these places is often missing [@karamouzian2020; @wehbe2021; @daar2020]. What we did not often observe in the MENA region are protests or other political moves against the pandemic as were seen in Europe, Latin America and North America. While misinformation about the pandemic was certainly a problem, Middle Easterners did not see the pandemic primarily as a political issue and were largely willing to comply with strict policies mandating social distancing, restricted international travel and economic closures.
+
+It is somewhat beyond the scope of this paper to determine exactly why that is the case, but I propose some hypotheses about trust in government as a possible explanatory factor [@vanbavel2022; @sibley2020]. Regime type is another plausible explanation for these trends as authoritarian control over public health policies may have helped to de-politicize these decisions compared to Western democracies where angry citizens denounced bureaucrats and political leaders [@barceló2022; @koehler2021]. In any case, while the COVID-19 pandemic in the region has certainly affected many people's lives and indirectly political outcomes [@harb2021; @alijla2021], whether or not COVID should be a concern for public policy is not itself a matter of political schism in the region.
+
+# Data
+
+The data that I will present in this paper are primarily drawn from my work with the CoronaNet project, an interdisciplinary and international collaboration of researchers collecting data on COVID-19 policies [@cheng2020]. Starting early in the pandemic, CoronaNet has amassed over 100,000 distinct policy records ranging from social distancing, international travel, business and school restrictions, and medicine and health supplies. Compared to existing alternatives [@hale2021], CoronaNet includes a wealth of detail about each policy record, recording the demographic that the policy targets, the type of enforcement, start and end dates, as well as any ensuing updates to the policy that either strengthen or weaken its reach. While coding remains ongoing, the MENA region contains extensive data up to the middle of 2021, with some countries more up to date. As mentioned, countries undergoing civil conflict, especially Yemen and Libya, have few policies recorded in the database as there have been few public records of COVID policies in these places.
+
+While the granular data contains an exceptional level of detail, to compare countries and regions it is necessary to have aggregated measures. For that reason, I focus on policy intensity scores, which combine CoronaNet and the @hale2021 data based on six categories of COVID policy: social distancing, school and business restrictions, mask policies, health monitoring and health resource production. At present, the policy intensity scores exist for the period from January 1st, 2020 to April 30th, 2021, permitting analysis of a broad swath of the pandemic up through the introduction of vaccines. These indices also incorporate sub-national policy information from CoronaNet, which is helpful for making informed comparisons with countries with extensive regional administration, such as the United States and Russia.
+
+To examine the opinions and behaviors of residents of the region, I examine the most recent wave of the Arab Barometer survey, which took place in 2020. I supplement this cross-sectional survey with over-time data from Facebook's online panel of COVID-19 responses, which has daily estimates for much of 2020 and 2021 [@barkay2020].
+
+```{r load_data,include=FALSE}
+
+all_mods_data <- lapply(list.files("indices/","time\\_data\\_scaled\\.rds",
+                                   full.names = T),readRDS) %>% 
+  bind_rows(.id="modtype")
+
+
+all_mods_data$modtype <- fct_recode(all_mods_data$modtype,
+                                    "biz" = "1",
+                                    "hm2" = "2",
+                                    "hr" = "3",
+                                    "masks" = "4",
+                                    "school" = "5",
+                                    "sd" = "6")
+
+baro1 <- read_dta("data/Arab Barometer Wave VI Part 1_DEC/Arab_Barometer_Wave_6_Part_1_ENG_RELEASE.dta") %>% 
+  mutate(wave=1,date_policy=ymd("2020-07-01"))
+baro2 <- read_dta("data/Arab Barometer Wave VI Part 2/Arab_Barometer_Wave_6_Part_2_ENG_RELEASE.dta") %>% 
+  mutate(wave=2,date_policy=ymd("2020-10-01"))
+baro3 <- read_dta("data/Arab Barometer Wave VI Part 3_DEC/Arab_Barometer_Wave_6_Part_3_ENG_RELEASE.dta") %>% 
+  mutate(wave=3,date_policy=ymd("2021-04-01"),
+         DATE=ymd(DATE))
+
+combine_baro <- bind_rows(baro1,baro2,baro3) %>% 
+  select(priority="Q2061A",
+         why_covid_priority="Q2ACOVID19",
+         why_not_covid_priority="Q2BCOVID19",
+         covid_employment_loss="Q5COVID19",
+         covid_education="Q11COVID19",
+         trust_stat="Q6COVID19",
+         trust_govt="Q201A_1",
+         healthcare_sat="Q204A_2",
+         freedom_express="Q521_1",
+         country="COUNTRY",
+         wave,
+         date_policy) %>% 
+  mutate_at(c("priority",
+              "why_covid_priority",
+              "why_not_covid_priority",
+              "covid_employment_loss",
+              "covid_education",
+              "trust_stat",
+              "trust_govt",
+              "healthcare_sat",
+              "freedom_express"),
+            ~ifelse(. %in% c(98,99,96,97),
+                    NA,.)) %>% 
+  group_by(country,date_policy) %>% 
+  summarize_at(c("priority",
+              "why_covid_priority",
+              "why_not_covid_priority",
+              "covid_employment_loss",
+              "covid_education",
+              "trust_stat",
+              "trust_govt",
+              "healthcare_sat",
+              "freedom_express"),mean,na.rm=T) %>% 
+  ungroup %>% 
+  mutate(country=factor(country,
+                        labels=c("Algeria", 
+                                 "Iraq",
+                                 "Jordan",
+                                 "Lebanon",
+                                 "Libya",
+                                 "Morocco",
+                                 "Tunisia" )))
+
+
+
+# expand and fill
+
+expand_mod <- group_by(all_mods_data,country,modtype) %>% 
+  expand(date_policy=seq(ymd("2020-01-01"),max(all_mods_data$date_policy),
+                         by="1 day"))
+
+all_mods_data <- left_join(expand_mod,all_mods_data,by=c("country","modtype","date_policy")) %>% 
+  group_by(country,modtype) %>% 
+  arrange(country,date_policy) %>% 
+  fill(med_est,sd_est,high_est,low_est,.direction="down")
+
+all_mods_med <- select(all_mods_data,country,date_policy,modtype,med_est) %>% 
+  mutate(modtype=paste0("med_",modtype)) %>% 
+  spread(key="modtype",value="med_est")
+
+all_mods_sd <- select(all_mods_data,country,date_policy,modtype,sd_est) %>% 
+  mutate(modtype=paste0("sd_",modtype)) %>% 
+  spread(key="modtype",value="sd_est")
+
+# COVID-19 indices
+
+jhu_cases <- read_csv("indices/jhu_cases.csv") %>% 
+    #filter(is.na(`Province/State`)) %>% 
+    mutate(country=recode(`Country/Region`,
+                          `Cabo Verde`="Cape Verde",
+                          `Congo (Brazzaville)`="Republic of the Congo",
+                          `Congo (Kinshasa)`="Democratic Republic of the Congo",
+                          `Cote d'Ivoire`="Ivory Coast",
+                          `Korea, South`="South Korea",
+                          `Taiwan*`="Taiwan",
+                          `Burma`="Myanmar",
+                          `Holy See`="Vatican",
+                          `US`="United States of America",
+                          `Timor-Leste`="Timor Leste",
+                          `West Bank and Gaza`="Palestine")) %>% 
+    select(-`Country/Region`,-Lat,-Long) %>% 
+    gather(key="date_policy",value="cases",-country,-`Province/State`) %>% 
+    mutate(date_policy=lubridate::mdy(date_policy)) %>% 
+    group_by(country,date_policy) %>% 
+    summarize(cases=ifelse(any(is.na(`Province/State`)),cases[is.na(`Province/State`)],
+                               sum(cases)))
+  
+  # original data
+  # read_csv("https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_deaths_global.csv")
+  
+  jhu_deaths <- read_csv("indices/jhu_deaths.csv") %>% 
+    mutate(country=recode(`Country/Region`,
+                          `Cabo Verde`="Cape Verde",
+                          `Congo (Brazzaville)`="Republic of the Congo",
+                          `Congo (Kinshasa)`="Democratic Republic of the Congo",
+                          `Cote d'Ivoire`="Ivory Coast",
+                          `Korea, South`="South Korea",
+                          `Taiwan*`="Taiwan",
+                          `Burma`="Myanmar",
+                          `Holy See`="Vatican",
+                          `US`="United States of America",
+                          `Timor-Leste`="Timor Leste",
+                          `West Bank and Gaza`="Palestine")) %>% 
+    select(-`Country/Region`,-Lat,-Long) %>% 
+    gather(key="date_policy",value="deaths",-country,-`Province/State`) %>% 
+    mutate(date_policy=lubridate::mdy(date_policy)) %>% 
+    group_by(country,date_policy) %>% 
+    summarize(deaths=ifelse(any(is.na(`Province/State`)),deaths[is.na(`Province/State`)],
+                           sum(deaths)))
+  
+  # load in our goodies
+  
+  cross_sections <- readRDS("indices/predictors_with_electoraldata.rds") %>% 
+    select(country,area:pop_tot_log,gdppc2019,humanrights,lastelection,nextelection) %>% 
+    distinct %>% 
+    select(-gdp_pc) %>% 
+    mutate(lastelection=ymd(lastelection),
+           nextelection=ymd(nextelection),
+           lastelection=case_when(country=="China"~ymd("2018-01-01"),
+                                  country %in% c("Brunei","Eritrea")~min(lastelection,na.rm=T),
+                                  TRUE~lastelection),
+           nextelection=case_when(country=="China"~ymd("2023-01-01"),
+                                  country %in% c("Brunei","Eritrea","Yemen","Saudi Arabia")~max(nextelection,na.rm=T),
+                                  TRUE~nextelection))
+  
+  time_vary_fb <- read_csv("indices/fb_surv.csv") %>% 
+    select(country,date_policy="date",
+           contact="data.percent_contact",
+           mask="data.percent_mask",
+           anxious='data.pct_anxious_7d',
+           finance="data.percent_finance")
+  
+  google <- readRDS("indices/gmob.rds") %>% 
+    filter(is.na(sub_region_1), is.na(sub_region_2), is.na(metro_area)) %>% 
+    select(country,matches("baseline"),date_policy="date")
+  
+  # merge into one dataset and probably impute
+  
+  combine_data <- left_join(time_vary_fb,all_mods_med,
+                            by=c("country","date_policy")) %>% 
+    left_join(google,by=c("country","date_policy")) %>% 
+    left_join(cross_sections,by="country") %>% 
+    left_join(jhu_cases,by=c("country","date_policy")) %>% 
+    left_join(jhu_deaths,by=c("country","date_policy")) %>% 
+    filter(!is.na(med_biz),!is.na(med_masks),!is.na(med_sd))
+  
+  # indicator for days to  election
+  
+  combine_data <- group_by(combine_data,country) %>% 
+    mutate(days_to_elec=case_when((lastelection - date_policy < nextelection - date_policy) & (lastelection - date_policy >0) ~ lastelection - date_policy,
+                               (lastelection - date_policy) == 0 ~ 0,
+                               (nextelection - date_policy) == 0 ~ 0,
+                               TRUE ~ nextelection - date_policy),
+           days_to_elec=as.numeric(days_to_elec))
+  
+  
+  # need to recode instances where gender of person in power changed
+  
+  combine_data <- mutate(combine_data,
+                         woman_leader=case_when(country == "Austria" & date_policy < ymd("2020-01-07") ~ 1,
+                                                country == "Austria" & date_policy >= ymd("2020-01-07") ~ 0,
+                                                country == "Belgium" & date_policy < ymd("2020-10-01") ~  1,
+                                                country == "Belgium" & date_policy >= ymd("2020-10-01") ~  0,
+                                                country == "Bolivia" & date_policy < ymd("2020-11-08") ~ 1,
+                                                country == "Bolivia" & date_policy >= ymd("2020-11-08") ~ 0,
+                                                country == "Togo" & date_policy < ymd("2020-09-28") ~ 1,
+                                                country == "Togo" & date_policy >= ymd("2020-09-28") ~ 0,
+                                                country == "Marshall Islands" & date_policy < ymd("2020-01-13") ~ 1,
+                                                country == "Marshall Islands" & date_policy >= ymd("2020-01-13") ~ 0,
+                                                country == "Myanmar" & date_policy < ymd("2020-04-01") ~ 1,
+                                                country == "Myanmar" & date_policy >= ymd("2020-04-01") ~ 0,
+                                                country == "Estonia" & date_policy < ymd("2021-01-26") ~ 0,
+                                                country == "Estonia" & date_policy >= ymd("2021-01-26") ~ 1,
+                                                country == "Moldova" & date_policy < ymd("2020-12-24") ~ 0,
+                                                country == "Moldova" & date_policy >= ymd("2020-12-24") ~ 1,
+                                                country == "Samoa" & date_policy < ymd("2020-05-24") ~ 0,
+                                                country == "Samoa" & date_policy >= ymd("2020-05-24") ~ 1,
+                                                country == "Tanzania" & date_policy < ymd("2021-03-19") ~ 0,
+                                                country == "Tanzania" & date_policy >= ymd("2021-03-19") ~ 1,
+                                                country == "Lithuania" & date_policy < ymd("2020-12-11") ~ 0,
+                                                country == "Lithuania" & date_policy >= ymd("2020-12-11") ~ 1,
+                                                country == "Gabon" & date_policy < ymd("2020-07-16") ~ 0,
+                                                country == "Gabon" & date_policy >= ymd("2020-07-16") ~ 1,
+                                                country == "San Marino" & date_policy < ymd("2020-10-01") ~ 0.5,
+                                                country == "San Marino" & date_policy >= ymd("2020-10-01") ~ 0))
+  
+# define MENA countries
+  
+mena_cov <- c("Turkey","Yemen","Tunisia","Sudan","Lebanon","Morocco",
+              "Israel", "Palestine","Jordan",
+              "Iraq" ,"Egypt","Algeria","Kuwait","Qatar",
+          "Oman","Libya")
+
+mena <- c("Turkey","Yemen","Tunisia","Sudan","Lebanon","Morocco",
+              "Israel", "Palestine","Jordan",
+              "Iraq" ,"Egypt","Algeria","Kuwait","Qatar",
+          "Oman","Libya","United Arab Emirates","Syria","Bahrain",
+          "Saudi Arabia","Iran")
+
+# calculate mena average and global average 
+
+mena_avg <- filter(all_mods_data, country %in% mena) %>% 
+  group_by(date_policy,modtype) %>% 
+  summarize(med_est=mean(med_est)) %>% 
+  mutate(Region="MENA")
+
+global_avg <- filter(all_mods_data,!(country %in% mena))  %>% 
+  group_by(date_policy,modtype) %>% 
+  summarize(med_est=mean(med_est)) %>% 
+  mutate(Region="Excluding MENA")
+
+
+# facebook survey average
+
+
+
+# merge in index values
+
+combine_baro <- left_join(combine_baro, all_mods_data, 
+                          by=c("country",
+                               "date_policy")) %>% 
+                select(-high_est, -low_est, -sd_est) %>% 
+                spread(key="modtype",value="med_est")
+
+```
+
+# Descriptive Results
+
+Figure \@ref(fig:globalmena) shows the average policy intensity score values for the MENA region as a whole (21 countries including Israel, Iran and Turkey) compared to all other countries in the data (168). As can be seen, MENA policy responses to the pandemic tracked closely with what other countries in the world did. For some categories, such as social distancing and health resources, the MENA policy response is virtually identical to the world average.
+
+The areas we see noticeable discrepancies are business and mask policies, where the MENA region was somewhat higher than the regional average, and health monitoring, where is was somewhat lower than the global average. There is a fascinating regional dip in the school restriction score during summer 2020, but it was short-lived. If any conclusions can be drawn from this plot, it would be that MENA countries were somewhat more disposed towards masks and business restrictions than other regions, and that they may have had some difficulty implementing health monitoring policies like app-based contact tracing.
+
+```{r globalmena,fig.cap="Comparison of MENA to Global Average COVID-19 Policy Intensity Scores"}
+
+bind_rows(mena_avg,global_avg) %>% 
+  mutate(modtype=recode(modtype,
+                        biz="Business",
+                        hm2="Health Monitoring",
+                        hr="Health Resources",
+                        masks="Masks",
+                        school="Schools",
+                        sd="Social Distancing")) %>% 
+  ggplot(aes(y=med_est,x=date_policy)) +
+  geom_line(aes(colour=Region,linetype=Region)) +
+  theme_tufte() +
+  labs(x="",y="Index Score",
+       caption=stringr::str_wrap("Plot shows average index scores by all MENA countries and for all other countries in the COVID-19 Policy Intensity dataset.")) +
+  facet_wrap(~modtype) + scale_x_date(date_labels = "%b %y")
+
+```
+
+We can next examine the dispersion within the MENA region between countries. Figure \@ref(fig:regiondisp) shows the daily policy intensity scores for all 23 MENA countries in the dataset. Not all lines could be labeled due to over-plotting, but it is still possible to see considerable diversity that the regional average obscures. While some countries maintained very high social distancing restrictions, such as Bahrain, on the whole the region did not have as strong social distancing policies. Some countries, namely Egypt, appear to be outliers in implementing relatively few health monitoring and mask mandates. Of course, a caveat in presenting this information is that the data coding relies on publicly available information about policies; when such information is not available, the country will necessarily have a lower score even if such policies were enforced.
+
+```{r regiondisp,fig.cap="Policy Intensity Scores for All MENA Countries"}
+
+mena_data <- filter(all_mods_data, country %in% mena)
+
+mena_data <- left_join(mena_data, rename(mena_avg, mena_est="med_est"),
+                       by=c("date_policy","modtype"))
+
+mena_data %>% 
+    mutate(modtype=recode(modtype,
+                        biz="Business",
+                        hm2="Health Monitoring",
+                        hr="Health Resources",
+                        masks="Masks",
+                        school="Schools",
+                        sd="Social Distancing")) %>% 
+  group_by(modtype) %>% 
+           mutate(country2=ifelse(date_policy==max(date_policy),country,NA)) %>% 
+    ggplot(aes(y=med_est,x=date_policy)) +
+  geom_line(aes(group=country),alpha=0.5) +
+    geom_text(aes(label = country2,y=med_est),size=2,
+                  x=ymd("2021-09-15"),check_overlap = T) +
+  labs(x="",y="Index Score",
+       caption=stringr::str_wrap("Plot shows country-specific policy intensity scores for each country. Not all country labels are shown due to overplotting."))+
+  theme_minimal() +
+  theme(panel.grid = element_blank()) +
+  expand_limits(x=ymd("2021-11-30")) +
+  facet_wrap(~modtype) + scale_x_date(date_labels = "%b %y")
+```
+
+It is also very interesting to see that different scores have very different over-time patterns. Social distancing and mask policies, for example, appear to be relatively stable after the initial period of the pandemic, while school policies shifted repeatedly over time. Also in some policy categories like masks, there is essentially two types of countries (strong mask mandates or few), while in other categories, like business restrictions, there are many fine gradations between countries, suggesting that there are more policy options available to countries to choose from.
+
+We can also examine whether the reported concern about COVID-19 and commitment to social distancing varied between MENA and the rest of the world. The Facebook survey of COVID-19 related behaviors is very helpful for discerning these potential differences. Figure \@ref(fig:regsurvey) shows that the MENA region did not have either as strong masking behaviors as the rest of the world with about 20% fewer respondents reporting that they wore masks.
+
+The number who reported feeling anxious is also noticeably higher, though we note that this question also captures general anxiety and there were several other prominent factors for anxiety in the region, such as ongoing civil conflict. MENA residents were somewhat more worried about finances, but reported rates of contact outside the home that were very similar to the rest of the world.
+
+It is important to note that this survey did not have complete coverage of the region, as the United Arab Emirates, Bahrain, and Syria were not included, though there are 16 countries represented (Algeria, Egypt, Iraq, Israel, Jordan, Kuwait, Lebanon, Libya, Morocco, Oman, Palestine, Qatar, Sudan, Tunisia and Yemen).
+
+```{r regsurvey,fig.cap="Over-time Facebook Survey Trends Regarding COVID-19 Behaviors"}
+
+time_vary_fb_long <- gather(time_vary_fb,
+                            key="Series",
+                            value="Average",
+                            -country,-date_policy) %>% 
+  group_by(date_policy,Series) %>% 
+    mutate(`Excluding MENA`=mean(Average[!(country %in% mena)],na.rm=T),
+           `MENA`=mean(Average[country %in% mena],na.rm=T)) %>% 
+  gather(key="Region",value="Estimate",`Excluding MENA`,`MENA`)
+
+time_vary_fb_long %>% 
+  mutate(Series=recode(Series, 
+                       mask="Wear a Mask in Public",
+                       contact="Contact Outside the Home",
+                       anxious="Feel Anxious",
+                       finance="Worried about Finances")) %>% 
+    ggplot(aes(y=Estimate,x=date_policy)) +
+  geom_line(aes(colour=Region,linetype=Region)) +
+  theme_tufte() +
+  labs(x="",y="Percent Reporting",
+       caption=stringr::str_wrap("Plot shows average daily values for the Facebook Global COVID-19 Trends survey panel.")) +
+  scale_y_continuous(labels=scales::percent) +
+  facet_wrap(~Series) + scale_x_date(date_labels = "%b %y")
+
+```
+
+We can also examine variation within MENA with these behaviors in Figure \@ref(fig:behwithin). This plot shows again substantial variation within the region in these COVID-19 related beliefs and behaviors. Reported contact outside the home ranges from 30% in the past week in countries like Turkey while it reaches as high as 80% in Sudan. Up to 20% of Jordanians report feeling anxious by the middle of 2021, but only 3 or 4% of Israelis do so. Israelis are also some of the most likely to wear a mask in public at 80%, whereas only 50% of Algerians do so. While these differences invite theorizing, it is important to note that these are quite complicated, time-varying patterns and could be due either to different policies, levels of economic development and misinformation concerning COVID-19 in the population.
+
+```{r behwithin,fig.cap="Within-Region Variation in COVID-19 Facebook Survey"}
+time_vary_fb_long %>% 
+    mutate(Series=recode(Series, 
+                       mask="Wear a Mask in Public",
+                       contact="Contact Outside the Home",
+                       anxious="Feel Anxious",
+                       finance="Worried about Finances")) %>% 
+  group_by(Series) %>% 
+           mutate(country2=ifelse(date_policy==max(date_policy),country,NA)) %>% 
+  filter(country %in% mena) %>% 
+  distinct(country,date_policy,Average,Series,country2) %>% 
+    ggplot(aes(y=Average,x=date_policy)) +
+  stat_smooth(aes(group=country),se = F,size=.5,colour="black",alpha=0.2) +
+    geom_text(aes(label = country2,y=Average),size=2,
+                  x=ymd("2021-06-15"),check_overlap = T) +
+  labs(x="",y="Percent Reporting",
+       caption=stringr::str_wrap("Plot shows Facebook Global COVID-19 Trends panel survey data for MENA countries by day."))+
+  theme_minimal() +
+  theme(panel.grid = element_blank()) +
+  expand_limits(x=ymd("2021-08-15")) +
+  scale_y_continuous(labels=scales::percent) +
+  facet_wrap(~Series,scales="free_y") + scale_x_date(date_labels = "%b %y")
+
+```
+
+# Inference
+
+While explaining exactly why these patterns exist and persist is someone beyond the scope of this paper, I examine some important associations to see whether some predicted patterns hold in the MENA data. One influential theory by @vanbavel2022 argues that increased identification with the nation is related to stronger adherence to COVID-19 behaviors. I operationalize that concept here with trust in government, a question that is present in the Arab Barometer and was included in 3 ways of surveys done in six countries in 2020: Algeria, Jordan, Lebanon, Libya, Morocco and Tunisia. While a more limited form of inference in that we only have these six countries, we can still look at whether average government trust in these countries is associated with higher or lower policy intensity scores.
+
+I first look at bivariate plots in Figure \@ref(fig:scatter) examining the average government in trust ratings from the Arab Barometer plotted against the sum of the policy intensity scores for approximate date when the survey was put into the field. As can be seen, while there is substantial variation in the levels of trust and the levels of policy intensity scores, there does not appear to be any noticeable pattern that could explain both types of variation. Based on this data, there does not seem to be much support for a process in which governments imposed more policies because their population had greater trust in its institutions.
+
+```{r scatter,fig.cap="Government Trust and Aggregated Policy Intensity Scores in Six MENA Countries"}
+
+combine_baro %>% 
+  # gather(key="Index",value="Estimate",biz:sd) %>% 
+  #   mutate(Index=recode(Index,
+  #                       biz="Business",
+  #                       hm2="Health Monitoring",
+  #                       hr="Health Resources",
+  #                       masks="Masks",
+  #                       school="Schools",
+  #                       sd="Social Distancing")) %>% 
+  # group_by(country,date_policy,trust_govt) %>% 
+  # summarize(Estimate=sum(Estimate)) %>% 
+  ggplot(aes(y=trust_govt, 
+             x=masks)) +
+  geom_text(aes(label=country),size=2,hjust='inward') +
+  stat_smooth(method="lm") +
+  facet_wrap(~date_policy, ncol=3,
+             scales="free_x") +
+  theme_minimal() +
+  labs(x="Masks Policy Intensity Score",y="Trust in Govt. (1-5)",
+          caption=stringr::str_wrap("Plot shows Arab Barometer trust in government on a 1 to 5 Likert scale country averages for three waves of its 2020 survey on the y axis. The x axis shows the masking policy intensity scores of the country at the time the survey was conducted.")) +
+  theme(panel.grid = element_blank())
+
+```
+
+Next I can examine the same Arab Barometer polling data, except now with the observed behaviors from the Facebook survey. Figure \@ref(fig:baroface) shows the percent of Facebook survey respondents reporting mask wearing plotted against average trust in government. Here we see a much stronger pattern. For the first survey, we see that trust in government is weakly associated with less mask wearing. For later surveys, we see that greater government trust is strongly associated with more reported mask wearing. As such, this plot provides some tentative support for the hypothesis that trust in government is an important mediator not of how policy is selected but whether or not people follow the policies their government implements.
+
+```{r baroface, fig.cap="Government Trust by Reported Mask Wearing from Facebook Survey"}
+
+baro_face <- left_join(combine_baro, select(time_vary_fb, date_policy,
+                                            mask),by="date_policy")
+
+baro_face %>% 
+    ggplot(aes(y=trust_govt, 
+             x=masks)) +
+  geom_text(aes(label=country),hjust='inward',size=2) +
+  stat_smooth(method="lm") +
+  facet_wrap(~date_policy, ncol=3,
+             scales="free_x") +
+  theme_minimal() +
+  labs(x="% Wearing Mask in Public",y="Trust in Govt. (1-5)",
+          caption=stringr::str_wrap("Plot shows Arab Barometer trust in government on a 1 to 5 Likert scale country averages for three waves of its 2020 survey on the y axis. The x axis shows the reported mask wearing percentage from the Facebook panel survey.")) +
+  theme(panel.grid = element_blank())
+
+```
+
+# Conclusion
+
+To conclude, while the MENA region as a whole is broadly similar to other parts of the world in its COVID response, we see substantial within-region differences in terms of how COVID policies were implemented and to what extent residents were affected by the pandemic and adopted public health behaviors. Countries with limited state capacity, such as Libya, Yemen and Syria, tend to be the worst performers whether in terms of policy implementation or adherence to COVID-19 measures such as mask-wearing.
+
+There does seem to be some initial evidence that trust in government is a moderating factor of people's adoption of COVID-19 behaviors like mask wearing, though not necessarily with policies. In Lebanon and Tunisia, countries where people report a relatively high trust in government, reported mask wearing was significantly higher later in the pandemic but there was not a noticeable higher level of policy coverage compared to low-trust countries. Understanding the nuances between the factors governing policy adoption and the factors behind personal decisions and opinions about COVID-19 is an important area for future research.
+
+# References
