@@ -16,7 +16,7 @@ require(RPostgres)
 
 # load CoronaNet Data in long form
 
-clean <- readRDS("data/coronanet_internal_allvars.rds")
+clean <- readRDS("data/ra_data_pull_purified_all.rds")
 
 # number cleaning function
 
