@@ -762,10 +762,10 @@ index_long <- group_by(index_long,country,item,date_policy,init_country_level) %
 
 # save disag data
 
-saveRDS(index_long, paste0("coronanet/index_long_disag_",type,".rds"))
-write_csv(index_long,paste0("coronanet/index_long_disag_",type,".csv"))
-zip(paste0("coronanet/index_long_disag_",type,".zip"),
-    paste0("coronanet/index_long_disag_",type,".csv"))
+saveRDS(index_long, paste0("/scratch/rmk7/coronanet/index_long_disag_",type,".rds"))
+write_csv(index_long,paste0("/scratch/rmk7/coronanet/index_long_disag_",type,".csv"))
+zip(paste0("/scratch/rmk7/coronanet/index_long_disag_",type,".zip"),
+    paste0("/scratch/rmk7/coronanet/index_long_disag_",type,".csv"))
 # need to calculate proportions of provinces/cities
 
 index_long <- mutate(ungroup(index_long),
@@ -884,7 +884,7 @@ index_long_model <- right_join(index_long_model,fillin) %>%
   mutate(pop_out=coalesce(pop_out,0),
          var=coalesce(var,0))
 
-saveRDS(index_long_model,paste0("coronanet/index_long_model_",type,".rds"))
+saveRDS(index_long_model,paste0("/scratch/rmk7/coronanet/index_long_model_",type,".rds"))
 
 rm(index_long_model)
 rm(oxford)
@@ -902,9 +902,9 @@ index_long_var <- select(index_long,-pop_out) %>% spread(key="item",value="var")
 
 index_long_pop <- select(index_long,-var) %>% spread(key="item",value="pop_out")
 
-saveRDS(index_long_var,paste0("coronanet/wide_data_binary_",type,".rds"))
+saveRDS(index_long_var,paste0("/scratch/rmk7/coronanet/wide_data_binary_",type,".rds"))
 
-saveRDS(index_long_pop,paste0("coronanet/wide_data_pop_weighted_",type,".rds"))
+saveRDS(index_long_pop,paste0("/scratch/rmk7/coronanet/wide_data_pop_weighted_",type,".rds"))
 
 })
 
