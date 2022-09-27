@@ -286,7 +286,8 @@ to_make <- index_long %>%
     anti_join(days_no_change,by="date_policy") %>% 
     anti_join(no_change,by="country") %>% 
     distinct %>% 
-    mutate(var=as.integer(var)) %>% 
+    mutate(var=as.integer(var),
+           var_cont=ifelse(is.infinite(var_cont),0,var_cont)) %>% 
     filter(!(country %in% c("Samoa","Solomon Islands","Saint Kitts and Nevis",
                             "Liechtenstein","Montenegro","Northern Cyprus",
                             "North Macedonia","Nauru","Equatorial Guinea",
