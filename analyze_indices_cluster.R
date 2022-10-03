@@ -34,7 +34,7 @@ if(sum_data) {
 biz_mod <- readRDS("/scratch/rmk7/coronanet/activity_fit_rwbiz_random_walk_run_4.rds")
 
 all_mods <- lapply(list.files(path = "/scratch/rmk7/coronanet/",
-                              pattern="biz\\_random\\_walk\\_run\\_[1-4].*rds",
+                              pattern="biz\\_random\\_walk\\_run\\_4.*rds",
                               full.names=T),readRDS)
 
 all_mods_mat <-  lapply(all_mods, function(c) c@stan_samples$draws())
@@ -377,7 +377,7 @@ rm(mask_mod)
 hm2_mod <- readRDS("/scratch/rmk7/coronanet/activity_fit_rwhm2_random_walk_run_4.rds")
 
 all_mods <- lapply(list.files(path = "/scratch/rmk7/coronanet/",
-                              pattern="hm2\\_random\\_walk\\_run\\_[1-4].*rds",
+                              pattern="hm2\\_random\\_walk\\_run\\_4.*rds",
                               full.names=T),readRDS)
 
 all_mods_mat <-  lapply(all_mods, function(c) c@stan_samples$draws())
@@ -558,7 +558,7 @@ rm(hm2_mod)
 sd_mod <- readRDS("/scratch/rmk7/coronanet/activity_fit_rwsd_random_walk_run_4.rds")
 
 all_mods <- lapply(list.files(path = "/scratch/rmk7/coronanet/",
-                              pattern="sd\\_random\\_walk\\_run\\_[1-4].*rds",
+                              pattern="sd\\_random\\_walk\\_run\\_4.*rds",
                               full.names=T),readRDS)
 
 all_mods_mat <-  lapply(all_mods, function(c) c@stan_samples$draws())
