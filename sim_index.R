@@ -296,9 +296,9 @@ over_sims <- lapply(1, function(i) {
   
   
   
-})
+}) 
 
-       
+  saveRDS(over_sims, "/scratch/rmk7/coronanet/over_sims.rds")
 
 
 
