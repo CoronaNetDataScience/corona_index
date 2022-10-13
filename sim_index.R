@@ -30,7 +30,7 @@ prior_func <- rnorm
 
 # simulate 200 times
 
-over_sims <- lapply(1:200, function(i) {
+over_sims <- parallel::mclapply(1:200, function(i) {
   
   # countries 
   
@@ -170,7 +170,7 @@ over_sims <- lapply(1:200, function(i) {
   
   # estimate model
   
-  est_obj <- id_estimate(outobj,vary_ideal_pts="random_walk",ncores=12,warmup=1500,nchains=1,niters=1000,
+  est_obj <- id_estimate(outobj,vary_ideal_pts="random_walk",ncores=1,warmup=1500,nchains=1,niters=1000,
                          const_type = "items",max_treedepth=12,id_refresh=100,time_var=4,
                          restrict_ind_high = which((abs(yes_points-no_points))==max(abs(yes_points-no_points))),
                          restrict_ind_low=which((abs(yes_points-no_points))==min(abs(yes_points-no_points))),
@@ -298,7 +298,7 @@ over_sims <- lapply(1:200, function(i) {
   
   
   
-}) 
+},mc.cores=parallel::detectCores()) 
 
   saveRDS(over_sims, "/scratch/rmk7/coronanet/over_sims.rds")
 
