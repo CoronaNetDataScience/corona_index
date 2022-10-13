@@ -287,6 +287,8 @@ over_sims <- lapply(1, function(i) {
          coefs_neg_sig=sum(sum_policies[,"Estimate"]>0 & sum_policies[,"Pr(>|z|)"]<0.05),
          idealpts_est=sum_ideal["Estimate"],
          idealpts_me_est=sum_ideal_me$median,
+         coef_vec_policy=list(sum_policies[,"Estimate"]),
+         sd_vec_policy=list(sum_policies[,"Std. Error"]),
          pca_est=sum_pca_fit["Estimate"],
          RMSE_true_idealpts=sqrt((-2 - sum_ideal_me$median)^2),
          RMSE_true_pca=sqrt((-2 - sum_pca_fit[1])^2),
