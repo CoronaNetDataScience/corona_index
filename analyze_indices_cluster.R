@@ -725,7 +725,7 @@ rm(sd_mod)
 school_mod <- readRDS("/scratch/rmk7/coronanet/activity_fit_rwschool_random_walk_run_4.rds")
 
 all_mods <- lapply(list.files(path = "/scratch/rmk7/coronanet/",
-                              pattern="school\\_random\\_walk\\_run\\_[0-4].*rds",
+                              pattern="school\\_random\\_walk\\_run\\_4.*rds",
                               full.names=T),readRDS)
 
 all_mods_mat <-  lapply(all_mods, function(c) c@stan_samples$draws())
