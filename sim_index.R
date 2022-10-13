@@ -30,7 +30,7 @@ prior_func <- rnorm
 
 # simulate 200 times
 
-over_sims <- lapply(1, function(i) {
+over_sims <- lapply(1:200, function(i) {
   
   # countries 
   
