@@ -281,7 +281,6 @@ over_sims <- parallel::mclapply(1:200, function(i) {
   print(paste0("finished iteration",i))
   
   tibble(iteration = i,
-         num_sample=num_sample,
          policy_data=list(policy_data),
          coefs_pos_sig=sum(sum_policies[,"Estimate"]>0 & sum_policies[,"Pr(>|z|)"]<0.05),
          coefs_neg_sig=sum(sum_policies[,"Estimate"]>0 & sum_policies[,"Pr(>|z|)"]<0.05),
