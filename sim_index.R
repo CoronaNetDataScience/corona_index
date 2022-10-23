@@ -30,7 +30,7 @@ prior_func <- rnorm
 
 # simulate 200 times
 
-over_sims <- parallel::mclapply(1:200, function(i) {
+over_sims <- lapply(1:2, function(i) {
   
   # countries 
   
@@ -297,7 +297,7 @@ over_sims <- parallel::mclapply(1:200, function(i) {
   
   
   
-},mc.cores=parallel::detectCores()) 
+}) 
 
   saveRDS(over_sims, "/scratch/rmk7/coronanet/over_sims.rds")
 

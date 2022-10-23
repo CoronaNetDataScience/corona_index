@@ -2,10 +2,10 @@
 title: "COVID-19 Responses in the Middle East and North Africa in Global Perspective"
 author: "Robert Kubinec"
 institution: "New York University Abu Dhabi"
-date: "March 23, 2022"
+date: "April 25, 2022"
+toc: false
 output: 
-  bookdown::pdf_document2:
-    extra_dependencies: "setspace"
+  bookdown::word_document2
 bibliography: references.bib
 ---
 
@@ -21,14 +21,15 @@ library(lubridate)
 library(haven)
 library(ggrepel)
 library(extrafont)
-knitr::opts_chunk$set(echo = FALSE, warning=FALSE, message=FALSE)
+library(gghighlight)
+knitr::opts_chunk$set(echo = FALSE, warning=FALSE, message=FALSE,dpi=400)
 ```
-
-\doublespacing
 
 In this paper I present research on the nature of the government response to the COVID-19 pandemic in the Middle East and North Africa (MENA), exploring both within-region diversity and between-region variation. On the whole, MENA governments have pursued a robust response to the pandemic when and where they have had the capability to do so. Countries that suffered from civil conflict and state failure, such as Syria, Yemen and Libya, had the the most limited COVID-19 responses and arguably suffered as a consequence, although medical data to assess the severity of the pandemic from these places is often missing [@karamouzian2020; @wehbe2021; @daar2020]. What we did not often observe in the MENA region are protests or other political moves against the pandemic as were seen in Europe, Latin America and North America. While misinformation about the pandemic was certainly a problem, Middle Easterners did not see the pandemic primarily as a political issue and were largely willing to comply with strict policies mandating social distancing, restricted international travel and economic closures.
 
-It is somewhat beyond the scope of this paper to determine exactly why that is the case, but I propose some hypotheses about trust in government as a possible explanatory factor [@vanbavel2022; @sibley2020]. Regime type is another plausible explanation for these trends as authoritarian control over public health policies may have helped to de-politicize these decisions compared to Western democracies where angry citizens denounced bureaucrats and political leaders [@barceló2022; @koehler2021]. In any case, while the COVID-19 pandemic in the region has certainly affected many people's lives and indirectly political outcomes [@harb2021; @alijla2021], whether or not COVID should be a concern for public policy is not itself a matter of political schism in the region.
+It is somewhat beyond the scope of this paper to determine exactly why that is the case, but I propose some hypotheses about trust in government as a possible explanatory factor [@vanbavel2022; @sibley2020; @koehler2022]. Regime type is another plausible explanation for these trends as authoritarian control over public health policies may have helped to de-politicize these decisions compared to Western democracies where angry citizens denounced bureaucrats and political leaders [@barceló2022; @koehler2021]. In any case, while the COVID-19 pandemic in the region has certainly affected many people's lives and indirectly political outcomes [@harb2021; @alijla2021], whether or not COVID should be a concern for public policy is not itself a matter of political schism in the region.
+
+Indeed, this rather high acceptance of the importance of fighting the pandemic seems to have led to a wave of new authoritarianism in the region. @abouzzohour2022 shows that governments exploited COVID containment measures to push back against social mobilization, such as occurred in Algeria with the successful repression of the long-lived Hirak protest movement. Similarly, @abedini2022 shows how the Iranian clerical and security apparatus took advantage of the chaos caused by COVID-19 to isolate moderates and regain more control over governing institutions. @barceló2022 analyzed cross-national data from a swath of countries in the early stages of the pandemic and found that governments with poorer records of human rights abuses were adopted stringent lockdowns much earlier in the pandemic and also kept them in place for much longer as well.
 
 # Data
 
@@ -261,14 +262,20 @@ mena <- c("Turkey","Yemen","Tunisia","Sudan","Lebanon","Morocco",
           "Oman","Libya","United Arab Emirates","Syria","Bahrain",
           "Saudi Arabia","Iran")
 
+mena2 <- c("Yemen","Tunisia","Sudan","Lebanon","Morocco",
+               "Palestine","Jordan",
+              "Iraq" ,"Egypt","Algeria","Kuwait","Qatar",
+          "Oman","Libya","United Arab Emirates","Syria","Bahrain",
+          "Saudi Arabia")
+
 # calculate mena average and global average 
 
-mena_avg <- filter(all_mods_data, country %in% mena) %>% 
+mena_avg <- filter(all_mods_data, country %in% mena2) %>% 
   group_by(date_policy,modtype) %>% 
   summarize(med_est=mean(med_est)) %>% 
   mutate(Region="MENA")
 
-global_avg <- filter(all_mods_data,!(country %in% mena))  %>% 
+global_avg <- filter(all_mods_data,!(country %in% mena2))  %>% 
   group_by(date_policy,modtype) %>% 
   summarize(med_est=mean(med_est)) %>% 
   mutate(Region="Excluding MENA")
@@ -290,7 +297,7 @@ combine_baro <- left_join(combine_baro, all_mods_data,
 
 # Descriptive Results
 
-Figure \@ref(fig:globalmena) shows the average policy intensity score values for the MENA region as a whole (21 countries including Israel, Iran and Turkey) compared to all other countries in the data (168). As can be seen, MENA policy responses to the pandemic tracked closely with what other countries in the world did. For some categories, such as social distancing and health resources, the MENA policy response is virtually identical to the world average.
+Figure \@ref(fig:globalmena) shows the average policy intensity score values for the MENA region as a whole (21 countries including Israel, Iran and Turkey) compared to all other countries in the data (168). I include Iran, Israel and Turkey as they are regionally proximate though not Arab-speaking countries. As can be seen, MENA policy responses to the pandemic tracked closely with what other countries in the world did. For some categories, such as social distancing and health resources, the MENA policy response is virtually identical to the world average.
 
 The areas we see noticeable discrepancies are business and mask policies, where the MENA region was somewhat higher than the regional average, and health monitoring, where is was somewhat lower than the global average. There is a fascinating regional dip in the school restriction score during summer 2020, but it was short-lived. If any conclusions can be drawn from this plot, it would be that MENA countries were somewhat more disposed towards masks and business restrictions than other regions, and that they may have had some difficulty implementing health monitoring policies like app-based contact tracing.
 
@@ -308,14 +315,14 @@ bind_rows(mena_avg,global_avg) %>%
   geom_line(aes(colour=Region,linetype=Region)) +
   theme_tufte() +
   labs(x="",y="Index Score",
-       caption=stringr::str_wrap("Plot shows average index scores by all MENA countries and for all other countries in the COVID-19 Policy Intensity dataset.")) +
+       caption=stringr::str_wrap("Plot shows average index scores by all MENA countries and for all other countries in the COVID-19 Policy Intensity dataset.",width = 70)) +
   facet_wrap(~modtype) + scale_x_date(date_labels = "%b %y")
 
 ```
 
-We can next examine the dispersion within the MENA region between countries. Figure \@ref(fig:regiondisp) shows the daily policy intensity scores for all 23 MENA countries in the dataset. Not all lines could be labeled due to over-plotting, but it is still possible to see considerable diversity that the regional average obscures. While some countries maintained very high social distancing restrictions, such as Bahrain, on the whole the region did not have as strong social distancing policies. Some countries, namely Egypt, appear to be outliers in implementing relatively few health monitoring and mask mandates. Of course, a caveat in presenting this information is that the data coding relies on publicly available information about policies; when such information is not available, the country will necessarily have a lower score even if such policies were enforced.
+We can next examine the dispersion within the MENA region between countries. Figure \@ref(fig:regiondisp) shows the daily policy intensity scores for all 23 MENA countries in the dataset. Not all lines could be labeled due to over-plotting, but it is still possible to see considerable diversity that the regional average obscures. While some countries maintained very high social distancing restrictions, such as Bahrain, on the whole the region did not have as strong social distancing policies. Wealthy Gulf states like Saudi Arabia, unsurprisingly, scored quite well on the production of health resources. Of course, a caveat in presenting this information is that the data coding relies on publicly available information about policies; when such information is not available, the country will necessarily have a lower score even if such policies were enforced.
 
-```{r regiondisp,fig.cap="Policy Intensity Scores for All MENA Countries"}
+```{r regiondisp,fig.cap="Policy Intensity Scores for All MENA Countries",fig.width=7}
 
 mena_data <- filter(all_mods_data, country %in% mena)
 
@@ -323,7 +330,7 @@ mena_data <- left_join(mena_data, rename(mena_avg, mena_est="med_est"),
                        by=c("date_policy","modtype"))
 
 mena_data %>% 
-    mutate(modtype=recode(modtype,
+  mutate(modtype=recode(modtype,
                         biz="Business",
                         hm2="Health Monitoring",
                         hr="Health Resources",
@@ -331,24 +338,27 @@ mena_data %>%
                         school="Schools",
                         sd="Social Distancing")) %>% 
   group_by(modtype) %>% 
-           mutate(country2=ifelse(date_policy==max(date_policy),country,NA)) %>% 
-    ggplot(aes(y=med_est,x=date_policy)) +
-  geom_line(aes(group=country),alpha=0.5) +
-    geom_text(aes(label = country2,y=med_est),size=2,
-                  x=ymd("2021-09-15"),check_overlap = T) +
+  mutate(country2=ifelse(date_policy==max(date_policy),country,NA)) %>% 
+  ungroup %>% 
+  #filter(modtype=="Business") %>% 
+  ggplot(aes(y=med_est,x=date_policy)) +
+  geom_line(aes(colour=country)) +
   labs(x="",y="Index Score",
-       caption=stringr::str_wrap("Plot shows country-specific policy intensity scores for each country. Not all country labels are shown due to overplotting."))+
+       caption=stringr::str_wrap("Plot shows country-specific policy intensity scores for each country in the data in gray, with three countries highlighted.",width = 70))+
   theme_minimal() +
   theme(panel.grid = element_blank()) +
-  expand_limits(x=ymd("2021-11-30")) +
-  facet_wrap(~modtype) + scale_x_date(date_labels = "%b %y")
+  gghighlight(max(med_est),max_highlight = 3,use_direct_label = F,calculate_per_facet = T,
+              unhighlighted_params = list(alpha=0.2)) +
+  facet_wrap(~modtype) +
+  scale_colour_viridis_d(name="") +
+  scale_x_date(date_labels = "%b %y")
 ```
 
-It is also very interesting to see that different scores have very different over-time patterns. Social distancing and mask policies, for example, appear to be relatively stable after the initial period of the pandemic, while school policies shifted repeatedly over time. Also in some policy categories like masks, there is essentially two types of countries (strong mask mandates or few), while in other categories, like business restrictions, there are many fine gradations between countries, suggesting that there are more policy options available to countries to choose from.
+It is also very interesting to see that different scores have very different over-time patterns. Social distancing and mask policies, for example, appear to be relatively stable after the initial period of the pandemic, while school policies shifted repeatedly over time. Also in some policy categories like masks, there are essentially two types of countries (strong mask mandates or few), while in other categories, like business restrictions, there are many fine gradations between countries, suggesting that there are more policy options available to countries to choose from.
 
-We can also examine whether the reported concern about COVID-19 and commitment to social distancing varied between MENA and the rest of the world. The Facebook survey of COVID-19 related behaviors is very helpful for discerning these potential differences. Figure \@ref(fig:regsurvey) shows that the MENA region did not have either as strong masking behaviors as the rest of the world with about 20% fewer respondents reporting that they wore masks.
+We can also examine whether the reported concern about COVID-19 and commitment to social distancing varied between MENA and the rest of the world. The COVID 19 Preventative Health Survey of COVID-19 related behaviors is very helpful for discerning these potential differences. This survey, sponsored by Facebook in cooperation with the Massachusetts Institute of Technology, John Hopkins University, and the World Health Organization, ran daily panels in over a hundred countries world-wide starting from the early days of the pandemic. These panels were all recruited via Facebook by using an ad that would appear at the top of users' timelines. Due to issues in unequal response rates, the results were re-weighted to match population totals for representativeness.
 
-The number who reported feeling anxious is also noticeably higher, though we note that this question also captures general anxiety and there were several other prominent factors for anxiety in the region, such as ongoing civil conflict. MENA residents were somewhat more worried about finances, but reported rates of contact outside the home that were very similar to the rest of the world.
+Figure \@ref(fig:regsurvey) shows that the MENA region did not have either as strong masking behaviors as the rest of the world with about 20% fewer respondents reporting that they wore masks. The number who reported feeling anxious is also noticeably higher, though we note that this question also captures general anxiety and there were several other prominent factors for anxiety in the region, such as ongoing civil conflict. MENA residents were somewhat more worried about finances, but reported rates of contact outside the home were very similar to the rest of the world.
 
 It is important to note that this survey did not have complete coverage of the region, as the United Arab Emirates, Bahrain, and Syria were not included, though there are 16 countries represented (Algeria, Egypt, Iraq, Israel, Jordan, Kuwait, Lebanon, Libya, Morocco, Oman, Palestine, Qatar, Sudan, Tunisia and Yemen).
 
@@ -373,15 +383,15 @@ time_vary_fb_long %>%
   geom_line(aes(colour=Region,linetype=Region)) +
   theme_tufte() +
   labs(x="",y="Percent Reporting",
-       caption=stringr::str_wrap("Plot shows average daily values for the Facebook Global COVID-19 Trends survey panel.")) +
+       caption=stringr::str_wrap("Plot shows average daily values for the Facebook Global COVID-19 Trends survey panel.",width = 70)) +
   scale_y_continuous(labels=scales::percent) +
   facet_wrap(~Series) + scale_x_date(date_labels = "%b %y")
 
 ```
 
-We can also examine variation within MENA with these behaviors in Figure \@ref(fig:behwithin). This plot shows again substantial variation within the region in these COVID-19 related beliefs and behaviors. Reported contact outside the home ranges from 30% in the past week in countries like Turkey while it reaches as high as 80% in Sudan. Up to 20% of Jordanians report feeling anxious by the middle of 2021, but only 3 or 4% of Israelis do so. Israelis are also some of the most likely to wear a mask in public at 80%, whereas only 50% of Algerians do so. While these differences invite theorizing, it is important to note that these are quite complicated, time-varying patterns and could be due either to different policies, levels of economic development and misinformation concerning COVID-19 in the population.
+We can also examine variation within MENA with these behaviors in Figure \@ref(fig:behwithin). This plot shows again substantial variation within the region in these COVID-19 related beliefs and behaviors. Reported contact outside the home ranges from 30% in the past week in countries like Turkey while it reaches as high as 70% in Yemen. Up to 20% of Yemenis report feeling anxious by the middle of 2021, but only 12% of Tunisians do so. Turks are some of the most likely to wear a mask in public at near 80%, whereas only 30% of Yemenis do so. While these differences invite theorizing, it is important to note that these are quite complicated, time-varying patterns and could be due either to different policies, levels of economic development and misinformation concerning COVID-19 in the population.
 
-```{r behwithin,fig.cap="Within-Region Variation in COVID-19 Facebook Survey"}
+```{r behwithin,fig.cap="Within-Region Variation in COVID-19 Facebook Survey",fig.width=7}
 time_vary_fb_long %>% 
     mutate(Series=recode(Series, 
                        mask="Wear a Mask in Public",
@@ -393,14 +403,14 @@ time_vary_fb_long %>%
   filter(country %in% mena) %>% 
   distinct(country,date_policy,Average,Series,country2) %>% 
     ggplot(aes(y=Average,x=date_policy)) +
-  stat_smooth(aes(group=country),se = F,size=.5,colour="black",alpha=0.2) +
-    geom_text(aes(label = country2,y=Average),size=2,
-                  x=ymd("2021-06-15"),check_overlap = T) +
+  stat_smooth(aes(colour=country),se = F,size=1,alpha=0.2) +
   labs(x="",y="Percent Reporting",
-       caption=stringr::str_wrap("Plot shows Facebook Global COVID-19 Trends panel survey data for MENA countries by day."))+
+       caption=stringr::str_wrap("Plot shows Facebook Global COVID-19 Trends panel survey data for MENA countries by day. Three countries are highlighted and the others are shown as gray lines without labels.",width = 60))+
   theme_minimal() +
   theme(panel.grid = element_blank()) +
-  expand_limits(x=ymd("2021-08-15")) +
+    gghighlight(max(Average),max_highlight = 3,use_direct_label = F,calculate_per_facet = T,
+              unhighlighted_params = list(alpha=0.1,size=.5)) +
+  scale_color_viridis_d(name="") +
   scale_y_continuous(labels=scales::percent) +
   facet_wrap(~Series,scales="free_y") + scale_x_date(date_labels = "%b %y")
 
@@ -408,7 +418,7 @@ time_vary_fb_long %>%
 
 # Inference
 
-While explaining exactly why these patterns exist and persist is someone beyond the scope of this paper, I examine some important associations to see whether some predicted patterns hold in the MENA data. One influential theory by @vanbavel2022 argues that increased identification with the nation is related to stronger adherence to COVID-19 behaviors. I operationalize that concept here with trust in government, a question that is present in the Arab Barometer and was included in 3 ways of surveys done in six countries in 2020: Algeria, Jordan, Lebanon, Libya, Morocco and Tunisia. While a more limited form of inference in that we only have these six countries, we can still look at whether average government trust in these countries is associated with higher or lower policy intensity scores.
+While explaining exactly why these patterns exist and persist is someone beyond the scope of this paper, I examine some important associations to see whether some predicted patterns hold in the MENA data. One influential theory by @vanbavel2022 argues that increased identification with the nation is related to stronger adherence to COVID-19 behaviors. However, @koehler2022a note that trust in government could be negatively related to compliance with COVID-19 restrictions if the government actively supports misinformation, as occurred in Turkey with President Erdogan. I operationalize the potential causal factor as expressed trust in government, which is present in the Arab Barometer and was included in 3 ways of surveys done in six countries in 2020: Algeria, Jordan, Lebanon, Libya, Morocco and Tunisia. While a more limited form of inference in that we only have these six countries, we can still look at whether average government trust in these countries is associated with higher or lower policy intensity scores.
 
 I first look at bivariate plots in Figure \@ref(fig:scatter) examining the average government in trust ratings from the Arab Barometer plotted against the sum of the policy intensity scores for approximate date when the survey was put into the field. As can be seen, while there is substantial variation in the levels of trust and the levels of policy intensity scores, there does not appear to be any noticeable pattern that could explain both types of variation. Based on this data, there does not seem to be much support for a process in which governments imposed more policies because their population had greater trust in its institutions.
 
@@ -433,12 +443,12 @@ combine_baro %>%
              scales="free_x") +
   theme_minimal() +
   labs(x="Masks Policy Intensity Score",y="Trust in Govt. (1-5)",
-          caption=stringr::str_wrap("Plot shows Arab Barometer trust in government on a 1 to 5 Likert scale country averages for three waves of its 2020 survey on the y axis. The x axis shows the masking policy intensity scores of the country at the time the survey was conducted.")) +
+          caption=stringr::str_wrap("Plot shows Arab Barometer trust in government on a 1 to 5 Likert scale country averages for three waves of its 2020 survey on the y axis. The x axis shows the masking policy intensity scores of the country at the time the survey was conducted.",width = 70)) +
   theme(panel.grid = element_blank())
 
 ```
 
-Next I can examine the same Arab Barometer polling data, except now with the observed behaviors from the Facebook survey. Figure \@ref(fig:baroface) shows the percent of Facebook survey respondents reporting mask wearing plotted against average trust in government. Here we see a much stronger pattern. For the first survey, we see that trust in government is weakly associated with less mask wearing. For later surveys, we see that greater government trust is strongly associated with more reported mask wearing. As such, this plot provides some tentative support for the hypothesis that trust in government is an important mediator not of how policy is selected but whether or not people follow the policies their government implements.
+Next I can examine the same Arab Barometer polling data, except now with the observed behaviors from the Facebook survey. Figure \@ref(fig:baroface) shows the percent of Facebook survey respondents reporting mask wearing plotted against average trust in government. Here we see a much stronger pattern. For the first survey, we see that trust in government is weakly associated with less mask wearing. For later surveys, we see that greater government trust is strongly associated with more reported mask wearing. As such, this plot provides some tentative support for the hypothesis that trust in government is an important moderator of whether people practice COVID-19 behaviors, though it does not seem to be related to the presence of policies themselves.
 
 ```{r baroface, fig.cap="Government Trust by Reported Mask Wearing from Facebook Survey"}
 
@@ -454,7 +464,7 @@ baro_face %>%
              scales="free_x") +
   theme_minimal() +
   labs(x="% Wearing Mask in Public",y="Trust in Govt. (1-5)",
-          caption=stringr::str_wrap("Plot shows Arab Barometer trust in government on a 1 to 5 Likert scale country averages for three waves of its 2020 survey on the y axis. The x axis shows the reported mask wearing percentage from the Facebook panel survey.")) +
+          caption=stringr::str_wrap("Plot shows Arab Barometer trust in government on a 1 to 5 Likert scale country averages for three waves of its 2020 survey on the y axis. The x axis shows the reported mask wearing percentage from the Facebook panel survey.",width = 70)) +
   theme(panel.grid = element_blank())
 
 ```
@@ -463,6 +473,6 @@ baro_face %>%
 
 To conclude, while the MENA region as a whole is broadly similar to other parts of the world in its COVID response, we see substantial within-region differences in terms of how COVID policies were implemented and to what extent residents were affected by the pandemic and adopted public health behaviors. Countries with limited state capacity, such as Libya, Yemen and Syria, tend to be the worst performers whether in terms of policy implementation or adherence to COVID-19 measures such as mask-wearing.
 
-There does seem to be some initial evidence that trust in government is a moderating factor of people's adoption of COVID-19 behaviors like mask wearing, though not necessarily with policies. In Lebanon and Tunisia, countries where people report a relatively high trust in government, reported mask wearing was significantly higher later in the pandemic but there was not a noticeable higher level of policy coverage compared to low-trust countries. Understanding the nuances between the factors governing policy adoption and the factors behind personal decisions and opinions about COVID-19 is an important area for future research.
+There does seem to be some initial evidence that trust in government is a moderating factor of people's adoption of COVID-19 behaviors like mask wearing, though not necessarily with policies. In Lebanon and Tunisia, countries where people report a relatively high trust in government, reported mask wearing was significantly higher later in the pandemic but there was not a noticeable higher level of policy coverage compared to low-trust countries. However, these cross-national comparisons necessarily obscure important sub-national factors, as @koehler2022a explore by comparing Turkish districts by level of support for the AK Parti. Understanding the nuances between the factors governing policy adoption and the factors behind personal decisions and opinions about COVID-19 is an important area for future research.
 
 # References
