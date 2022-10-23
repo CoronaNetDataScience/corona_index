@@ -30,7 +30,7 @@ prior_func <- rnorm
 
 # simulate 200 times
 
-over_sims <- lapply(1:2, function(i) {
+over_sims <- parallel::mclapply(1:200, function(i) {
   
   # countries 
   
@@ -241,6 +241,8 @@ over_sims <- lapply(1:2, function(i) {
   c1 <- make_standata(bf(obs_cases | trials(size) ~ me(med_est_ideal_scale,sdx = sd_est_ideal_scale),family=binomial),
                       data=policy_data,  chains=1,max_treedepth=15,adapt_delta=0.99, backend="cmdstanr")
   
+  class(c1) <- "list"
+  
   me_model <- cmdstan_model("me_model2.stan")
   
   init_list <- list(
@@ -297,7 +299,7 @@ over_sims <- lapply(1:2, function(i) {
   
   
   
-}) 
+},mc.cores=parallel::detectCores()) 
 
   saveRDS(over_sims, "/scratch/rmk7/coronanet/over_sims.rds")
 
