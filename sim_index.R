@@ -174,8 +174,8 @@ over_sims <- parallel::mclapply(1:200, function(i) {
                          const_type = "items",max_treedepth=12,id_refresh=100,time_var=4,
                          restrict_ind_high = which((abs(yes_points-no_points))==max(abs(yes_points-no_points))),
                          restrict_ind_low=which((abs(yes_points-no_points))==min(abs(yes_points-no_points))),
-                         fix_high=max(abs(yes_points-no_points)),
-                         fix_low=min(abs(yes_points-no_points)),
+                         fix_high=2*max(abs(yes_points-no_points)),
+                         fix_low=2*min(abs(yes_points-no_points)),
                          discrim_reg_sd=1,person_sd=1,diff_reg_sd = 1,
                          restrict_sd_low = 0.01,restrict_sd_high=0.01)
   
@@ -285,7 +285,7 @@ over_sims <- parallel::mclapply(1:200, function(i) {
   tibble(iteration = i,
          policy_data=list(policy_data),
          coefs_pos_sig=sum(sum_policies[,"Estimate"]>0 & sum_policies[,"Pr(>|z|)"]<0.05),
-         coefs_neg_sig=sum(sum_policies[,"Estimate"]>0 & sum_policies[,"Pr(>|z|)"]<0.05),
+         coefs_neg_sig=sum(sum_policies[,"Estimate"]<0 & sum_policies[,"Pr(>|z|)"]<0.05),
          idealpts_est=sum_ideal["Estimate"],
          idealpts_me_est=sum_ideal_me$median,
          coef_vec_policy=list(sum_policies[,"Estimate"]),
