@@ -136,7 +136,7 @@ over_sims <- parallel::mclapply(1:200, function(i) {
     c1 <- country_points[policy_points==i]
     c2 <- time_points[policy_points==i]
     
-    tibble(outcome_disc=as.numeric(runif(n=length(country_points[policy_points==i]))>plogis(pr_vote[policy_points==i] + rnorm(n=length(country_points[country_points==i]),
+    tibble(outcome_disc=as.numeric(runif(n=length(country_points[policy_points==i]))<plogis(pr_vote[policy_points==i] + rnorm(n=length(country_points[country_points==i]),
                                                                                                                               mean=0,
                                                                                                                               sd=norm_meas_error))),
            id=i,
@@ -170,14 +170,14 @@ over_sims <- parallel::mclapply(1:200, function(i) {
   
   # estimate model
   
-  est_obj <- id_estimate(outobj,vary_ideal_pts="random_walk",ncores=1,warmup=1500,nchains=1,niters=1000,
+  est_obj <- id_estimate(outobj,vary_ideal_pts="random_walk",ncores=12,warmup=1500,nchains=4,niters=1000,
                          const_type = "items",max_treedepth=12,id_refresh=100,time_var=4,
                          restrict_ind_high = which((abs(yes_points-no_points))==max(abs(yes_points-no_points))),
                          restrict_ind_low=which((abs(yes_points-no_points))==min(abs(yes_points-no_points))),
                          fix_high=2*max(abs(yes_points-no_points)),
                          fix_low=2*min(abs(yes_points-no_points)),
-                         discrim_reg_sd=1,person_sd=1,diff_reg_sd = 1,
-                         restrict_sd_low = 0.01,restrict_sd_high=0.01)
+                         discrim_reg_sd=2,person_sd=1,diff_reg_sd = 2,
+                         restrict_sd_low = 0.001,restrict_sd_high=0.001,compile_optim = F)
   
   # create covid data
   
