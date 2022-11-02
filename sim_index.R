@@ -170,14 +170,17 @@ over_sims <- parallel::mclapply(1:200, function(i) {
   
   # estimate model
   
-  est_obj <- id_estimate(outobj,vary_ideal_pts="random_walk",ncores=12,warmup=1500,nchains=4,niters=1000,
+  est_obj <- id_estimate(outobj,vary_ideal_pts="random_walk",ncores=1,warmup=1500,nchains=1,niters=1000,
                          const_type = "items",max_treedepth=12,id_refresh=100,time_var=4,
                          restrict_ind_high = which((abs(yes_points-no_points))==max(abs(yes_points-no_points))),
                          restrict_ind_low=which((abs(yes_points-no_points))==min(abs(yes_points-no_points))),
                          fix_high=2*max(abs(yes_points-no_points)),
-                         fix_low=2*min(abs(yes_points-no_points)),
-                         discrim_reg_sd=2,person_sd=1,diff_reg_sd = 2,
-                         restrict_sd_low = 0.001,restrict_sd_high=0.001,compile_optim = F)
+                         time_center_cutoff = 100,
+                         het_var=FALSE,
+                         fix_low=0,
+                         #fix_low=2*min(abs(yes_points-no_points)),
+                         discrim_reg_sd=3,person_sd=3,diff_reg_sd = 3,
+                         restrict_sd_low = 2,restrict_sd_high=0.001,compile_optim = F)
   
   # create covid data
   
@@ -229,7 +232,7 @@ over_sims <- parallel::mclapply(1:200, function(i) {
   
   policy_data <- left_join(policy_data, all_varying_sum)
   
-  est_cases_ideal_pts <- glm(cbind(obs_cases,size) ~ med_est_ideal_scale,
+  est_cases_ideal_pts <- glm(cbind(obs_cases,size) ~ med_est_ideal,
                              data=policy_data,family=binomial)
   
   library(cmdstanr)
