@@ -10,6 +10,7 @@ cmdstanr::set_cmdstan_path("/home/rmk7/cmdstan")
 library(idealstan)
 library(tidyverse)
 library(freqdom)
+library(glmnet)
 
 # number of countries
 params <- list()
@@ -213,6 +214,20 @@ over_sims <- parallel::mclapply(1:200, function(i) {
   est_cases_policies <- glm(cbind(obs_cases,size) ~ var_1 + var_2 + var_3 + var_4 + var_5 + var_6 + var_7 + var_8 + var_9 + var_10,
                             data=policy_data,family=binomial)
   
+  # try a lasso
+  # calculate lambda with CV
+  
+  y <- cbind(policy_data$obs_cases,policy_data$size)
+  x <- model.matrix(cbind(obs_cases,size) ~ var_1 + var_2 + var_3 + var_4 + var_5 + var_6 + var_7 + var_8 + var_9 + var_10,
+                    data=policy_data)
+  
+  lambda_cv <- cv.glmnet(y=y,
+                         x=x,alpha=1,family="binomial")
+  
+  est_cases_policies_lasso <- glmnet(y=y,
+                                     x=x,alpha=1,family="binomial",
+                                     lambda=lambda_cv$lambda.min)
+  
   # compare with country ideal points estimates
   
   all_varying <- est_obj@time_varying %>% 
@@ -298,6 +313,8 @@ over_sims <- parallel::mclapply(1:200, function(i) {
          policy_data=list(policy_data),
          coefs_pos_sig=sum(sum_policies[,"Estimate"]>0 & sum_policies[,"Pr(>|z|)"]<0.05),
          coefs_neg_sig=sum(sum_policies[,"Estimate"]<0 & sum_policies[,"Pr(>|z|)"]<0.05),
+         coefs_pos_sig_lasso=sum(as.numeric(est_cases_policies_lasso$beta)>0),
+         coefs_neg_sig_lasso=sum(as.numeric(est_cases_policies_lasso$beta)<0),
          coefs_pos_sig_lowvif=sum(sum_policies[-to_drop,"Estimate"]>0 & sum_policies[-to_drop,"Pr(>|z|)"]<0.05),
          coefs_neg_sig_lowvif=sum(sum_policies[-to_drop,"Estimate"]<0 & sum_policies[-to_drop,"Pr(>|z|)"]<0.05),
          idealpts_est=sum_ideal["Estimate"],
