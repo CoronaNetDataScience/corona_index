@@ -12,6 +12,8 @@ library(tidyverse)
 library(freqdom)
 library(glmnet)
 
+set.seed(11032022)
+
 # number of countries
 params <- list()
 params$N <- 20
@@ -31,7 +33,7 @@ prior_func <- rnorm
 
 # simulate 200 times
 
-over_sims <- parallel::mclapply(1:200, function(i) {
+over_sims <- parallel::mclapply(1:500, function(i) {
   
   # countries 
   
