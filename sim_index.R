@@ -232,7 +232,7 @@ over_sims <- parallel::mclapply(1:200, function(i) {
   
   policy_data <- left_join(policy_data, all_varying_sum)
   
-  est_cases_ideal_pts <- glm(cbind(obs_cases,size) ~ med_est_ideal,
+  est_cases_ideal_pts <- glm(cbind(obs_cases,size) ~ med_est_ideal_scale,
                              data=policy_data,family=binomial)
   
   library(cmdstanr)
@@ -249,14 +249,14 @@ over_sims <- parallel::mclapply(1:200, function(i) {
   me_model <- cmdstan_model("me_model2.stan")
   
   init_list <- list(
-    list(zme_1 = policy_data$med_est_ideal)
+    list(zme_1 = policy_data$med_est_ideal_scale)
   )
   
   fit_me_model <- me_model$sample(data=c1, chains=1,iter_warmup = 1000,iter_sampling = 1500,max_treedepth=12,
                                   init=init_list)
   fit_sum <- fit_me_model$summary()
   
-  hist(fit_sum$median[grepl(x=fit_sum$variable, pattern="zme")])
+  #hist(fit_sum$median[grepl(x=fit_sum$variable, pattern="zme")])
   
   # use dynamic PCA
   
@@ -283,18 +283,30 @@ over_sims <- parallel::mclapply(1:200, function(i) {
   sum_ideal_me <- filter(fit_sum, grepl(x=variable, pattern="bsp"))
   sum_pca_fit <- summary(pca_glm_fit)$coefficients[-1,]
   
+  # measure VIF, drop coefs with high VIF
+  
+  vif_policy <- car::vif(est_cases_policies)
+  
+  drop1 <- which(vif_policy==max(vif_policy))
+  drop2 <- which(vif_policy==max(vif_policy[-drop1]))
+  
+  to_drop <- c(drop1,drop2)
+  
   print(paste0("finished iteration",i))
   
   tibble(iteration = i,
          policy_data=list(policy_data),
          coefs_pos_sig=sum(sum_policies[,"Estimate"]>0 & sum_policies[,"Pr(>|z|)"]<0.05),
          coefs_neg_sig=sum(sum_policies[,"Estimate"]<0 & sum_policies[,"Pr(>|z|)"]<0.05),
+         coefs_pos_sig_lowvif=sum(sum_policies[-to_drop,"Estimate"]>0 & sum_policies[-to_drop,"Pr(>|z|)"]<0.05),
+         coefs_neg_sig_lowvif=sum(sum_policies[-to_drop,"Estimate"]<0 & sum_policies[-to_drop,"Pr(>|z|)"]<0.05),
          idealpts_est=sum_ideal["Estimate"],
          idealpts_me_est=sum_ideal_me$median,
          coef_vec_policy=list(sum_policies[,"Estimate"]),
          sd_vec_policy=list(sum_policies[,"Std. Error"]),
          pca_est=sum_pca_fit["Estimate"],
-         RMSE_true_idealpts=sqrt((-2 - sum_ideal_me$median)^2),
+         RMSE_true_idealpts_me=sqrt((-2 - sum_ideal_me$median)^2),
+         RMSE_true_idealpts=sqrt((-2 - sum_ideal["Estimate"])^2),
          RMSE_true_pca=sqrt((-2 - sum_pca_fit[1])^2),
          in_ci_idealpts=as.numeric((-2 < sum_ideal["Std. Error"]*1.96 + sum_ideal["Estimate"]) && (-2 > sum_ideal["Estimate"] - sum_ideal["Std. Error"]*1.96)),
          in_ci_idealpts_me=as.numeric((-2 < sum_ideal_me$q95) && (-2 > sum_ideal_me$q5)),
