@@ -12,19 +12,20 @@ model_type <- Sys.getenv("MODELTYPE")
 nchains <- Sys.getenv("NCHAINS")
 time <- Sys.getenv("TIME")
 run <- Sys.getenv("RUN")
+version <- Sys.getenv("VERSION")
 
-libpaths <- switch(model_type,
-                      sd="/home/rmk7/other_R_libs_cor1",
-                      biz="/home/rmk7/other_R_libs_cor2",
-                      ht="/home/rmk7/other_R_libs_cor3",
-                      hm="/home/rmk7/other_R_libs_cor4",
-                   hm2="/home/rmk7/other_R_libs_cor4",
-                      mask="/home/rmk7/other_R_libs_cor5",
-                      hr="/home/rmk7/other_R_libs_cor6",
-                      school="/home/rmk7/other_R_libs_cor7")
+# libpaths <- switch(model_type,
+#                       sd="/home/rmk7/other_R_libs_cor1",
+#                       biz="/home/rmk7/other_R_libs_cor2",
+#                       ht="/home/rmk7/other_R_libs_cor3",
+#                       hm="/home/rmk7/other_R_libs_cor4",
+#                    hm2="/home/rmk7/other_R_libs_cor4",
+#                       mask="/home/rmk7/other_R_libs_cor5",
+#                       hr="/home/rmk7/other_R_libs_cor6",
+#                       school="/home/rmk7/other_R_libs_cor7")
 
-.libPaths(libpaths)
-cmdstanr::set_cmdstan_path("/home/rmk7/cmdstan")
+# .libPaths(libpaths)
+# cmdstanr::set_cmdstan_path("/home/rmk7/cmdstan")
   
 require(idealstan)
 require(ggplot2)
@@ -287,6 +288,7 @@ to_make <- index_long %>%
     anti_join(no_change,by="country") %>% 
     distinct %>% 
     mutate(var=as.integer(var),
+           var=ifelse(model_id==9,0,var-1),
            var_cont=ifelse(is.infinite(var_cont),0,var_cont)) %>% 
     filter(!(country %in% c("Samoa","Solomon Islands","Saint Kitts and Nevis",
                             "Liechtenstein","Montenegro","Northern Cyprus",
@@ -319,8 +321,8 @@ to_make <- index_long %>%
   print(nchains)
   print(grainsize)
   activity_fit <- to_ideal %>% 
-                    id_estimate(vary_ideal_pts=time,
-                              ncores=parallel::detectCores(),
+                    id_estimate(ncores=parallel::detectCores(),
+                                vary_ideal_pts = "random_walk",
                               nchains=as.numeric(nchains),niters=300,
                               save_warmup=TRUE,
                               warmup=250,grainsize = grainsize,
@@ -334,13 +336,13 @@ to_make <- index_long %>%
                               max_treedepth=max_treedepth,het_var = F,
                               fix_high=1,
                               fix_low=0,
-                              time_center_cutoff = 50,
+                              time_center_cutoff = 550,
                               time_var = 10,
                               restrict_sd_high=.001,
                               id_refresh = 100,
                               const_type="items") 
   
-  saveRDS(activity_fit,paste0("/scratch/rmk7/coronanet/activity_fit_rw",model_type,"_",time,"_run_",run,".rds"))
+  saveRDS(activity_fit,paste0("/scratch/rmk7/coronanet/activity_fit_rw_",model_type,"_",time,"_run_",run,"_version_",version,".rds"))
   
   get_all_discrim <- filter(activity_fit@summary,grepl(x=variable,pattern="reg\\_full"))
   
