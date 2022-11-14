@@ -12,19 +12,6 @@ model_type <- Sys.getenv("MODELTYPE")
 nchains <- Sys.getenv("NCHAINS")
 time <- Sys.getenv("TIME")
 run <- Sys.getenv("RUN")
-
-libpaths <- switch(model_type,
-                      sd="/home/rmk7/other_R_libs_cor1",
-                      biz="/home/rmk7/other_R_libs_cor2",
-                      ht="/home/rmk7/other_R_libs_cor3",
-                      hm="/home/rmk7/other_R_libs_cor4",
-                   hm2="/home/rmk7/other_R_libs_cor4",
-                      mask="/home/rmk7/other_R_libs_cor5",
-                      hr="/home/rmk7/other_R_libs_cor6",
-                      school="/home/rmk7/other_R_libs_cor7")
-
-.libPaths(libpaths)
-cmdstanr::set_cmdstan_path("/home/rmk7/cmdstan")
   
 require(idealstan)
 require(ggplot2)
@@ -323,7 +310,7 @@ to_make <- index_long %>%
                               ncores=parallel::detectCores(),
                               nchains=as.numeric(nchains),niters=300,
                               save_warmup=TRUE,
-                              warmup=250,grainsize = grainsize,
+                              warmup=500,
                               gpu=FALSE,save_files = "/scratch/rmk7/coronanet_csvs",
                               fixtype="prefix",pos_discrim = F,
                               restrict_ind_high=restrict_list[1],
@@ -332,9 +319,9 @@ to_make <- index_long %>%
                               map_over_id = "persons",
                               #adapt_delta=0.95,
                               max_treedepth=max_treedepth,het_var = F,
-                              fix_high=1,
+                              fix_high=2,
                               fix_low=0,
-                              time_center_cutoff = 50,
+                              time_center_cutoff = 350,
                               time_var = 10,
                               restrict_sd_high=.001,
                               id_refresh = 100,
