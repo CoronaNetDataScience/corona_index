@@ -196,10 +196,15 @@ to_make <- index_long %>%
   group_by(item) %>% 
   mutate(var=ifelse(is.na(var) & !grepl(x=item,pattern="ox"),min(var,na.rm=T),var),
          var_cont=ifelse(is.na(var_cont) & item!="ox_health_invest",min(var_cont,na.rm=T),var_cont)) %>% 
-         #var_cont=ifelse(item=="ox_health_invest",as.numeric(scale(var_cont)),var_cont)) %>% 
+         var_cont=as.numeric(scale(var_cont)) %>% 
   group_by(country,item,date_policy) %>% 
   mutate(n_dup=n()) %>% 
   ungroup  
+
+# plot distributions
+
+
+
   # check for unique values
   
 # un_vals <- group_by(to_make,item) %>% 
@@ -321,7 +326,7 @@ to_make <- index_long %>%
                               max_treedepth=max_treedepth,het_var = F,
                               fix_high=2,
                               fix_low=0,
-                              time_center_cutoff = 350,
+                              time_center_cutoff = 550,
                               time_var = 10,
                               restrict_sd_high=.001,
                               id_refresh = 100,
