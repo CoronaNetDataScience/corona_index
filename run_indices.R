@@ -195,8 +195,8 @@ to_make <- index_long %>%
   mutate(ra_num=as.numeric(scale(ra_num))) %>% 
   group_by(item) %>% 
   mutate(var=ifelse(is.na(var) & !grepl(x=item,pattern="ox"),min(var,na.rm=T),var),
-         var_cont=ifelse(is.na(var_cont) & item!="ox_health_invest",min(var_cont,na.rm=T),var_cont)) %>% 
-         var_cont=as.numeric(scale(var_cont)) %>% 
+         var_cont=ifelse(is.na(var_cont) & item!="ox_health_invest",min(var_cont,na.rm=T),var_cont),
+         var_cont=as.numeric(scale(var_cont))) %>% 
   group_by(country,item,date_policy) %>% 
   mutate(n_dup=n()) %>% 
   ungroup  
