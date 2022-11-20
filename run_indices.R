@@ -313,11 +313,11 @@ to_make <- index_long %>%
   print(nchains)
   print(grainsize)
   activity_fit <- to_ideal %>% 
-                    id_estimate(ncores=parallel::detectCores(),
-                                vary_ideal_pts = "random_walk",
-                              nchains=as.numeric(nchains),niters=300,
+                    id_estimate(vary_ideal_pts=time,
+                              ncores=parallel::detectCores(),
+                              nchains=as.numeric(nchains),niters=350,
                               save_warmup=TRUE,
-                              warmup=500,
+                              warmup=600,
                               gpu=FALSE,save_files = "/scratch/rmk7/coronanet_csvs",
                               fixtype="prefix",pos_discrim = F,
                               restrict_ind_high=restrict_list[1],
@@ -326,7 +326,7 @@ to_make <- index_long %>%
                               map_over_id = "persons",
                               #adapt_delta=0.95,
                               max_treedepth=max_treedepth,het_var = F,
-                              fix_high=2,
+                              fix_high=4,
                               fix_low=0,
                               time_center_cutoff = 550,
                               time_var = 10,
