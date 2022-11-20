@@ -12,6 +12,7 @@ model_type <- Sys.getenv("MODELTYPE")
 nchains <- Sys.getenv("NCHAINS")
 time <- Sys.getenv("TIME")
 run <- Sys.getenv("RUN")
+version <- Sys.getenv("VERSION")
   
 require(idealstan)
 require(ggplot2)
@@ -333,7 +334,7 @@ to_make <- index_long %>%
                               id_refresh = 100,
                               const_type="items") 
   
-  saveRDS(activity_fit,paste0("/scratch/rmk7/coronanet/activity_fit_rw_",model_type,"_",time,"_run_",run,"_version_",version,".rds"))
+  saveRDS(activity_fit,paste0("/scratch/rmk7/coronanet/activity_fit_",model_type,"_",time,"_run_",run,"_",version,".rds"))
   
   get_all_discrim <- filter(activity_fit@summary,grepl(x=variable,pattern="reg\\_full"))
   
@@ -347,13 +348,13 @@ to_make <- index_long %>%
     labs(x="Items",y="Level of Discrimination") +
     ggtitle("Discrimination parameters from model")
   
-  ggsave(paste0("/scratch/rmk7/coronanet/discrim_",model_type,"_",time,"_run_",run,".png"))
+  ggsave(paste0("/scratch/rmk7/coronanet/discrim_",model_type,"_",time,"_run_",run,"_",version,".png"))
   
   id_plot_legis_dyn(activity_fit,use_ci=T) + ylab(paste0(model_type," Index")) + guides(color="none") +
     ggtitle("CoronaNet Social Distancing Index",
             subtitle="Posterior Median Estimates with 5% - 95% Intervals")
   
-  ggsave(paste0("/scratch/rmk7/coronanet/index_",model_type,"_",time,"_run_",run,".png"))
+  ggsave(paste0("/scratch/rmk7/coronanet/index_",model_type,"_",time,"_run_",run,"_",version,".png"))
   
   range01 <- function(x){(x-min(x))/(max(x)-min(x))}
   
@@ -375,7 +376,7 @@ to_make <- index_long %>%
            distancing_index_low_est="low_est",
            distancing_index_high_est="high_est")
   
-  write_csv(country_est,paste0("/scratch/rmk7/coronanet/",model_type,"_",time,"_run_",run,"_index_est.csv"))
+  write_csv(country_est,paste0("/scratch/rmk7/coronanet/",model_type,"_",time,"_run_",run,"_",version,"_index_est.csv"))
 
     
     # country_names <- read_xlsx("data/ISO WORLD COUNTRIES.xlsx",sheet = "ISO-names")
