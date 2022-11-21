@@ -768,9 +768,9 @@ index_long <- group_by(index_long,country,item,date_policy,init_country_level) %
 # save disag data
 
 saveRDS(index_long, paste0("/scratch/rmk7/coronanet/index_long_disag_",type,".rds"))
-write_csv(index_long,paste0("/scratch/rmk7/coronanet/index_long_disag_",type,".csv"))
-zip(paste0("/scratch/rmk7/coronanet/index_long_disag_",type,".zip"),
-    paste0("/scratch/rmk7/coronanet/index_long_disag_",type,".csv"))
+#write_csv(index_long,paste0("/scratch/rmk7/coronanet/index_long_disag_",type,".csv"))
+#zip(paste0("/scratch/rmk7/coronanet/index_long_disag_",type,".zip"),
+#    paste0("/scratch/rmk7/coronanet/index_long_disag_",type,".csv"))
 # need to calculate proportions of provinces/cities
 
 index_long <- mutate(ungroup(index_long),
