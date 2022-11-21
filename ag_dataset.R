@@ -97,6 +97,7 @@ index <- filter(
     matches("type_health")
   ) %>%
   mutate(
+    target_city=ifelse(target_city %in%  c("N/A","n/a"),NA_character_,target_city),
     curfew_length = (as_datetime(as.numeric(type_curfew_end)) + days(1)) - as_datetime(as.numeric(type_curfew_start)),
     curfew_length = ifelse(curfew_length > 24, curfew_length - 24, curfew_length),
     curfew_length = curfew_length / 24,
@@ -649,6 +650,10 @@ index_long <- lapply(this_vars, function(a) {
   
   this_data <- filter(this_data,!is.na(var),var>0 | var<0) %>% 
     mutate(item=a)
+  
+  if(nrow(this_data)==0) {
+    return(NULL)
+  }
   
   # make a time series
   
