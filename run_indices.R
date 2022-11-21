@@ -229,7 +229,7 @@ to_make <- index_long %>%
   # check country scores
   
   country_score <- group_by(to_make,country,date_policy) %>% 
-    summarize(score=sum(var[model_id!=9]) + sum(var_cont[model_id==9])) %>% 
+    summarize(score=sum(var[model_id!=9],na.rm=T) + sum(var_cont[model_id==9],na.rm=T)) %>% 
     group_by(country) %>% 
     mutate(var_out=var(score)) %>% 
     group_by(country) %>% 
@@ -265,28 +265,21 @@ to_make <- index_long %>%
     summarize(n_country_cont=length(unique(country[(var_cont>0)])),
               n_country_var=length(unique(country[(var>0)])))
   
-  # if masks, remove countries with no changes
-  
-  if(model_type=="mask") {
-    
-    to_make <- anti_join(to_make,no_change, by="country")
-
-  }
-  
   # remove countries that aren't in the Oxford data
   
   to_ideal <- to_make %>% 
-    anti_join(days_no_change,by="date_policy") %>% 
-    anti_join(no_change,by="country") %>% 
+    # anti_join(days_no_change,by="date_policy") %>% 
+    # anti_join(no_change,by="country") %>% 
     distinct %>% 
     mutate(var=as.integer(var),
            var=ifelse(model_id==9,0,var-1),
+           var_cont=ifelse(is.nan(var_cont),0,var_cont),
            var_cont=ifelse(is.infinite(var_cont),0,var_cont)) %>% 
     filter(!(country %in% c("Samoa","Solomon Islands","Saint Kitts and Nevis",
                             "Liechtenstein","Montenegro","Northern Cyprus",
                             "North Macedonia","Nauru","Equatorial Guinea",
                             "Luxembourg","Malta","North Korea")),
-           date_policy < ymd("2021-04-30"),
+           date_policy < ymd("2021-05-02"),
            !(item %in% c("allow_ann_event","postpone_rec_event","mask_preschool"))) %>% 
     distinct %>% 
             id_make(
@@ -328,7 +321,7 @@ to_make <- index_long %>%
                               max_treedepth=max_treedepth,het_var = F,
                               fix_high=4,
                               fix_low=0,
-                              time_center_cutoff = 550,
+                              time_center_cutoff = 650,
                               time_var = 10,
                               restrict_sd_high=.001,
                               id_refresh = 100,

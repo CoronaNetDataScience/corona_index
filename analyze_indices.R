@@ -227,18 +227,12 @@ mask_sum <- summarize_draws_mc(mask_draws,"median","quantile2",posterior::rhat,c
 
 all_mods_mat <-  lapply(all_mods, function(c) as_draws_array(c@time_varying))
 
-rm(all_mods)
-
 mask_time <- do.call(bind_draws, c(all_mods_mat,list(along="chain"))) %>% 
   subset_draws(variable="tp1",regex=T)
 
 mask_time <- apply_draws(mask_time,FUN=function(c) as.numeric(scale(c)),MARGIN=c(1:2))
 
 sum_time <- summarize_draws_mc(mask_time,"median","quantile2",posterior::rhat,cores=16)
-
-rm(all_mods_mat)
-
-gc()
 
 get_all_discrim <- filter(mask_sum,grepl(x=variable,pattern="reg\\_full"))
 
@@ -344,7 +338,7 @@ saveRDS(mask_time,"coronanet/mask_plot_object.rds")
 
 ggsave("plots/mask_mod_plot.png")
 
-mask_time_single <- mask_time_data_scaled %>%
+mask_time_single <- mask_time_data %>%
   filter(country %in% plot_countries) %>%
   ggplot(aes(y=med_est,x=date_policy)) +
   geom_line(colour="#8DD3C7",aes(group=country)) +
