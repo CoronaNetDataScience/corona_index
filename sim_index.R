@@ -1,12 +1,7 @@
 # simulate and fit idealstan index model
 
 
-.libPaths("/home/rmk7/other_R_libs2")
-
 require(cmdstanr)
-
-cmdstanr::set_cmdstan_path("/home/rmk7/cmdstan")
-
 library(idealstan)
 library(tidyverse)
 library(freqdom)
@@ -31,9 +26,9 @@ params$num_policies <- 10
 
 prior_func <- rnorm
 
-# simulate 200 times
+# simulate 2000 times
 
-over_sims <- parallel::mclapply(1:500, function(i) {
+over_sims <- parallel::mclapply(1:2000, function(i) {
   
   # countries 
   
@@ -335,7 +330,7 @@ over_sims <- parallel::mclapply(1:500, function(i) {
   
 },mc.cores=parallel::detectCores()) 
 
-  saveRDS(over_sims, "/scratch/rmk7/coronanet/over_sims.rds")
+  saveRDS(over_sims, "/scratch/rmk7/coronanet/over_sims_2000.rds")
 
 
 
