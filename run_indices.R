@@ -12,19 +12,7 @@ model_type <- Sys.getenv("MODELTYPE")
 nchains <- Sys.getenv("NCHAINS")
 time <- Sys.getenv("TIME")
 run <- Sys.getenv("RUN")
-
-libpaths <- switch(model_type,
-                      sd="/home/rmk7/other_R_libs_cor1",
-                      biz="/home/rmk7/other_R_libs_cor2",
-                      ht="/home/rmk7/other_R_libs_cor3",
-                      hm="/home/rmk7/other_R_libs_cor4",
-                   hm2="/home/rmk7/other_R_libs_cor4",
-                      mask="/home/rmk7/other_R_libs_cor5",
-                      hr="/home/rmk7/other_R_libs_cor6",
-                      school="/home/rmk7/other_R_libs_cor7")
-
-.libPaths(libpaths)
-cmdstanr::set_cmdstan_path("/home/rmk7/cmdstan")
+version <- Sys.getenv("VERSION")
   
 require(idealstan)
 require(ggplot2)
@@ -208,11 +196,16 @@ to_make <- index_long %>%
   mutate(ra_num=as.numeric(scale(ra_num))) %>% 
   group_by(item) %>% 
   mutate(var=ifelse(is.na(var) & !grepl(x=item,pattern="ox"),min(var,na.rm=T),var),
-         var_cont=ifelse(is.na(var_cont) & item!="ox_health_invest",min(var_cont,na.rm=T),var_cont)) %>% 
-         #var_cont=ifelse(item=="ox_health_invest",as.numeric(scale(var_cont)),var_cont)) %>% 
+         var_cont=ifelse(is.na(var_cont) & item!="ox_health_invest",min(var_cont,na.rm=T),var_cont),
+         var_cont=as.numeric(scale(var_cont))) %>% 
   group_by(country,item,date_policy) %>% 
   mutate(n_dup=n()) %>% 
   ungroup  
+
+# plot distributions
+
+
+
   # check for unique values
   
 # un_vals <- group_by(to_make,item) %>% 
@@ -236,7 +229,7 @@ to_make <- index_long %>%
   # check country scores
   
   country_score <- group_by(to_make,country,date_policy) %>% 
-    summarize(score=sum(var[model_id!=9]) + sum(var_cont[model_id==9])) %>% 
+    summarize(score=sum(var[model_id!=9],na.rm=T) + sum(var_cont[model_id==9],na.rm=T)) %>% 
     group_by(country) %>% 
     mutate(var_out=var(score)) %>% 
     group_by(country) %>% 
@@ -272,27 +265,21 @@ to_make <- index_long %>%
     summarize(n_country_cont=length(unique(country[(var_cont>0)])),
               n_country_var=length(unique(country[(var>0)])))
   
-  # if masks, remove countries with no changes
-  
-  if(model_type=="mask") {
-    
-    to_make <- anti_join(to_make,no_change, by="country")
-
-  }
-  
   # remove countries that aren't in the Oxford data
   
   to_ideal <- to_make %>% 
-    anti_join(days_no_change,by="date_policy") %>% 
-    anti_join(no_change,by="country") %>% 
+    # anti_join(days_no_change,by="date_policy") %>% 
+    # anti_join(no_change,by="country") %>% 
     distinct %>% 
     mutate(var=as.integer(var),
+           var=ifelse(model_id==9,0,var-1),
+           var_cont=ifelse(is.nan(var_cont),0,var_cont),
            var_cont=ifelse(is.infinite(var_cont),0,var_cont)) %>% 
     filter(!(country %in% c("Samoa","Solomon Islands","Saint Kitts and Nevis",
                             "Liechtenstein","Montenegro","Northern Cyprus",
                             "North Macedonia","Nauru","Equatorial Guinea",
                             "Luxembourg","Malta","North Korea")),
-           date_policy < ymd("2021-04-30"),
+           date_policy < ymd("2021-05-02"),
            !(item %in% c("allow_ann_event","postpone_rec_event","mask_preschool"))) %>% 
     distinct %>% 
             id_make(
@@ -321,9 +308,9 @@ to_make <- index_long %>%
   activity_fit <- to_ideal %>% 
                     id_estimate(vary_ideal_pts=time,
                               ncores=parallel::detectCores(),
-                              nchains=as.numeric(nchains),niters=300,
+                              nchains=as.numeric(nchains),niters=350,
                               save_warmup=TRUE,
-                              warmup=250,grainsize = grainsize,
+                              warmup=600,
                               gpu=FALSE,save_files = "/scratch/rmk7/coronanet_csvs",
                               fixtype="prefix",pos_discrim = F,
                               restrict_ind_high=restrict_list[1],
@@ -332,15 +319,15 @@ to_make <- index_long %>%
                               map_over_id = "persons",
                               #adapt_delta=0.95,
                               max_treedepth=max_treedepth,het_var = F,
-                              fix_high=1,
+                              fix_high=4,
                               fix_low=0,
-                              time_center_cutoff = 50,
+                              time_center_cutoff = 650,
                               time_var = 10,
                               restrict_sd_high=.001,
                               id_refresh = 100,
                               const_type="items") 
   
-  saveRDS(activity_fit,paste0("/scratch/rmk7/coronanet/activity_fit_rw",model_type,"_",time,"_run_",run,".rds"))
+  saveRDS(activity_fit,paste0("/scratch/rmk7/coronanet/activity_fit_",model_type,"_",time,"_run_",run,"_",version,".rds"))
   
   get_all_discrim <- filter(activity_fit@summary,grepl(x=variable,pattern="reg\\_full"))
   
@@ -354,13 +341,13 @@ to_make <- index_long %>%
     labs(x="Items",y="Level of Discrimination") +
     ggtitle("Discrimination parameters from model")
   
-  ggsave(paste0("/scratch/rmk7/coronanet/discrim_",model_type,"_",time,"_run_",run,".png"))
+  ggsave(paste0("/scratch/rmk7/coronanet/discrim_",model_type,"_",time,"_run_",run,"_",version,".png"))
   
   id_plot_legis_dyn(activity_fit,use_ci=T) + ylab(paste0(model_type," Index")) + guides(color="none") +
     ggtitle("CoronaNet Social Distancing Index",
             subtitle="Posterior Median Estimates with 5% - 95% Intervals")
   
-  ggsave(paste0("/scratch/rmk7/coronanet/index_",model_type,"_",time,"_run_",run,".png"))
+  ggsave(paste0("/scratch/rmk7/coronanet/index_",model_type,"_",time,"_run_",run,"_",version,".png"))
   
   range01 <- function(x){(x-min(x))/(max(x)-min(x))}
   
@@ -382,7 +369,7 @@ to_make <- index_long %>%
            distancing_index_low_est="low_est",
            distancing_index_high_est="high_est")
   
-  write_csv(country_est,paste0("/scratch/rmk7/coronanet/",model_type,"_",time,"_run_",run,"_index_est.csv"))
+  write_csv(country_est,paste0("/scratch/rmk7/coronanet/",model_type,"_",time,"_run_",run,"_",version,"_index_est.csv"))
 
     
     # country_names <- read_xlsx("data/ISO WORLD COUNTRIES.xlsx",sheet = "ISO-names")

@@ -26,10 +26,10 @@ if(sum_data) {
 
 # Business ----------------------------------------------------------------
 
-biz_mod <- readRDS("coronanet/activity_fit_rwbiz_random_walk_run_4.rds")
+biz_mod <- readRDS("coronanet/activity_fit_biz_random_walk_run_4_version_RR.rds")
 
 all_mods <- lapply(list.files(path = "coronanet/",
-                              pattern="biz\\_random\\_walk\\_run\\_[1-4].*rds",
+                              pattern="biz\\_random\\_walk\\_run\\_[1-4]\\_version\\_RR.*rds",
                               full.names=T),readRDS)
 
 all_mods_mat <-  lapply(all_mods, function(c) c@stan_samples$draws())
@@ -213,10 +213,10 @@ rm(biz_mod)
 
 # Mask --------------------------------------------------------------------
 
-mask_mod <- readRDS("coronanet/activity_fit_rwmask_random_walk_run_4.rds")
+mask_mod <- readRDS("coronanet/activity_fit_mask_random_walk_run_4_RR.rds")
 
 all_mods <- lapply(list.files(path = "coronanet/",
-                              pattern="mask\\_random\\_walk\\_run\\_[0-4].*rds",
+                              pattern="mask\\_random\\_walk\\_run\\_[1-4]\\_RR.*rds",
                               full.names=T),readRDS)
 
 all_mods_mat <-  lapply(all_mods, function(c) c@stan_samples$draws())
@@ -227,18 +227,12 @@ mask_sum <- summarize_draws_mc(mask_draws,"median","quantile2",posterior::rhat,c
 
 all_mods_mat <-  lapply(all_mods, function(c) as_draws_array(c@time_varying))
 
-rm(all_mods)
-
 mask_time <- do.call(bind_draws, c(all_mods_mat,list(along="chain"))) %>% 
   subset_draws(variable="tp1",regex=T)
 
 mask_time <- apply_draws(mask_time,FUN=function(c) as.numeric(scale(c)),MARGIN=c(1:2))
 
 sum_time <- summarize_draws_mc(mask_time,"median","quantile2",posterior::rhat,cores=16)
-
-rm(all_mods_mat)
-
-gc()
 
 get_all_discrim <- filter(mask_sum,grepl(x=variable,pattern="reg\\_full"))
 
@@ -323,10 +317,10 @@ saveRDS(mask_time_data_scaled,"indices/mask_time_data_scaled.rds")
 write_csv(mask_time_data,"indices/mask_time_data.csv")
 write_csv(mask_time_data_scaled,"indices/mask_time_data_scaled.csv")
 
-sample_plot_dates <- group_by(mask_time_data_scaled,country) %>%
+sample_plot_dates <- group_by(mask_time_data,country) %>%
   sample_n(1)
 
-mask_time <- mask_time_data_scaled %>%
+mask_time <- mask_time_data %>%
   ggplot(aes(y=med_est,x=date_policy)) +
   geom_line(colour="#8DD3C7",aes(group=country)) +
   geom_ribbon(aes(ymin=low_est,ymax=high_est,group=country),alpha=0.1) +
@@ -344,7 +338,7 @@ saveRDS(mask_time,"coronanet/mask_plot_object.rds")
 
 ggsave("plots/mask_mod_plot.png")
 
-mask_time_single <- mask_time_data_scaled %>%
+mask_time_single <- mask_time_data %>%
   filter(country %in% plot_countries) %>%
   ggplot(aes(y=med_est,x=date_policy)) +
   geom_line(colour="#8DD3C7",aes(group=country)) +
@@ -369,10 +363,10 @@ rm(mask_mod)
 
 # Health monitoring -------------------------------------------------------
 
-hm2_mod <- readRDS("coronanet/activity_fit_rwhm2_random_walk_run_4.rds")
+hm2_mod <- readRDS("coronanet/activity_fit_hm2_random_walk_run_4_version_RR.rds")
 
 all_mods <- lapply(list.files(path = "coronanet/",
-                              pattern="hm2\\_random\\_walk\\_run\\_[1-4].*rds",
+                              pattern="hm2\\_random\\_walk\\_run\\_[1-4]\\_version\\_RR.*rds",
                               full.names=T),readRDS)
 
 all_mods_mat <-  lapply(all_mods, function(c) c@stan_samples$draws())
@@ -550,10 +544,10 @@ rm(hm2_mod)
 
 # social distance ---------------------------------------------------------
 
-sd_mod <- readRDS("coronanet/activity_fit_rwsd_random_walk_run_4.rds")
+sd_mod <- readRDS("coronanet/activity_fit_sd_random_walk_run_4_version_RR.rds")
 
 all_mods <- lapply(list.files(path = "coronanet/",
-                              pattern="sd\\_random\\_walk\\_run\\_[1-4].*rds",
+                              pattern="sd\\_random\\_walk\\_run\\_[1-4]\\_version\\_RR.*rds",
                               full.names=T),readRDS)
 
 all_mods_mat <-  lapply(all_mods, function(c) c@stan_samples$draws())
@@ -717,10 +711,10 @@ rm(sd_mod)
 
 # schools -----------------------------------------------------------------
 
-school_mod <- readRDS("coronanet/activity_fit_rwschool_random_walk_run_4.rds")
+school_mod <- readRDS("coronanet/activity_fit_school_random_walk_run_4_version_RR.rds")
 
 all_mods <- lapply(list.files(path = "coronanet/",
-                              pattern="school\\_random\\_walk\\_run\\_[0-4].*rds",
+                              pattern="school\\_random\\_walk\\_run\\_[1-4]\\_version\\_RR.*rds",
                               full.names=T),readRDS)
 
 all_mods_mat <-  lapply(all_mods, function(c) c@stan_samples$draws())
@@ -885,10 +879,10 @@ gc()
 
 # health resources --------------------------------------------------------
 
-hr_mod <- readRDS("coronanet/activity_fit_rwhr_random_walk_run_4.rds")
+hr_mod <- readRDS("coronanet/activity_fit_hr_random_walk_run_4_version_RR.rds")
 
 all_mods <- lapply(list.files(path = "coronanet/",
-                              pattern="hr\\_random\\_walk\\_run\\_[0-4].*rds",
+                              pattern="hr\\_random\\_walk\\_run\\_[1-4]\\_version\\_RR.*rds",
                               full.names=T),readRDS)
 
 all_mods_mat <-  lapply(all_mods, function(c) c@stan_samples$draws())
