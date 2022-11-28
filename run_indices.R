@@ -319,7 +319,7 @@ to_make <- index_long %>%
                               map_over_id = "persons",
                               #adapt_delta=0.95,
                               max_treedepth=max_treedepth,het_var = F,
-                              fix_high=4,
+                              fix_high=5,
                               fix_low=0,
                               time_center_cutoff = 650,
                               time_var = 10,
