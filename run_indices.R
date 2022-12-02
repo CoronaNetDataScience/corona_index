@@ -268,7 +268,7 @@ to_make <- index_long %>%
   # remove countries that aren't in the Oxford data
   
   to_ideal <- to_make %>% 
-    # anti_join(days_no_change,by="date_policy") %>% 
+    anti_join(days_no_change,by="date_policy") %>% 
     # anti_join(no_change,by="country") %>% 
     distinct %>% 
     mutate(var=as.integer(var),
@@ -280,7 +280,7 @@ to_make <- index_long %>%
                             "North Macedonia","Nauru","Equatorial Guinea",
                             "Luxembourg","Malta","North Korea")),
            date_policy < ymd("2021-05-02"),
-           !(item %in% c("allow_ann_event","postpone_rec_event","mask_preschool"))) %>% 
+           !(item %in% c("allow_ann_event","postpone_rec_event"))) %>% 
     distinct %>% 
             id_make(
             outcome_disc="var",
@@ -317,6 +317,9 @@ to_make <- index_long %>%
                               restrict_ind_low=restrict_list[2],
                               restrict_sd_low=3,
                               map_over_id = "persons",
+                              person_sd=1,
+                              discrim_reg_sd = 5,
+                              diff_reg_sd = 5,
                               #adapt_delta=0.95,
                               max_treedepth=max_treedepth,het_var = F,
                               fix_high=5,
@@ -327,7 +330,7 @@ to_make <- index_long %>%
                               id_refresh = 100,
                               const_type="items") 
   
-  saveRDS(activity_fit,paste0("/scratch/rmk7/coronanet/activity_fit_",model_type,"_",time,"_run_",run,"_",version,".rds"))
+  saveRDS(activity_fit,paste0("/scratch/rmk7/coronanet/activity_fit_",model_type,"_",time,"_run_",run,"_",version,"_nochange.rds"))
   
   get_all_discrim <- filter(activity_fit@summary,grepl(x=variable,pattern="reg\\_full"))
   

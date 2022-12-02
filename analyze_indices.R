@@ -26,34 +26,32 @@ if(sum_data) {
 
 # Business ----------------------------------------------------------------
 
-biz_mod <- readRDS("coronanet/activity_fit_biz_random_walk_run_4_version_RR.rds")
+biz_mod <- readRDS("coronanet/activity_fit_biz_random_walk_run_1_RR.rds")
 
-all_mods <- lapply(list.files(path = "coronanet/",
-                              pattern="biz\\_random\\_walk\\_run\\_[1-4]\\_version\\_RR.*rds",
-                              full.names=T),readRDS)
+# all_mods <- lapply(list.files(path = "coronanet/",
+#                               pattern="biz\\_random\\_walk\\_run\\_[1-4]\\_version\\_RR.*rds",
+#                               full.names=T),readRDS)
+# 
+# all_mods_mat <-  lapply(all_mods, function(c) c@stan_samples$draws())
+# 
+# biz_draws <- do.call(bind_draws, c(all_mods_mat,list(along="chain")))
+# 
+# biz_sum <- summarize_draws_mc(biz_draws,"median","quantile2",posterior::rhat,cores=16)
+# 
+# all_mods_mat <-  lapply(all_mods, function(c) as_draws_array(c@time_varying))
+# 
+# rm(all_mods)
+# 
+# biz_time <- do.call(bind_draws, c(all_mods_mat,list(along="chain"))) %>% 
+#   subset_draws(variable="tp1",regex=T)
+# 
+# biz_time <- apply_draws(biz_time,FUN=function(c) as.numeric(scale(c)),MARGIN=c(1:2))
+# 
+# sum_time <- summarize_draws_mc(biz_time,"median","quantile2",posterior::rhat,cores=16)
 
-all_mods_mat <-  lapply(all_mods, function(c) c@stan_samples$draws())
+sum_time <- filter(biz_mod@summary,grepl(x=variable,pattern="tp1"))
 
-biz_draws <- do.call(bind_draws, c(all_mods_mat,list(along="chain")))
-
-biz_sum <- summarize_draws_mc(biz_draws,"median","quantile2",posterior::rhat,cores=16)
-
-all_mods_mat <-  lapply(all_mods, function(c) as_draws_array(c@time_varying))
-
-rm(all_mods)
-
-biz_time <- do.call(bind_draws, c(all_mods_mat,list(along="chain"))) %>% 
-  subset_draws(variable="tp1",regex=T)
-
-biz_time <- apply_draws(biz_time,FUN=function(c) as.numeric(scale(c)),MARGIN=c(1:2))
-
-sum_time <- summarize_draws_mc(biz_time,"median","quantile2",posterior::rhat,cores=16)
-
-rm(all_mods_mat)
-
-gc()
-
-get_all_discrim <- filter(biz_sum,grepl(x=variable,pattern="reg\\_full"))
+get_all_discrim <- filter(biz_mod@summary,grepl(x=variable,pattern="reg\\_full"))
 
 get_all_discrim$id <- levels(biz_mod@score_data@score_matrix$item_id)
 
@@ -113,7 +111,7 @@ saveRDS(biz_rhat,"coronanet/biz_rhat.rds")
 
 biz <- get_all_discrim %>% 
   ggplot(aes(y=median,x=reorder(id_rec,median))) +
-  geom_pointrange(aes(ymin=q5,ymax=q95)) +
+  geom_pointrange(aes(ymin=lower,ymax=upper)) +
   theme_tufte() +
 
   coord_flip() +
@@ -126,7 +124,7 @@ saveRDS(biz,"coronanet/biz_discrim_object.rds")
 
 ggsave("plots/biz_discrim.png")
 
-biz_time_data_scaled <- biz_time %>% as_draws_df() %>% 
+biz_time_data_scaled <- biz_mod@time_varying %>% as_draws_df() %>% 
   gather(key="variable",value="estimate",-.chain,-.iteration,-.draw) %>% 
   group_by(.iteration) %>% 
   mutate(estimate=plogis(estimate)*100,
@@ -138,7 +136,7 @@ biz_time_data_scaled <- biz_time %>% as_draws_df() %>%
             low_est=quantile(estimate,.05),
             sd_est=sd(estimate))
 
-biz_time_data <- biz_time %>% as_draws_df() %>% 
+biz_time_data <- biz_mod@time_varying %>% as_draws_df() %>% 
   gather(key="variable",value="estimate",-.chain,-.iteration,-.draw) %>% 
   mutate(country=levels(biz_mod@score_data@score_matrix$person_id)[as.numeric(str_extract(variable,"[0-9]+(?=\\])"))],
          date_policy=unique(biz_mod@score_data@score_matrix$time_id)[as.numeric(str_extract(variable,"(?<=\\[)[0-9]+"))]) %>% 
@@ -167,15 +165,17 @@ saveRDS(biz_time_data_scaled,"indices/biz_time_data_scaled.rds")
 write_csv(biz_time_data,"indices/biz_time_data.csv")
 write_csv(biz_time_data_scaled,"indices/biz_time_data_scaled.csv")
 
-sample_plot_dates <- group_by(biz_time_data_scaled,country) %>% 
+sample_plot_dates <- group_by(biz_time_data,country) %>% 
   sample_n(1)
 
-biz_time <- biz_time_data_scaled %>% 
+biz_time <- biz_time_data %>% 
   ggplot(aes(y=med_est,x=date_policy)) +
-  geom_line(colour="#8DD3C7",aes(group=country)) +
-  geom_ribbon(aes(ymin=low_est,ymax=high_est,group=country),alpha=0.1) +
-  geom_text(aes(label=country),colour="#FFFFB3",fontface="bold",
-            data=sample_plot_dates,check_overlap = T,size=2) +
+  #geom_line(colour="#8DD3C7",aes(group=country),alpha=0.5) +
+  geom_line(aes(group=country),alpha=0.5) +
+  stat_smooth() +
+  #geom_ribbon(aes(ymin=low_est,ymax=high_est,group=country),alpha=0.1) +
+  # geom_text(aes(label=country),colour="#FFFFB3",fontface="bold",
+  #           data=sample_plot_dates,check_overlap = T,size=2) +
   theme_tufte() +
   labs(x="",y="") +
   ggtitle("Business Restrictions") + 
@@ -186,9 +186,9 @@ biz_time
 
 saveRDS(biz_time,"coronanet/biz_mod_plot_object.rds")
 
-ggsave("plots/biz_mod_plot.png")
+ggsave("plots/biz_mod_plot.pdf")
 
-biz_time_single <- biz_time_data_scaled %>% 
+biz_time_single <- biz_time_data %>% 
   filter(country %in% plot_countries) %>% 
   ggplot(aes(y=med_est,x=date_policy)) +
   geom_line(colour="#8DD3C7",aes(group=country)) +
@@ -206,35 +206,18 @@ biz_time_single
 
 saveRDS(biz_time_single,"coronanet/biz_mod_plot_single_object.rds")
 
-ggsave("plots/biz_mod_plot_single.png")
+ggsave("plots/biz_mod_plot_single.pdf")
 
 rm(biz_mod)
 
 
 # Mask --------------------------------------------------------------------
 
-mask_mod <- readRDS("coronanet/activity_fit_mask_random_walk_run_4_RR.rds")
+mask_mod <- readRDS("coronanet/activity_fit_mask_random_walk_run_1_RR.rds")
 
-all_mods <- lapply(list.files(path = "coronanet/",
-                              pattern="mask\\_random\\_walk\\_run\\_[1-4]\\_RR.*rds",
-                              full.names=T),readRDS)
+sum_time <- filter(mask_mod@summary,grepl(x=variable,pattern="tp1"))
 
-all_mods_mat <-  lapply(all_mods, function(c) c@stan_samples$draws())
-
-mask_draws <- do.call(bind_draws, c(all_mods_mat,list(along="chain")))
-
-mask_sum <- summarize_draws_mc(mask_draws,"median","quantile2",posterior::rhat,cores=16)
-
-all_mods_mat <-  lapply(all_mods, function(c) as_draws_array(c@time_varying))
-
-mask_time <- do.call(bind_draws, c(all_mods_mat,list(along="chain"))) %>% 
-  subset_draws(variable="tp1",regex=T)
-
-mask_time <- apply_draws(mask_time,FUN=function(c) as.numeric(scale(c)),MARGIN=c(1:2))
-
-sum_time <- summarize_draws_mc(mask_time,"median","quantile2",posterior::rhat,cores=16)
-
-get_all_discrim <- filter(mask_sum,grepl(x=variable,pattern="reg\\_full"))
+get_all_discrim <- filter(mask_mod@summary,grepl(x=variable,pattern="reg\\_full"))
 
 get_all_discrim$id <- levels(mask_mod@score_data@score_matrix$item_id)
 
@@ -265,7 +248,7 @@ saveRDS(mask_rhat,"coronanet/mask_rhat.rds")
 
 mask <- get_all_discrim %>%
   ggplot(aes(y=median,x=reorder(id_rec,median))) +
-  geom_pointrange(aes(ymin=q5,ymax=q95)) +
+  geom_pointrange(aes(ymin=lower,ymax=upper)) +
   theme_tufte() +
 
   coord_flip() +
@@ -276,25 +259,25 @@ mask
 
 saveRDS(mask,"coronanet/mask_discrim_object.rds")
 
-ggsave("plots/mask_discrim.png")
+ggsave("plots/mask_discrim.pdf")
 
-mask_time_data_scaled <- mask_time %>% as_draws_df() %>%
-  gather(key="variable",value="estimate",-.chain,-.iteration,-.draw) %>%
-  group_by(.iteration) %>%
+mask_time_data_scaled <- mask_mod@time_varying %>% as_draws_df() %>% 
+  gather(key="variable",value="estimate",-.chain,-.iteration,-.draw) %>% 
+  group_by(.iteration) %>% 
   mutate(estimate=plogis(estimate)*100,
          country=levels(mask_mod@score_data@score_matrix$person_id)[as.numeric(str_extract(variable,"[0-9]+(?=\\])"))],
-         date_policy=unique(mask_mod@score_data@score_matrix$time_id)[as.numeric(str_extract(variable,"(?<=\\[)[0-9]+"))]) %>%
-  group_by(date_policy,country) %>%
+         date_policy=unique(mask_mod@score_data@score_matrix$time_id)[as.numeric(str_extract(variable,"(?<=\\[)[0-9]+"))]) %>% 
+  group_by(date_policy,country) %>% 
   summarize(med_est=quantile(estimate,.5),
             high_est=quantile(estimate,.95),
             low_est=quantile(estimate,.05),
             sd_est=sd(estimate))
 
-mask_time_data <- mask_time %>% as_draws_df() %>%
-  gather(key="variable",value="estimate",-.chain,-.iteration,-.draw) %>%
+mask_time_data <- mask_mod@time_varying %>% as_draws_df() %>% 
+  gather(key="variable",value="estimate",-.chain,-.iteration,-.draw) %>% 
   mutate(country=levels(mask_mod@score_data@score_matrix$person_id)[as.numeric(str_extract(variable,"[0-9]+(?=\\])"))],
-         date_policy=unique(mask_mod@score_data@score_matrix$time_id)[as.numeric(str_extract(variable,"(?<=\\[)[0-9]+"))]) %>%
-  group_by(date_policy,country) %>%
+         date_policy=unique(mask_mod@score_data@score_matrix$time_id)[as.numeric(str_extract(variable,"(?<=\\[)[0-9]+"))]) %>% 
+  group_by(date_policy,country) %>% 
   summarize(med_est=quantile(estimate,.5),
             high_est=quantile(estimate,.95),
             low_est=quantile(estimate,.05),
@@ -322,13 +305,15 @@ sample_plot_dates <- group_by(mask_time_data,country) %>%
 
 mask_time <- mask_time_data %>%
   ggplot(aes(y=med_est,x=date_policy)) +
-  geom_line(colour="#8DD3C7",aes(group=country)) +
-  geom_ribbon(aes(ymin=low_est,ymax=high_est,group=country),alpha=0.1) +
-  geom_text(aes(label=country),colour="#FFFFB3",fontface="bold",
-            data=sample_plot_dates,check_overlap = T,size=2) +
+  #geom_line(colour="#8DD3C7",aes(group=country),alpha=0.5) +
+  geom_line(aes(group=country),alpha=0.5) +
+  stat_smooth() +
+  #geom_ribbon(aes(ymin=low_est,ymax=high_est,group=country),alpha=0.1) +
+  # geom_text(aes(label=country),colour="#FFFFB3",fontface="bold",
+  #           data=sample_plot_dates,check_overlap = T,size=2) +
   theme_tufte() +
-  labs(x="",y="Index Score") +
-  ggtitle("Mask") +
+  labs(x="",y="") +
+  ggtitle("Mask Restrictions") + 
   theme(axis.text.x=element_blank(),
         axis.ticks.x = element_blank())
 
@@ -363,34 +348,11 @@ rm(mask_mod)
 
 # Health monitoring -------------------------------------------------------
 
-hm2_mod <- readRDS("coronanet/activity_fit_hm2_random_walk_run_4_version_RR.rds")
+hm2_mod <- readRDS("coronanet/activity_fit_hm2_random_walk_run_1_RR.rds")
 
-all_mods <- lapply(list.files(path = "coronanet/",
-                              pattern="hm2\\_random\\_walk\\_run\\_[1-4]\\_version\\_RR.*rds",
-                              full.names=T),readRDS)
+sum_time <- filter(hm2_mod@summary,grepl(x=variable,pattern="tp1"))
 
-all_mods_mat <-  lapply(all_mods, function(c) c@stan_samples$draws())
-
-hm2_draws <- do.call(bind_draws, c(all_mods_mat,list(along="chain")))
-
-hm2_sum <- summarize_draws_mc(hm2_draws,"median","quantile2",posterior::rhat,cores=16)
-
-all_mods_mat <-  lapply(all_mods, function(c) as_draws_array(c@time_varying))
-
-rm(all_mods)
-
-hm2_time <- do.call(bind_draws, c(all_mods_mat,list(along="chain"))) %>%
-subset_draws(variable="tp1",regex=T)
-
-hm2_time <- apply_draws(hm2_time,FUN=function(c) as.numeric(scale(c)),MARGIN=c(1:2))
-
-sum_time <- summarize_draws_mc(hm2_time,"median","quantile2",posterior::rhat,cores=16)
-
-rm(all_mods_mat)
-
-gc()
-
-get_all_discrim <- filter(hm2_sum,grepl(x=variable,pattern="reg\\_full"))
+get_all_discrim <- filter(hm2_mod@summary,grepl(x=variable,pattern="reg\\_full"))
 
 get_all_discrim$id <- levels(hm2_mod@score_data@score_matrix$item_id)
 
@@ -448,7 +410,7 @@ saveRDS(hm2_rhat,"coronanet/hm2_rhat.rds")
 
 hm2 <- get_all_discrim %>%
   ggplot(aes(y=median,x=reorder(id_rec,median))) +
-  geom_pointrange(aes(ymin=q5,ymax=q95)) +
+  geom_pointrange(aes(ymin=lower,ymax=upper)) +
   theme_tufte() +
   coord_flip() +
   labs(x="",y="Level of Discrimination") +
@@ -460,7 +422,7 @@ saveRDS(hm2,"coronanet/hm2_discrim_object.rds")
 
 ggsave("plots/hm2_discrim.png")
 
-hm2_time_data_scaled <- hm2_time %>% as_draws_df() %>%
+hm2_time_data_scaled <- hm2_mod@time_varying %>% as_draws_df() %>%
   gather(key="variable",value="estimate",-.chain,-.iteration,-.draw) %>%
   group_by(.iteration) %>%
   mutate(estimate=plogis(estimate)*100,
@@ -472,7 +434,7 @@ hm2_time_data_scaled <- hm2_time %>% as_draws_df() %>%
             low_est=quantile(estimate,.05),
             sd_est=sd(estimate))
 
-hm2_time_data <- hm2_time %>% as_draws_df() %>%
+hm2_time_data <- hm2_mod@time_varying %>% as_draws_df() %>%
   gather(key="variable",value="estimate",-.chain,-.iteration,-.draw) %>%
   mutate(country=levels(hm2_mod@score_data@score_matrix$person_id)[as.numeric(str_extract(variable,"[0-9]+(?=\\])"))],
          date_policy=unique(hm2_mod@score_data@score_matrix$time_id)[as.numeric(str_extract(variable,"(?<=\\[)[0-9]+"))]) %>%
@@ -499,18 +461,20 @@ saveRDS(hm2_time_data_scaled,"indices/hm2_time_data_scaled.rds")
 write_csv(hm2_time_data,"indices/hm2_time_data.csv")
 write_csv(hm2_time_data_scaled,"indices/hm2_time_data_scaled.csv")
 
-sample_plot_dates <- group_by(hm2_time_data_scaled,country) %>%
+sample_plot_dates <- group_by(hm2_time_data,country) %>%
   sample_n(1)
 
-hm2_time <- hm2_time_data_scaled %>%
+hm2_time <- hm2_time_data %>%
   ggplot(aes(y=med_est,x=date_policy)) +
-  geom_line(colour="#8DD3C7",aes(group=country)) +
-  geom_ribbon(aes(ymin=low_est,ymax=high_est,group=country),alpha=0.1) +
-  geom_text(aes(label=country),colour="#FFFFB3",fontface="bold",
-            data=sample_plot_dates,check_overlap = T,size=2) +
+  #geom_line(colour="#8DD3C7",aes(group=country),alpha=0.5) +
+  geom_line(aes(group=country),alpha=0.5) +
+  stat_smooth() +
+  #geom_ribbon(aes(ymin=low_est,ymax=high_est,group=country),alpha=0.1) +
+  # geom_text(aes(label=country),colour="#FFFFB3",fontface="bold",
+  #           data=sample_plot_dates,check_overlap = T,size=2) +
   theme_tufte() +
-  labs(x="",y="Index Score") +
-  ggtitle("Health Monitoring") +
+  labs(x="",y="") +
+  ggtitle("Health Monitoring") + 
   theme(axis.text.x=element_blank(),
         axis.ticks.x = element_blank())
 
@@ -520,7 +484,7 @@ saveRDS(hm2_time,"coronanet/hm2_plot_object.rds")
 
 ggsave("plots/hm2_mod_plot.png")
 
-hm2_time_single <- hm2_time_data_scaled %>%
+hm2_time_single <- hm2_time_data %>%
   filter(country %in% plot_countries) %>%
   ggplot(aes(y=med_est,x=date_policy)) +
   geom_line(colour="#8DD3C7",aes(group=country)) +
@@ -544,34 +508,11 @@ rm(hm2_mod)
 
 # social distance ---------------------------------------------------------
 
-sd_mod <- readRDS("coronanet/activity_fit_sd_random_walk_run_4_version_RR.rds")
+sd_mod <- readRDS("coronanet/activity_fit_sd_random_walk_run_1_RR.rds")
 
-all_mods <- lapply(list.files(path = "coronanet/",
-                              pattern="sd\\_random\\_walk\\_run\\_[1-4]\\_version\\_RR.*rds",
-                              full.names=T),readRDS)
+sum_time <- filter(sd_mod@summary,grepl(x=variable,pattern="tp1"))
 
-all_mods_mat <-  lapply(all_mods, function(c) c@stan_samples$draws())
-
-sd_draws <- do.call(bind_draws, c(all_mods_mat,list(along="chain")))
-
-sd_sum <- summarize_draws_mc(sd_draws,"median","quantile2",posterior::rhat,cores=16)
-
-all_mods_mat <-  lapply(all_mods, function(c) as_draws_array(c@time_varying))
-
-rm(all_mods)
-
-sd_time <- do.call(bind_draws, c(all_mods_mat,list(along="chain"))) %>% 
-  subset_draws(variable="tp1",regex=T)
-
-sd_time <- apply_draws(sd_time,FUN=function(c) as.numeric(scale(c)),MARGIN=c(1:2))
-
-sum_time <- summarize_draws_mc(sd_time,"median","quantile2",posterior::rhat,cores=16)
-
-rm(all_mods_mat)
-
-gc()
-
-get_all_discrim <- filter(sd_sum,grepl(x=variable,pattern="reg\\_full"))
+get_all_discrim <- filter(sd_mod@summary,grepl(x=variable,pattern="reg\\_full"))
 
 
 get_all_discrim$id <- levels(sd_mod@score_data@score_matrix$item_id)
@@ -617,7 +558,7 @@ saveRDS(sd_rhat,"coronanet/sd_rhat.rds")
 
 sd <- get_all_discrim %>% 
   ggplot(aes(y=median,x=reorder(id_rec,median))) +
-  geom_pointrange(aes(ymin=q5,ymax=q95)) +
+  geom_pointrange(aes(ymin=lower,ymax=upper)) +
   theme_tufte() +
 
   coord_flip() +
@@ -630,7 +571,7 @@ saveRDS(sd,"coronanet/sd_discrim_object.rds")
 
 ggsave("plots/sd_discrim.png")
 
-sd_time_data_scaled <- sd_time %>% as_draws_df() %>% 
+sd_time_data_scaled <- sd_mod@time_varying %>% as_draws_df() %>% 
   gather(key="variable",value="estimate",-.chain,-.iteration,-.draw) %>% 
   group_by(.iteration) %>% 
   mutate(estimate=plogis(estimate)*100,
@@ -642,7 +583,7 @@ sd_time_data_scaled <- sd_time %>% as_draws_df() %>%
             low_est=quantile(estimate,.05),
             sd_est=sd(estimate))
 
-sd_time_data <- sd_time %>% as_draws_df() %>% 
+sd_time_data <- sd_mod@time_varying %>% as_draws_df() %>% 
   gather(key="variable",value="estimate",-.chain,-.iteration,-.draw) %>% 
   mutate(country=levels(sd_mod@score_data@score_matrix$person_id)[as.numeric(str_extract(variable,"[0-9]+(?=\\])"))],
          date_policy=unique(sd_mod@score_data@score_matrix$time_id)[as.numeric(str_extract(variable,"(?<=\\[)[0-9]+"))]) %>% 
@@ -669,17 +610,21 @@ saveRDS(sd_time_data_scaled,"indices/sd_time_data_scaled.rds")
 write_csv(sd_time_data,"indices/sd_time_data.csv")
 write_csv(sd_time_data_scaled,"indices/sd_time_data_scaled.csv")
 
-sample_plot_dates <- group_by(sd_time_data_scaled,country) %>% 
+sample_plot_dates <- group_by(sd_time_data,country) %>% 
   sample_n(1)
 
-sd_time <- sd_time_data_scaled %>% 
+sd_time <- sd_time_data %>% 
   ggplot(aes(y=med_est,x=date_policy)) +
-  geom_line(colour="#8DD3C7",aes(group=country)) +
-  geom_ribbon(aes(ymin=low_est,ymax=high_est,group=country),alpha=0.1) +
-  geom_text(aes(label=country),colour="#FFFFB3",fontface="bold",
-            data=sample_plot_dates,check_overlap = T,size=2) +
+  #geom_line(colour="#8DD3C7",aes(group=country),alpha=0.5) +
+  geom_line(aes(group=country),alpha=0.5) +
+  stat_smooth() +
+  #geom_ribbon(aes(ymin=low_est,ymax=high_est,group=country),alpha=0.1) +
+  # geom_text(aes(label=country),colour="#FFFFB3",fontface="bold",
+  #           data=sample_plot_dates,check_overlap = T,size=2) +
   theme_tufte() +
   labs(x="",y="") +
+  theme(axis.text.x=element_blank(),
+        axis.ticks.x = element_blank()) +
   ggtitle("Social Distancing")
 
 sd_time
@@ -688,7 +633,7 @@ saveRDS(sd_time,"coronanet/sd_plot_object.rds")
 
 ggsave("plots/sd_mod_plot.png")
 
-sd_time_single <- sd_time_data_scaled %>% 
+sd_time_single <- sd_time_data %>% 
   filter(country %in% plot_countries) %>% 
   ggplot(aes(y=med_est,x=date_policy)) +
   geom_line(colour="#8DD3C7",aes(group=country)) +
@@ -711,36 +656,11 @@ rm(sd_mod)
 
 # schools -----------------------------------------------------------------
 
-school_mod <- readRDS("coronanet/activity_fit_school_random_walk_run_4_version_RR.rds")
+school_mod <- readRDS("coronanet/activity_fit_school_random_walk_run_1_RR.rds")
 
-all_mods <- lapply(list.files(path = "coronanet/",
-                              pattern="school\\_random\\_walk\\_run\\_[1-4]\\_version\\_RR.*rds",
-                              full.names=T),readRDS)
+sum_time <- filter(school_mod@summary,grepl(x=variable,pattern="tp1"))
 
-all_mods_mat <-  lapply(all_mods, function(c) c@stan_samples$draws())
-
-school_draws <- do.call(bind_draws, c(all_mods_mat,list(along="chain")))
-
-school_sum <- summarize_draws_mc(school_draws,"median","quantile2",posterior::rhat,cores=16)
-
-all_mods_mat <-  lapply(all_mods, function(c) as_draws_array(c@time_varying)) 
-
-rm(all_mods)
-
-school_time <- do.call(bind_draws, c(all_mods_mat,list(along="chain"))) %>% 
-  subset_draws(variable="tp1",regex=T)
-
-# standardize by iteration
-
-school_time <- apply_draws(school_time,FUN=function(c) as.numeric(scale(c)),MARGIN=c(1:2))
-
-sum_time <- summarize_draws_mc(school_time,"median","quantile2",posterior::rhat,cores=16)
-
-rm(all_mods_mat)
-
-gc()
-
-get_all_discrim <- filter(school_sum,grepl(x=variable,pattern="reg\\_full"))
+get_all_discrim <- filter(school_mod@summary,grepl(x=variable,pattern="reg\\_full"))
 
 get_all_discrim$id <- levels(school_mod@score_data@score_matrix$item_id)
 
@@ -777,7 +697,7 @@ saveRDS(school_rhat,"coronanet/school_rhat.rds")
 
 school <- get_all_discrim %>% 
   ggplot(aes(y=median,x=reorder(id_rec,median))) +
-  geom_pointrange(aes(ymin=q5,ymax=q95)) +
+  geom_pointrange(aes(ymin=lower,ymax=upper)) +
   theme_tufte() +
 
   coord_flip() +
@@ -790,7 +710,7 @@ saveRDS(school,"coronanet/school_discrim_object.rds")
 
 ggsave("plots/school_discrim.png")
 
-school_time_data_scaled <- school_time %>% as_draws_df %>% 
+school_time_data_scaled <- school_mod@time_varying %>% as_draws_df %>% 
   gather(key="variable",value="estimate",-.chain,-.iteration,-.draw) %>% 
   group_by(.iteration) %>% 
   mutate(estimate=plogis(estimate)*100,
@@ -802,7 +722,7 @@ school_time_data_scaled <- school_time %>% as_draws_df %>%
             low_est=quantile(estimate,.05),
             sd_est=sd(estimate))
 
-school_time_data <- school_time %>% as_draws_df %>% 
+school_time_data <- school_mod@time_varying %>% as_draws_df %>% 
   gather(key="variable",value="estimate",-.chain,-.iteration,-.draw) %>% 
   mutate(country=levels(school_mod@score_data@score_matrix$person_id)[as.numeric(str_extract(variable,"[0-9]+(?=\\])"))],
          date_policy=unique(school_mod@score_data@score_matrix$time_id)[as.numeric(str_extract(variable,"(?<=\\[)[0-9]+"))]) %>% 
@@ -829,17 +749,21 @@ saveRDS(school_time_data_scaled,"indices/school_time_data_scaled.rds")
 write_csv(school_time_data,"indices/school_time_data.csv")
 write_csv(school_time_data_scaled,"indices/school_time_data_scaled.csv")
 
-sample_plot_dates <- group_by(school_time_data_scaled,country) %>% 
+sample_plot_dates <- group_by(school_time_data,country) %>% 
   sample_n(1)
 
-school_time <- school_time_data_scaled %>% 
+school_time <- school_time_data %>% 
   ggplot(aes(y=med_est,x=date_policy)) +
-  geom_line(colour="#8DD3C7",aes(group=country)) +
-  geom_ribbon(aes(ymin=low_est,ymax=high_est,group=country),alpha=0.1) +
-  geom_text(aes(label=country),colour="#FFFFB3",fontface="bold",
-            data=sample_plot_dates,check_overlap = T,size=2) +
+  #geom_line(colour="#8DD3C7",aes(group=country),alpha=0.5) +
+  geom_line(aes(group=country),alpha=0.5) +
+  stat_smooth() +
+  #geom_ribbon(aes(ymin=low_est,ymax=high_est,group=country),alpha=0.1) +
+  # geom_text(aes(label=country),colour="#FFFFB3",fontface="bold",
+  #           data=sample_plot_dates,check_overlap = T,size=2) +
   theme_tufte() +
   labs(x="",y="") +
+  theme(axis.text.x=element_blank(),
+        axis.ticks.x = element_blank()) +
   ggtitle("School Restrictions")
 
 school_time
@@ -848,7 +772,7 @@ saveRDS(school_time,"coronanet/school_plot_object.rds")
 
 ggsave("plots/school_mod_plot.png")
 
-school_time_single <- school_time_data_scaled %>% 
+school_time_single <- school_time_data %>% 
   filter(country %in% plot_countries) %>% 
   ggplot(aes(y=med_est,x=date_policy)) +
   geom_line(colour="#8DD3C7",aes(group=country)) +
@@ -868,45 +792,15 @@ ggsave("plots/school_mod_plot_single.png")
 
 
 rm(school_mod)
-rm(school_time)
-rm(school_time_data)
-rm(school_time_data_scaled)
-rm(school_sum)
-rm(school)
-rm(school_draws)
 
-gc()
 
 # health resources --------------------------------------------------------
 
-hr_mod <- readRDS("coronanet/activity_fit_hr_random_walk_run_4_version_RR.rds")
+hr_mod <- readRDS("coronanet/activity_fit_hr_random_walk_run_1_RR.rds")
 
-all_mods <- lapply(list.files(path = "coronanet/",
-                              pattern="hr\\_random\\_walk\\_run\\_[1-4]\\_version\\_RR.*rds",
-                              full.names=T),readRDS)
+sum_time <- filter(hr_mod@summary,grepl(x=variable,pattern="tp1"))
 
-all_mods_mat <-  lapply(all_mods, function(c) c@stan_samples$draws())
-
-hr_draws <- do.call(bind_draws, c(all_mods_mat,list(along="chain")))
-
-hr_sum <- summarize_draws_mc(hr_draws,"median","quantile2",posterior::rhat,cores=16)
-
-all_mods_mat <-  lapply(all_mods, function(c) as_draws_array(c@time_varying))
-
-rm(all_mods)
-
-hr_time <- do.call(bind_draws, c(all_mods_mat,list(along="chain"))) %>% 
-  subset_draws(variable="tp1",regex=T)
-
-hr_time <- apply_draws(hr_time,FUN=function(c) as.numeric(scale(c)),MARGIN=c(1:2))
-
-sum_time <- summarize_draws_mc(hr_time,"median","quantile2",posterior::rhat,cores=16)
-
-rm(all_mods_mat)
-
-gc()
-
-get_all_discrim <- filter(hr_sum,grepl(x=variable,pattern="reg\\_full"))
+get_all_discrim <- filter(hr_mod@summary,grepl(x=variable,pattern="reg\\_full"))
 
 get_all_discrim$id <- levels(hr_mod@score_data@score_matrix$item_id)
 
@@ -948,7 +842,7 @@ saveRDS(hr_rhat,"coronanet/hr_rhat.rds")
 
 hr <- get_all_discrim %>% 
   ggplot(aes(y=median,x=reorder(id_rec,median))) +
-  geom_pointrange(aes(ymin=q5,ymax=q95)) +
+  geom_pointrange(aes(ymin=lower,ymax=upper)) +
   theme_tufte() +
 
   coord_flip() +
@@ -961,7 +855,7 @@ saveRDS(hr,"coronanet/hr_discrim_object.rds")
 
 ggsave("plots/hr_discrim.png")
 
-hr_time_data_scaled <- hr_time %>% as_draws_df() %>% 
+hr_time_data_scaled <- hr_mod@time_varying %>% as_draws_df() %>% 
   gather(key="variable",value="estimate",-.chain,-.iteration,-.draw) %>% 
   group_by(.iteration) %>% 
   mutate(estimate=plogis(estimate)*100,
@@ -973,7 +867,7 @@ hr_time_data_scaled <- hr_time %>% as_draws_df() %>%
             low_est=quantile(estimate,.05),
             sd_est=sd(estimate))
 
-hr_time_data <- hr_time %>% as_draws_df() %>% 
+hr_time_data <- hr_mod@time_varying %>% as_draws_df() %>% 
   gather(key="variable",value="estimate",-.chain,-.iteration,-.draw) %>% 
   mutate(country=levels(hr_mod@score_data@score_matrix$person_id)[as.numeric(str_extract(variable,"[0-9]+(?=\\])"))],
          date_policy=unique(hr_mod@score_data@score_matrix$time_id)[as.numeric(str_extract(variable,"(?<=\\[)[0-9]+"))]) %>% 
@@ -1000,17 +894,21 @@ saveRDS(hr_time_data_scaled,"indices/hr_time_data_scaled.rds")
 write_csv(hr_time_data,"indices/hr_time_data.csv")
 write_csv(hr_time_data_scaled,"indices/hr_time_data_scaled.csv")
 
-sample_plot_dates <- group_by(hr_time_data_scaled,country) %>% 
+sample_plot_dates <- group_by(hr_time_data,country) %>% 
   sample_n(1)
 
-hr_time <- hr_time_data_scaled %>% 
+hr_time <- hr_time_data %>% 
   ggplot(aes(y=med_est,x=date_policy)) +
-  geom_line(colour="#8DD3C7",aes(group=country)) +
-  geom_ribbon(aes(ymin=low_est,ymax=high_est,group=country),alpha=0.1) +
-  geom_text(aes(label=country),colour="#FFFFB3",fontface="bold",
-            data=sample_plot_dates,check_overlap = T,size=2) +
+  #geom_line(colour="#8DD3C7",aes(group=country),alpha=0.5) +
+  geom_line(aes(group=country),alpha=0.5) +
+  stat_smooth() +
+  #geom_ribbon(aes(ymin=low_est,ymax=high_est,group=country),alpha=0.1) +
+  # geom_text(aes(label=country),colour="#FFFFB3",fontface="bold",
+  #           data=sample_plot_dates,check_overlap = T,size=2) +
   theme_tufte() +
-  labs(x="",y="Index Score") +
+  labs(x="",y="") +
+  theme(axis.text.x=element_blank(),
+        axis.ticks.x = element_blank()) +
   ggtitle("Health Resources")
 
 hr_time
@@ -1019,7 +917,7 @@ saveRDS(hr_time,"coronanet/hr_plot_object.rds")
 
 ggsave("plots/hr_mod_plot.png")
 
-hr_time_single <- hr_time_data_scaled %>% 
+hr_time_single <- hr_time_data %>% 
   filter(country %in% plot_countries) %>% 
   ggplot(aes(y=med_est,x=date_policy)) +
   geom_line(colour="#8DD3C7",aes(group=country)) +
@@ -1038,14 +936,6 @@ saveRDS(hr_time_single,"coronanet/hr_plot_single_object.rds")
 ggsave("plots/hr_mod_plot_single.png")
 
 rm(hr_mod)
-rm(hr_time)
-rm(hr_time_data)
-rm(hr_time_data_scaled)
-rm(hr_sum)
-rm(hr)
-rm(hr_draws)
-
-gc()
 
 }
 
@@ -1067,7 +957,7 @@ sd_time <- readRDS("coronanet/sd_plot_object.rds")
 (mask_time + hm2_time + biz_time) / (hr_time + school_time + sd_time)
 
 ggsave("plots/combine_plot.png")
-ggsave("plots/combine_plot.pdf")
+ggsave("plots/combine_plot.pdf",width=6,height=4)
 
 mask_time_single <- readRDS("coronanet/mask_plot_single_object.rds")
 hm2_time_single <- readRDS("coronanet/hm2_plot_single_object.rds")
@@ -1079,7 +969,7 @@ sd_time_single <- readRDS("coronanet/sd_plot_single_object.rds")
 (mask_time_single + hm2_time_single + biz_time_single) / (hr_time_single + school_time_single + sd_time_single)
 
 ggsave("plots/combine_plot_single.png",scale=1.2)
-ggsave("plots/combine_plot_single.pdf",scale=1.2)
+ggsave("plots/combine_plot_single.pdf",width=6,height=4)
 
 (mask_time_single + hm2_time_single + biz_time_single) / (hr_time_single + school_time_single + sd_time_single) +
   plot_annotation(title="Index Values for a Subset of Countries",
@@ -1098,12 +988,12 @@ hr <- readRDS("coronanet/hr_discrim_object.rds")
 (mask + hm2) / (hr + school)
 
 ggsave("plots/discrim1.png",height=7.5,width=6)
-ggsave("plots/discrim1.pdf",height=7.5,width=6)
+ggsave("plots/discrim1.pdf",width=6,height=4)
 
 (sd + biz) 
 
 ggsave("plots/discrim2.png",scale=1.2)
-ggsave("plots/discrim2.pdf",scale=1.2)
+ggsave("plots/discrim2.pdf",width=6,height=4)
 
 mask_rhat <- readRDS("coronanet/mask_rhat.rds")
 hm2_rhat <- readRDS("coronanet/hm2_rhat.rds")
@@ -1116,7 +1006,7 @@ hr_rhat <- readRDS("coronanet/hr_rhat.rds")
 
 (mask_rhat + hm2_rhat + biz_rhat) / (hr_rhat + school_rhat + sd_rhat)
 
-ggsave("plots/rhat.png")
+ggsave("plots/rhat.pdf",width=6,height=4)
 
 # make aggregates
 
