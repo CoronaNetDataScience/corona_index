@@ -271,7 +271,7 @@ test_set <- sample_n(combine_dv[[1]],1000)
 
 library(ordbetareg)
 
-contact_mod <- brm(bf(contact ~ scale(cases) + scale(deaths) +
+contact_mod <- brm_multiple(bf(contact ~ scale(cases) + scale(deaths) +
                         mi(med_biz) +
                         mi(med_hm2) +
                         mi(med_sd) +
@@ -285,10 +285,12 @@ contact_mod <- brm(bf(contact ~ scale(cases) + scale(deaths) +
                      mask_mi +
                      hr_mi +
                     set_rescor(rescor=FALSE), 
-                            data=combine_dv[[1]],
+                            data=combine_dv,
                             chains=1,threads=18,
                             warmup = 500,iter = 1000,
                    backend="cmdstanr")
+
+saveRDS(contact_mod, "data/contact_mod.rds")
 
 
 # drop this model
