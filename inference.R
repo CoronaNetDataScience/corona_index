@@ -1,9 +1,6 @@
 # run cross-sectional and time-varying models
-#.libPaths("~/other_R_libs2")
 
 require(cmdstanr)
-
-#set_cmdstan_path("/home/rmk7/cmdstan")
 
 require(dplyr)
 require(tidyr)
@@ -27,57 +24,17 @@ paper_output <- T
 
 # run everything from scratch
 
-load_data <- F
-run_mod <- F
+load_data <- T
+run_mod <- T
 mult_pull <- F
-
-# helper functions for brms
-
-glance.brmsfit <- function(x,...) {
-  
-  this_sum <- summary(x)
-  print("Estimating R2")
-  this_R2 <- try(loo_R2(x))
-  print("Estimating LOO")
-  this_loo <- try(loo(x))
-  
-  if('try_error' %in% class(this_R2)) {
-    r2 <- NA
-  } else {
-    r2 <- this_R2[,"Estimate"]
-  }
-  
-  if('try_error' %in% class(this_loo)) {
-    tl <- NA
-  } else {
-    tl <- this_loo$estimates[3,1]
-  }
-
-  out <- tibble::tibble(`$R^2$` =r2,
-                        `LOO-IC`=tl,
-                        `Chains`=this_sum$chains,
-                        `Iter`=this_sum$iter,
-                        `Warmup`=this_sum$warmup)
-  return(out)
-}
-
-tidy.brmsfit <- function(x,...) {
-  
-  get_d <- summary(x)$fixed
-
-   tibble::as_tibble(get_d,rownames="term") %>% 
-    dplyr::select(term,
-           estimate="Estimate",
-           std.error="Est.Error",
-           conf.low="l-95% CI",
-           conf.high="u-95% CI",
-           rhat="Rhat")
-  
-}
 
 # load time-varying estimates
 
-all_mods_data <- lapply(list.files("indices/","time\\_data\\_scaledjan15\\.rds",
+# all_mods_data <- lapply(list.files("indices/","time\\_data\\_scaledjan15\\.rds",
+#                                    full.names = T),readRDS) %>% 
+#   bind_rows(.id="modtype")
+
+all_mods_data <- lapply(list.files("indices/","time\\_data\\.rds",
                                    full.names = T),readRDS) %>% 
   bind_rows(.id="modtype")
 
@@ -108,6 +65,35 @@ all_mods_med <- select(all_mods_data,country,date_policy,modtype,med_est) %>%
 all_mods_sd <- select(all_mods_data,country,date_policy,modtype,sd_est) %>% 
   mutate(modtype=paste0("sd_",modtype)) %>% 
   spread(key="modtype",value="sd_est")
+
+# make a combined index file
+
+all_mods_data <- mutate(all_mods_data,
+                        modtype=fct_recode(modtype,`Business Restrictions`="biz",
+                                           `Health Monitoring`='hm2',
+                                           `Health Resources`='hr',
+                                           `Social Distancing`="sd",
+                                           `Mask Policies`="masks",
+                                           `School Restrictions`='school'))
+
+write_csv(all_mods_data,"indices/all_indices.csv")
+saveRDS(all_mods_data,'indices/all_indices.rds')
+
+# make a combined data file
+
+all_inds <- lapply(list.files(path="coronanet/",pattern="long\\_model",full.names=T),
+                   readRDS) %>% 
+  bind_rows %>% 
+  select(country,item,date_policy,pop_out) %>% 
+  group_by(country,item,date_policy) %>% 
+  summarize(pop_out=max(pop_out))
+
+all_inds_weighted <- all_inds %>% 
+  ungroup %>% 
+  spread(key="item",value="pop_out")
+
+saveRDS(all_inds_weighted, "indices/all_inds_weighted.rds")
+write_csv(all_inds_weighted,"indices/all_inds_weighted.csv")
 
 if(load_data) {
   
@@ -270,170 +256,207 @@ combine_dv <- lapply(over_five, function(o) {
   
       }) 
 
-if(run_mod) {
-  
-  # business restrictions
-  
-  biz_mod <- brm_multiple(brmsformula(med_biz | mi(sd_biz) ~ trade + finance + state_fragility + bureaucracy_corrupt +
-                               retail_and_recreation_percent_change_from_baseline +
-                               workplaces_percent_change_from_baseline +
-                               grocery_and_pharmacy_percent_change_from_baseline +
-                               parks_percent_change_from_baseline +
-                               contact +
-                               anxious +
-                               gdp_pc +
-                               fdi_prop +
-                               pandemic_prep +
-                               woman_leader +
-                               polity +
-                               gini +
-                                cases_per_cap +
-                                 deaths_per_cap +
-                               density +
-                                 days_to_elec +
-                                 humanrights,decomp="QR",center=TRUE),
-                 data=combine_dv,
-                 backend="cmdstanr",
-                 chains=1,threads=threading(num_cores),
-                 iter=1000,
-                 cores=num_cores,
-                 max_treedepth=12)
 
-  saveRDS(biz_mod,"biz_mod_rr.rds")
+# Predicting contact rates ------------------------------------------------
 
-  school_mod <- brm_multiple(brmsformula(med_school | mi(sd_school) ~ trade + finance + state_fragility + bureaucracy_corrupt +
-                                  retail_and_recreation_percent_change_from_baseline +
-                                  workplaces_percent_change_from_baseline +
-                                  grocery_and_pharmacy_percent_change_from_baseline +
-                                  parks_percent_change_from_baseline +
-                                  contact +
-                                  anxious +
-                                  gdp_pc +
-                                  fdi_prop +
-                                  pandemic_prep +
-                                  woman_leader +
-                                  polity +
-                                  gini +
-                                    cases_per_cap +
-                                    deaths_per_cap +
-                                  density +
-                                    days_to_elec +
-                                    humanrights,decomp="QR",center=TRUE),
-                    data=combine_dv,
-                    backend="cmdstanr",
-                    chains=1,threads=threading(num_cores),
-                    iter=1000,
-                    cores=num_cores,
-                    max_treedepth=12)
+biz_mi <- bf(med_biz | mi(sd_biz) ~ 0,family=gaussian())
+hm2_mi <- bf(med_hm2 | mi(sd_hm2) ~ 0,family=gaussian())
+sd_mi <- bf(med_sd | mi(sd_sd) ~ 0,family=gaussian())
+school_mi <- bf(med_school | mi(sd_school) ~ 0,family=gaussian())
+mask_mi <- bf(med_masks | mi(sd_masks) ~ 0,family=gaussian())
+hr_mi <- bf(med_hr | mi(sd_hr) ~ 0,family=gaussian())
 
-  saveRDS(school_mod,"/scratch/rmk7/school_mod_rr.rds")
+test_set <- sample_n(combine_dv[[1]],1000)
 
-  sd_mod <- brm_multiple(brmsformula(med_sd | mi(sd_sd) ~ trade + finance + state_fragility + bureaucracy_corrupt +
-                              retail_and_recreation_percent_change_from_baseline +
-                              workplaces_percent_change_from_baseline +
-                              grocery_and_pharmacy_percent_change_from_baseline +
-                              parks_percent_change_from_baseline +
-                              contact +
-                              anxious +
-                              gdp_pc +
-                              fdi_prop +
-                              pandemic_prep +
-                              woman_leader +
-                              polity +
-                              gini +
-                                cases_per_cap +
-                                deaths_per_cap +
-                              density +
-                                days_to_elec +
-                                humanrights,decomp="QR",center=TRUE),
-                data=combine_dv,
-                backend="cmdstanr",
-                chains=1,threads=threading(num_cores),
-                iter=1000,
-                cores=num_cores,
-                max_treedepth=12)
 
-  # saveRDS(sd_mod,"/scratch/rmk7/sd_mod_rr.rds")
-  
-  # combined model, average SDs
-  
-  combine_form <- mvbrmsformula(bf(med_biz | mi(sd_biz) ~ trade + finance + state_fragility + bureaucracy_corrupt +
-                                  retail_and_recreation_percent_change_from_baseline +
-                                  workplaces_percent_change_from_baseline +
-                                  grocery_and_pharmacy_percent_change_from_baseline +
-                                  parks_percent_change_from_baseline +
-                                  contact + 
-                                  anxious +
-                                  gdp_pc +
-                                  fdi_prop +
-                                  pandemic_prep +
-                                  woman_leader +
-                                  polity +
-                                  gini +
-                                  cases_per_cap +
-                                  deaths_per_cap +
-                                  density +
-                                  days_to_elec +
-                                  humanrights,
-                                decomp="QR",center=TRUE),
-                                bf(med_school | mi(sd_school) ~ trade + finance + state_fragility + bureaucracy_corrupt +
-                                     retail_and_recreation_percent_change_from_baseline +
-                                     workplaces_percent_change_from_baseline +
-                                     grocery_and_pharmacy_percent_change_from_baseline +
-                                     parks_percent_change_from_baseline +
-                                     contact + 
-                                     anxious +
-                                     gdp_pc +
-                                     fdi_prop +
-                                     pandemic_prep +
-                                     woman_leader +
-                                     polity +
-                                     gini +
-                                     cases_per_cap +
-                                     deaths_per_cap +
-                                     density +
-                                     days_to_elec +
-                                     humanrights,
-                                   decomp="QR",center=TRUE),
-                          bf(med_sd | mi(sd_sd) ~ trade + finance + state_fragility + bureaucracy_corrupt +
-                               retail_and_recreation_percent_change_from_baseline +
-                               workplaces_percent_change_from_baseline +
-                               grocery_and_pharmacy_percent_change_from_baseline +
-                               parks_percent_change_from_baseline +
-                               contact + 
-                               anxious +
-                               gdp_pc +
-                               fdi_prop +
-                               pandemic_prep +
-                               woman_leader +
-                               polity +
-                               gini +
-                               cases_per_cap +
-                               deaths_per_cap +
-                               density +
-                               days_to_elec +
-                               humanrights,
-                             decomp="QR",center=TRUE),
-                          rescor=T)
-  
-  mult_mod <- brm_multiple(combine_form,
-                         data=combine_dv,
-                         backend="cmdstanr",
-                         chains=1,threads=threading(num_cores),
-                         iter=1000,
-                         cores=num_cores,
-                         max_treedepth=12)
-  
-  saveRDS(mult_mod,"/scratch/rmk7/multivariate_mod_rr.rds")
-  
-} else {
-  
-  sd_mod <- readRDS("sd_mod_rr.rds")
-  biz_mod <- readRDS("biz_mod_rr.rds")
-  school_mod <- readRDS("school_mod_rr.rds")
-  mult_mod <- readRDS("multivariate_mod_rr.rds")
-  
-}
+library(ordbetareg)
+
+contact_mod <- brm(bf(contact ~ scale(cases) + scale(deaths) +
+                        mi(med_biz) +
+                        mi(med_hm2) +
+                        mi(med_sd) +
+                        mi(med_school) +
+                        mi(med_masks) +
+                        mi(med_hr)) +
+                     biz_mi +
+                     sd_mi +
+                     hm2_mi +
+                     school_mi +
+                     mask_mi +
+                     hr_mi +
+                    set_rescor(rescor=FALSE), 
+                            data=combine_dv[[1]],
+                            chains=1,threads=18,
+                            warmup = 500,iter = 1000,
+                   backend="cmdstanr")
+
+
+# drop this model
+
+# if(run_mod) {
+#   
+#   # business restrictions
+#   
+#   biz_mod <- brm_multiple(brmsformula(med_biz | mi(sd_biz) ~ trade + finance + state_fragility + bureaucracy_corrupt +
+#                                retail_and_recreation_percent_change_from_baseline +
+#                                workplaces_percent_change_from_baseline +
+#                                grocery_and_pharmacy_percent_change_from_baseline +
+#                                parks_percent_change_from_baseline +
+#                                contact +
+#                                anxious +
+#                                gdp_pc +
+#                                fdi_prop +
+#                                pandemic_prep +
+#                                woman_leader +
+#                                polity +
+#                                gini +
+#                                 cases_per_cap +
+#                                  deaths_per_cap +
+#                                density +
+#                                  days_to_elec +
+#                                  humanrights,decomp="QR",center=TRUE),
+#                  data=combine_dv,
+#                  backend="cmdstanr",
+#                  chains=1,threads=threading(num_cores),
+#                  iter=1000,
+#                  cores=num_cores,
+#                  max_treedepth=12)
+# 
+#   saveRDS(biz_mod,"biz_mod_rr.rds")
+# 
+#   school_mod <- brm_multiple(brmsformula(med_school | mi(sd_school) ~ trade + finance + state_fragility + bureaucracy_corrupt +
+#                                   retail_and_recreation_percent_change_from_baseline +
+#                                   workplaces_percent_change_from_baseline +
+#                                   grocery_and_pharmacy_percent_change_from_baseline +
+#                                   parks_percent_change_from_baseline +
+#                                   contact +
+#                                   anxious +
+#                                   gdp_pc +
+#                                   fdi_prop +
+#                                   pandemic_prep +
+#                                   woman_leader +
+#                                   polity +
+#                                   gini +
+#                                     cases_per_cap +
+#                                     deaths_per_cap +
+#                                   density +
+#                                     days_to_elec +
+#                                     humanrights,decomp="QR",center=TRUE),
+#                     data=combine_dv,
+#                     backend="cmdstanr",
+#                     chains=1,threads=threading(num_cores),
+#                     iter=1000,
+#                     cores=num_cores,
+#                     max_treedepth=12)
+# 
+#   saveRDS(school_mod,"/scratch/rmk7/school_mod_rr.rds")
+# 
+#   sd_mod <- brm_multiple(brmsformula(med_sd | mi(sd_sd) ~ trade + finance + state_fragility + bureaucracy_corrupt +
+#                               retail_and_recreation_percent_change_from_baseline +
+#                               workplaces_percent_change_from_baseline +
+#                               grocery_and_pharmacy_percent_change_from_baseline +
+#                               parks_percent_change_from_baseline +
+#                               contact +
+#                               anxious +
+#                               gdp_pc +
+#                               fdi_prop +
+#                               pandemic_prep +
+#                               woman_leader +
+#                               polity +
+#                               gini +
+#                                 cases_per_cap +
+#                                 deaths_per_cap +
+#                               density +
+#                                 days_to_elec +
+#                                 humanrights,decomp="QR",center=TRUE),
+#                 data=combine_dv,
+#                 backend="cmdstanr",
+#                 chains=1,threads=threading(num_cores),
+#                 iter=1000,
+#                 cores=num_cores,
+#                 max_treedepth=12)
+# 
+#   # saveRDS(sd_mod,"/scratch/rmk7/sd_mod_rr.rds")
+#   
+#   # combined model, average SDs
+#   
+#   combine_form <- mvbrmsformula(bf(med_biz | mi(sd_biz) ~ trade + finance + state_fragility + bureaucracy_corrupt +
+#                                   retail_and_recreation_percent_change_from_baseline +
+#                                   workplaces_percent_change_from_baseline +
+#                                   grocery_and_pharmacy_percent_change_from_baseline +
+#                                   parks_percent_change_from_baseline +
+#                                   contact + 
+#                                   anxious +
+#                                   gdp_pc +
+#                                   fdi_prop +
+#                                   pandemic_prep +
+#                                   woman_leader +
+#                                   polity +
+#                                   gini +
+#                                   cases_per_cap +
+#                                   deaths_per_cap +
+#                                   density +
+#                                   days_to_elec +
+#                                   humanrights,
+#                                 decomp="QR",center=TRUE),
+#                                 bf(med_school | mi(sd_school) ~ trade + finance + state_fragility + bureaucracy_corrupt +
+#                                      retail_and_recreation_percent_change_from_baseline +
+#                                      workplaces_percent_change_from_baseline +
+#                                      grocery_and_pharmacy_percent_change_from_baseline +
+#                                      parks_percent_change_from_baseline +
+#                                      contact + 
+#                                      anxious +
+#                                      gdp_pc +
+#                                      fdi_prop +
+#                                      pandemic_prep +
+#                                      woman_leader +
+#                                      polity +
+#                                      gini +
+#                                      cases_per_cap +
+#                                      deaths_per_cap +
+#                                      density +
+#                                      days_to_elec +
+#                                      humanrights,
+#                                    decomp="QR",center=TRUE),
+#                           bf(med_sd | mi(sd_sd) ~ trade + finance + state_fragility + bureaucracy_corrupt +
+#                                retail_and_recreation_percent_change_from_baseline +
+#                                workplaces_percent_change_from_baseline +
+#                                grocery_and_pharmacy_percent_change_from_baseline +
+#                                parks_percent_change_from_baseline +
+#                                contact + 
+#                                anxious +
+#                                gdp_pc +
+#                                fdi_prop +
+#                                pandemic_prep +
+#                                woman_leader +
+#                                polity +
+#                                gini +
+#                                cases_per_cap +
+#                                deaths_per_cap +
+#                                density +
+#                                days_to_elec +
+#                                humanrights,
+#                              decomp="QR",center=TRUE),
+#                           rescor=T)
+#   
+#   mult_mod <- brm_multiple(combine_form,
+#                          data=combine_dv,
+#                          backend="cmdstanr",
+#                          chains=1,threads=threading(num_cores),
+#                          iter=1000,
+#                          cores=num_cores,
+#                          max_treedepth=12)
+#   
+#   saveRDS(mult_mod,"/scratch/rmk7/multivariate_mod_rr.rds")
+#   
+# } else {
+#   
+#   sd_mod <- readRDS("sd_mod_rr.rds")
+#   biz_mod <- readRDS("biz_mod_rr.rds")
+#   school_mod <- readRDS("school_mod_rr.rds")
+#   mult_mod <- readRDS("multivariate_mod_rr.rds")
+#   
+# }
 
 if(paper_output) {
   
@@ -484,258 +507,229 @@ if(paper_output) {
   
   # new multivariate model /w correlated errors
   
-  require(gtsummary)
-  require(tidybayes)
-  require(stringr)
-  
-  if(mult_pull) {
-    
-    tidy_out <- gather_draws(mult_mod,`b_.*`, regex=T) %>% 
-      median_qi
-    
-    saveRDS(tidy_out, "data/mult_tidy_out.rds")
-    
-    mult_loo <- loo(mult_mod)
-    
-    saveRDS(mult_loo, "data/mult_loo.rds")
-    
-    mult_R2 <- bayes_R2(mult_mod)
-    
-    saveRDS(mult_R2, "data/mult_R2.rds")
-    
-  } else {
-    
-    mult_loo <- readRDS("data/mult_loo.rds")
-    mult_R2 <- readRDS("data/mult_R2.rds")
-    tidy_out <- readRDS("data/mult_tidy_out.rds")
-    
-  }
-  
-  
-  
-  # make a 3 column table
-  
-  tidy_out <- mutate(tidy_out, type=str_extract(.variable,
-                                                pattern="(?<=b\\_med)[a-z]+"),
-                              .variable=str_extract(.variable,
-                                                    pattern="(?<=med[a-z]{1,6}\\_)[a-zA-Z]+|Intercept"))
-  
-  tidy_wide  <- select(tidy_out,.value, .variable,type) %>% spread(key="type",value=".value") %>% 
-    mutate(stat="coef") %>% 
-    mutate_at(c("biz","school","sd"), ~as.character(round(.,3)))
-  
-  tidy_ci <- mutate(tidy_out,.value=paste0("(",round(.lower,3),", ",round(.upper,3),")")) %>% 
-    select(.value, .variable,type) %>% spread(key="type",value=".value") %>% 
-    mutate(stat="ci")
-  
-  tidy_combine <- bind_rows(tidy_wide, tidy_ci) %>% 
-    mutate(.variable=fct_recode(.variable,
-                                "Facebook General Anxiety" = "anxious",
-                                "Bureaucracy Corrupt" = "bureaucracy",
-                                "COVID-19 Cases" = "cases",
-                                "Facebook Personal Contact" = "contact",
-                                "Days to Election" = "days",
-                                "COVID-19 Deaths" = "deaths",
-                                "Population Density" = "density",
-                                "FDI" = "fdi",
-                                "Facebook Financial Anxiety" = "finance",
-                                "GDP Per Capita" = "gdp",
-                                "Gini Index" = "gini",
-                                "Grocery Mobility" = "grocery",
-                                "Human Rights" = "humanrights",
-                                "Pandemic Preparedness" = "pandemic",
-                                "Parks Mobility" = "parks",
-                                "Polity Score" = "polity",
-                                "Retail Mobility" = "retail",
-                                "State Fragility" = "state",
-                                "Trade" = "trade",
-                                "Woman Leader" = "woman",
-                                "Workplace Mobility" = "workplaces"))
-  
-  # add loo / R2
-  
-  loo_tb <- tibble(biz=as.character(round(mult_loo$looic,0)),
-                   sd=as.character(round(mult_loo$looic,0)),
-                   school=as.character(round(mult_loo$looic,0)),
-                   .variable="LOO-IC",
-                   stat='coef')
-  
-  r2_tb <- tibble(biz=as.character(round(mult_R2[1,1],3)),
-                  sd=as.character(round(mult_R2[3,1],3)),
-                  school=as.character(round(mult_R2[2,1],3)),
-                  .variable="R2",
-                  stat='coef')
-  
-  tidy_combine <- bind_rows(tidy_combine,loo_tb) %>% 
-    bind_rows(r2_tb)
-  
-  
-  # format and export
-  
-  tidy_combine %>% 
-    mutate(.variable=fct_relevel(
-      .variable,
-      "COVID-19 Deaths", "COVID-19 Cases", "Facebook Financial Anxiety",
-      "Facebook General Anxiety", "Facebook Personal Contact", "Retail Mobility",
-      "Parks Mobility", "Grocery Mobility", "Workplace Mobility", "Days to Election",
-      "FDI", "GDP Per Capita", "Bureaucracy Corrupt", "Gini Index",
-      "Human Rights", "Pandemic Preparedness", "Polity Score", "Population Density",
-      "State Fragility", "Trade", "Woman Leader", "Intercept", "LOO-IC",
-      "R2"
-    )) %>% 
-    arrange(.variable,desc(stat)) %>% 
-    mutate(.variable=ifelse(stat=="coef",as.character(.variable),"")) %>% 
-    select(-stat,Variable=".variable",
-           `Business Restrictions`="biz",
-           `Social Distancing`="sd",
-           `School Restrictions`="school") %>% 
-    kable(caption="Results of Regression of Social, Political and Economic Covariates on Index Scores",
-          linesep = "",booktabs=T,format="latex",
-          align=c('lccc')) %>% 
-    kable_styling(latex_options = c("striped","hold_position"),
-                  font_size = 9) %>% 
-    pack_rows("Time-varying", 1, 20) %>%
-    pack_rows("Cross-sectional",21, 44) %>% 
-    row_spec(seq(2,44,by=2),font_size=7,italic = T) %>% 
-    footnote(general="Coefficients are the posterior median values and the uncertainty intervals are the 5% to 95% posterior density intervals. Results marginalize across 5 imputed datasets. LOO-IC values are identical across models due to the use of a single multivariate Normal distribution.",
-             threeparttable = T) %>% 
-    save_kable("mod_table.tex",keep_tex=T)
-  
-  # make a correlation table
-  
-  cor_dv <- VarCorr(mult_mod)$residual__$cor
-  
-  cor_dv <- cbind(cor_dv[,1,1],cor_dv[,1,2],cor_dv[,1,3])
-  
-  row.names(cor_dv) <- c("Business","Schools","Social\nDistancing")
-  
-  colnames(cor_dv) <- row.names(cor_dv)
-  
-  require(ggcorrplot)
-  
-  ggcorrplot(cor_dv,show.legend=F,lab=T)
-  
-  ggsave("mult_mod_corr.png",scale=0.7)
-  
-  # do some posterior predictions
-  
-  
-  # FB Predictions ----------------------------------------------------------
-  
-  fb_biz <- conditional_effects(mult_mod,c("finance","contact","anxious"))
-  
-  finance <- bind_rows(lapply(fb_biz[1:3], select, cond="finance", estimate__, upper__, lower__),
-                       .id="index") %>% 
-    mutate(var="Financial Anxiety")
-  
-  contact <- bind_rows(lapply(fb_biz[4:6], select, cond="contact", estimate__, upper__, lower__),
-                       .id="index") %>% 
-    mutate(var="Personal Contacts")
-  
-  anxious <- bind_rows(lapply(fb_biz[7:9], select, cond="anxious", estimate__, upper__, lower__),
-                       .id="index") %>% 
-    mutate(var="General Anxiety")
-  
-  fb_fx <- bind_rows(finance,contact,anxious) %>% 
-    mutate(index=case_when(grepl(x=index,pattern="biz")~"DV: Business",
-                           grepl(x=index,pattern="sd")~"DV: Distancing",
-                           grepl(x=index,pattern="school")~"DV: School"))
-  
-  
-  
-  label_value2 = function(labels) {
-    label_value(labels = labels, multi_line = FALSE)
-  }
-  
-  fb_fx %>% 
-    ggplot(aes(y=estimate__,x=cond)) +
-    geom_ribbon(aes(ymin=lower__,
-                    ymax=upper__),alpha=0.5) +
-    geom_line(colour="blue") +
-    theme_tufte() +
-    scale_x_continuous(labels=scales::percent_format(accuracy=1)) +
-    facet_grid(cols = vars(var),rows = vars(index),labeller = label_value2,scales = "free_x") +
-    labs(x="Weighted Percent Reporting via Facebook Survey",
-         y="Predicted Index Score",
-         caption=str_wrap("Estimates are predictions with other variables held at their means. Shaded intervals are the 5% to 95% posterior quantiles.",
-                          width=75))
-  
-  ggsave("plots/fb_fx.png")
-  ggsave("plots/extended_data_figure_5.pdf")
-  
-  
-  
-  # Cross-section Predictions -----------------------------------------------
-  
-  cs_all <- conditional_effects(mult_mod,c("humanrights","polity","trade"))
-  
-  
-  days <- bind_rows(lapply(cs_all[1:3], select, cond="humanrights", estimate__, upper__, lower__),
-                       .id="index") %>% 
-    mutate(var="Human Rights")
-  
-  polity <- bind_rows(lapply(cs_all[4:6], select, cond="polity", estimate__, upper__, lower__),
-                       .id="index") %>% 
-    mutate(var="Polity IV (Democracy)")
-  
-  trade <- bind_rows(lapply(cs_all[7:9], select, cond="trade", estimate__, upper__, lower__),
-                       .id="index") %>% 
-    mutate(var="Trade % GDP")
-  
-  cs_fx <- bind_rows(days,trade,polity) %>% 
-    mutate(index=case_when(grepl(x=index,pattern="biz")~"DV: Business",
-                           grepl(x=index,pattern="sd")~"DV: Distancing",
-                           grepl(x=index,pattern="school")~"DV: School"))
-  
-  
-  label_value2 = function(labels) {
-    label_value(labels = labels, multi_line = FALSE)
-  }
-  
-  cs_fx %>% 
-    ggplot(aes(y=estimate__,x=cond)) +
-    geom_ribbon(aes(ymin=lower__,
-                    ymax=upper__),alpha=0.5) +
-    geom_line(colour="blue") +
-    theme_tufte() +
-    #scale_x_continuous(labels=scales::percent_format(accuracy=1)) +
-    facet_grid(cols = vars(var),rows = vars(index),labeller = label_value2,scales = "free_x") +
-    labs(x="Weighted Percent Reporting via Facebook Survey",
-         y="Predicted Index Score",
-         caption=str_wrap("Estimates are predictions with other variables held at their means. Shaded intervals are the 5% to 95% posterior quantiles.",
-                          width=75))
-  
-  ggsave("cs_fx.png")
-  ggsave("plots/extended_data_figure_6.pdf")
-  
-  # make a combined index file
-  
-  all_mods_data <- mutate(all_mods_data,
-                          modtype=fct_recode(modtype,`Business Restrictions`="biz",
-                                             `Health Monitoring`='hm2',
-                                             `Health Resources`='hr',
-                                             `Social Distancing`="sd",
-                                             `Mask Policies`="masks",
-                                             `School Restrictions`='school'))
-  
-  write_csv(all_mods_data,"indices/all_indices.csv")
-  saveRDS(all_mods_data,'indices/all_indices.rds')
-  
-  # make a combined data file
-  
-  all_inds <- lapply(list.files(path="coronanet/",pattern="model",full.names=T),
-                     readRDS) %>% 
-    bind_rows %>% 
-    select(country,item,date_policy,pop_out) %>% 
-    group_by(country,item,date_policy) %>% 
-    summarize(pop_out=max(pop_out))
-  
-  all_inds_weighted <- all_inds %>% 
-    ungroup %>% 
-    spread(key="item",value="pop_out")
-  
-  saveRDS(all_inds_weighted, "coronanet/all_inds_weighted.rds")
-  write_csv(all_inds_weighted,"coronanet/all_inds_weighted.csv")
+  # require(gtsummary)
+  # require(tidybayes)
+  # require(stringr)
+  # 
+  # if(mult_pull) {
+  #   
+  #   tidy_out <- gather_draws(mult_mod,`b_.*`, regex=T) %>% 
+  #     median_qi
+  #   
+  #   saveRDS(tidy_out, "data/mult_tidy_out.rds")
+  #   
+  #   mult_loo <- loo(mult_mod)
+  #   
+  #   saveRDS(mult_loo, "data/mult_loo.rds")
+  #   
+  #   mult_R2 <- bayes_R2(mult_mod)
+  #   
+  #   saveRDS(mult_R2, "data/mult_R2.rds")
+  #   
+  # } else {
+  #   
+  #   mult_loo <- readRDS("data/mult_loo.rds")
+  #   mult_R2 <- readRDS("data/mult_R2.rds")
+  #   tidy_out <- readRDS("data/mult_tidy_out.rds")
+  #   
+  # }
+  # 
+  # 
+  # 
+  # # make a 3 column table
+  # 
+  # tidy_out <- mutate(tidy_out, type=str_extract(.variable,
+  #                                               pattern="(?<=b\\_med)[a-z]+"),
+  #                             .variable=str_extract(.variable,
+  #                                                   pattern="(?<=med[a-z]{1,6}\\_)[a-zA-Z]+|Intercept"))
+  # 
+  # tidy_wide  <- select(tidy_out,.value, .variable,type) %>% spread(key="type",value=".value") %>% 
+  #   mutate(stat="coef") %>% 
+  #   mutate_at(c("biz","school","sd"), ~as.character(round(.,3)))
+  # 
+  # tidy_ci <- mutate(tidy_out,.value=paste0("(",round(.lower,3),", ",round(.upper,3),")")) %>% 
+  #   select(.value, .variable,type) %>% spread(key="type",value=".value") %>% 
+  #   mutate(stat="ci")
+  # 
+  # tidy_combine <- bind_rows(tidy_wide, tidy_ci) %>% 
+  #   mutate(.variable=fct_recode(.variable,
+  #                               "Facebook General Anxiety" = "anxious",
+  #                               "Bureaucracy Corrupt" = "bureaucracy",
+  #                               "COVID-19 Cases" = "cases",
+  #                               "Facebook Personal Contact" = "contact",
+  #                               "Days to Election" = "days",
+  #                               "COVID-19 Deaths" = "deaths",
+  #                               "Population Density" = "density",
+  #                               "FDI" = "fdi",
+  #                               "Facebook Financial Anxiety" = "finance",
+  #                               "GDP Per Capita" = "gdp",
+  #                               "Gini Index" = "gini",
+  #                               "Grocery Mobility" = "grocery",
+  #                               "Human Rights" = "humanrights",
+  #                               "Pandemic Preparedness" = "pandemic",
+  #                               "Parks Mobility" = "parks",
+  #                               "Polity Score" = "polity",
+  #                               "Retail Mobility" = "retail",
+  #                               "State Fragility" = "state",
+  #                               "Trade" = "trade",
+  #                               "Woman Leader" = "woman",
+  #                               "Workplace Mobility" = "workplaces"))
+  # 
+  # # add loo / R2
+  # 
+  # loo_tb <- tibble(biz=as.character(round(mult_loo$looic,0)),
+  #                  sd=as.character(round(mult_loo$looic,0)),
+  #                  school=as.character(round(mult_loo$looic,0)),
+  #                  .variable="LOO-IC",
+  #                  stat='coef')
+  # 
+  # r2_tb <- tibble(biz=as.character(round(mult_R2[1,1],3)),
+  #                 sd=as.character(round(mult_R2[3,1],3)),
+  #                 school=as.character(round(mult_R2[2,1],3)),
+  #                 .variable="R2",
+  #                 stat='coef')
+  # 
+  # tidy_combine <- bind_rows(tidy_combine,loo_tb) %>% 
+  #   bind_rows(r2_tb)
+  # 
+  # 
+  # # format and export
+  # 
+  # tidy_combine %>% 
+  #   mutate(.variable=fct_relevel(
+  #     .variable,
+  #     "COVID-19 Deaths", "COVID-19 Cases", "Facebook Financial Anxiety",
+  #     "Facebook General Anxiety", "Facebook Personal Contact", "Retail Mobility",
+  #     "Parks Mobility", "Grocery Mobility", "Workplace Mobility", "Days to Election",
+  #     "FDI", "GDP Per Capita", "Bureaucracy Corrupt", "Gini Index",
+  #     "Human Rights", "Pandemic Preparedness", "Polity Score", "Population Density",
+  #     "State Fragility", "Trade", "Woman Leader", "Intercept", "LOO-IC",
+  #     "R2"
+  #   )) %>% 
+  #   arrange(.variable,desc(stat)) %>% 
+  #   mutate(.variable=ifelse(stat=="coef",as.character(.variable),"")) %>% 
+  #   select(-stat,Variable=".variable",
+  #          `Business Restrictions`="biz",
+  #          `Social Distancing`="sd",
+  #          `School Restrictions`="school") %>% 
+  #   kable(caption="Results of Regression of Social, Political and Economic Covariates on Index Scores",
+  #         linesep = "",booktabs=T,format="latex",
+  #         align=c('lccc')) %>% 
+  #   kable_styling(latex_options = c("striped","hold_position"),
+  #                 font_size = 9) %>% 
+  #   pack_rows("Time-varying", 1, 20) %>%
+  #   pack_rows("Cross-sectional",21, 44) %>% 
+  #   row_spec(seq(2,44,by=2),font_size=7,italic = T) %>% 
+  #   footnote(general="Coefficients are the posterior median values and the uncertainty intervals are the 5% to 95% posterior density intervals. Results marginalize across 5 imputed datasets. LOO-IC values are identical across models due to the use of a single multivariate Normal distribution.",
+  #            threeparttable = T) %>% 
+  #   save_kable("mod_table.tex",keep_tex=T)
+  # 
+  # # make a correlation table
+  # 
+  # cor_dv <- VarCorr(mult_mod)$residual__$cor
+  # 
+  # cor_dv <- cbind(cor_dv[,1,1],cor_dv[,1,2],cor_dv[,1,3])
+  # 
+  # row.names(cor_dv) <- c("Business","Schools","Social\nDistancing")
+  # 
+  # colnames(cor_dv) <- row.names(cor_dv)
+  # 
+  # require(ggcorrplot)
+  # 
+  # ggcorrplot(cor_dv,show.legend=F,lab=T)
+  # 
+  # ggsave("mult_mod_corr.png",scale=0.7)
+  # 
+  # # do some posterior predictions
+  # 
+  # 
+  # # FB Predictions ----------------------------------------------------------
+  # 
+  # fb_biz <- conditional_effects(mult_mod,c("finance","contact","anxious"))
+  # 
+  # finance <- bind_rows(lapply(fb_biz[1:3], select, cond="finance", estimate__, upper__, lower__),
+  #                      .id="index") %>% 
+  #   mutate(var="Financial Anxiety")
+  # 
+  # contact <- bind_rows(lapply(fb_biz[4:6], select, cond="contact", estimate__, upper__, lower__),
+  #                      .id="index") %>% 
+  #   mutate(var="Personal Contacts")
+  # 
+  # anxious <- bind_rows(lapply(fb_biz[7:9], select, cond="anxious", estimate__, upper__, lower__),
+  #                      .id="index") %>% 
+  #   mutate(var="General Anxiety")
+  # 
+  # fb_fx <- bind_rows(finance,contact,anxious) %>% 
+  #   mutate(index=case_when(grepl(x=index,pattern="biz")~"DV: Business",
+  #                          grepl(x=index,pattern="sd")~"DV: Distancing",
+  #                          grepl(x=index,pattern="school")~"DV: School"))
+  # 
+  # 
+  # 
+  # label_value2 = function(labels) {
+  #   label_value(labels = labels, multi_line = FALSE)
+  # }
+  # 
+  # fb_fx %>% 
+  #   ggplot(aes(y=estimate__,x=cond)) +
+  #   geom_ribbon(aes(ymin=lower__,
+  #                   ymax=upper__),alpha=0.5) +
+  #   geom_line(colour="blue") +
+  #   theme_tufte() +
+  #   scale_x_continuous(labels=scales::percent_format(accuracy=1)) +
+  #   facet_grid(cols = vars(var),rows = vars(index),labeller = label_value2,scales = "free_x") +
+  #   labs(x="Weighted Percent Reporting via Facebook Survey",
+  #        y="Predicted Index Score",
+  #        caption=str_wrap("Estimates are predictions with other variables held at their means. Shaded intervals are the 5% to 95% posterior quantiles.",
+  #                         width=75))
+  # 
+  # ggsave("plots/fb_fx.png")
+  # ggsave("plots/extended_data_figure_5.pdf")
+  # 
+  # 
+  # 
+  # # Cross-section Predictions -----------------------------------------------
+  # 
+  # cs_all <- conditional_effects(mult_mod,c("humanrights","polity","trade"))
+  # 
+  # 
+  # days <- bind_rows(lapply(cs_all[1:3], select, cond="humanrights", estimate__, upper__, lower__),
+  #                      .id="index") %>% 
+  #   mutate(var="Human Rights")
+  # 
+  # polity <- bind_rows(lapply(cs_all[4:6], select, cond="polity", estimate__, upper__, lower__),
+  #                      .id="index") %>% 
+  #   mutate(var="Polity IV (Democracy)")
+  # 
+  # trade <- bind_rows(lapply(cs_all[7:9], select, cond="trade", estimate__, upper__, lower__),
+  #                      .id="index") %>% 
+  #   mutate(var="Trade % GDP")
+  # 
+  # cs_fx <- bind_rows(days,trade,polity) %>% 
+  #   mutate(index=case_when(grepl(x=index,pattern="biz")~"DV: Business",
+  #                          grepl(x=index,pattern="sd")~"DV: Distancing",
+  #                          grepl(x=index,pattern="school")~"DV: School"))
+  # 
+  # 
+  # label_value2 = function(labels) {
+  #   label_value(labels = labels, multi_line = FALSE)
+  # }
+  # 
+  # cs_fx %>% 
+  #   ggplot(aes(y=estimate__,x=cond)) +
+  #   geom_ribbon(aes(ymin=lower__,
+  #                   ymax=upper__),alpha=0.5) +
+  #   geom_line(colour="blue") +
+  #   theme_tufte() +
+  #   #scale_x_continuous(labels=scales::percent_format(accuracy=1)) +
+  #   facet_grid(cols = vars(var),rows = vars(index),labeller = label_value2,scales = "free_x") +
+  #   labs(x="Weighted Percent Reporting via Facebook Survey",
+  #        y="Predicted Index Score",
+  #        caption=str_wrap("Estimates are predictions with other variables held at their means. Shaded intervals are the 5% to 95% posterior quantiles.",
+  #                         width=75))
+  # 
+  # ggsave("cs_fx.png")
+  # ggsave("plots/extended_data_figure_6.pdf")
   
   
 }
