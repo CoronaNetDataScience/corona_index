@@ -222,6 +222,10 @@ if(load_data) {
                                                 country == "San Marino" & date_policy < ymd("2020-10-01") ~ 0.5,
                                                 country == "San Marino" & date_policy >= ymd("2020-10-01") ~ 0))
   
+  combine_dv_noimpute <- combine_dv
+  
+  saveRDS(combine_dv_noimpute, "data/non_imputed_data.rds")
+  
   # need to merge in indices to impute
   
   # impute 5 big ones
@@ -236,6 +240,8 @@ if(load_data) {
 } else {
   
   over_five <- readRDS("indices/over_five.rds")
+  
+  combine_dv_noimpute <- readRDS("data/non_imputed_data.rds")
   
 }
 
@@ -257,6 +263,17 @@ combine_dv <- lapply(over_five, function(o) {
       }) 
 
 
+combine_dv_noimpute <- left_join(combine_dv_noimpute, all_mods_sd,
+                                 by=c('country',"date_policy")) %>% 
+  ungroup %>% 
+  mutate(density=as.numeric(scale(exp(pop_tot_log)/area)),
+         fdi_prop=as.numeric(scale((fdi/exp(pop_tot_log))/gdppc2019)),
+         gdp_pc=as.numeric(scale(gdppc2019)),
+         cases_per_cap=as.numeric(scale(cases/exp(pop_tot_log))),
+         deaths_per_cap=as.numeric(scale(deaths/exp(pop_tot_log))),
+         mean_sd = (sd_school + sd_biz + sd_sd)/3)
+
+
 # Predicting contact rates ------------------------------------------------
 
 biz_mi <- bf(med_biz | mi(sd_biz) ~ 0,family=gaussian())
@@ -271,13 +288,14 @@ test_set <- sample_n(combine_dv[[1]],1000)
 
 library(ordbetareg)
 
-contact_mod <- brm_multiple(bf(contact ~ scale(cases) + scale(deaths) +
+contact_mod <- brm(bf(contact ~ cases_per_cap + deaths_per_cap +
                         mi(med_biz) +
                         mi(med_hm2) +
                         mi(med_sd) +
                         mi(med_school) +
                         mi(med_masks) +
-                        mi(med_hr)) +
+                        mi(med_hr),
+                        decomp="QR") +
                      biz_mi +
                      sd_mi +
                      hm2_mi +
@@ -285,7 +303,7 @@ contact_mod <- brm_multiple(bf(contact ~ scale(cases) + scale(deaths) +
                      mask_mi +
                      hr_mi +
                     set_rescor(rescor=FALSE), 
-                            data=combine_dv,
+                            data=combine_dv_noimpute,
                             chains=1,threads=18,
                             warmup = 500,iter = 1000,
                    backend="cmdstanr")
