@@ -34,8 +34,9 @@ model {
     target += binomial_logit_lpmf(Y | trials, mu);
   }
   // priors including constants
-  target += normal_lpdf(Intercept | -5,5);
-  target += normal_lpdf(zme_1 | Xn_1 , noise_1);
+  target += normal_lpdf(Intercept | -10,5);
+  target += normal_lpdf(zme_1|0,3);
+  target += normal_lpdf(Xn_1  | zme_1, noise_1);
   target += normal_lpdf(bsp | 0, 10);
 }
 generated quantities {
