@@ -283,32 +283,123 @@ school_mi <- bf(med_school | mi(sd_school) ~ 0,family=gaussian())
 mask_mi <- bf(med_masks | mi(sd_masks) ~ 0,family=gaussian())
 hr_mi <- bf(med_hr | mi(sd_hr) ~ 0,family=gaussian())
 
-test_set <- sample_n(combine_dv[[1]],1000)
-
+test_set <- sample_n(combine_dv[[1]],2000)
+test_set$date_policy_fac <- as.character(test_set$date_policy)
+combine_dv_noimpute$date_policy_fac <- as.character(combine_dv_noimpute$date_policy)
 
 library(ordbetareg)
 
-contact_mod <- brm(bf(contact ~ cases_per_cap + deaths_per_cap +
-                        mi(med_biz) +
-                        mi(med_hm2) +
-                        mi(med_sd) +
-                        mi(med_school) +
-                        mi(med_masks) +
-                        mi(med_hr),
-                        decomp="QR") +
-                     biz_mi +
-                     sd_mi +
-                     hm2_mi +
-                     school_mi +
-                     mask_mi +
-                     hr_mi +
-                    set_rescor(rescor=FALSE), 
-                            data=combine_dv_noimpute,
-                            chains=1,threads=18,
-                            warmup = 500,iter = 1000,
-                   backend="cmdstanr")
+if(run_mod) {
+  
+  contact_mod <- brm(bf(contact ~ cases_per_cap + deaths_per_cap +
+                          me(med_biz,sdx = sd_biz) +
+                          me(med_hm2,sdx=sd_hm2) +
+                          me(med_sd,sdx = sd_sd) +
+                          me(med_school,sdx = sd_school) +
+                          me(med_masks,sdx = sd_masks) +
+                          me(med_hr,sdx = sd_hr) +
+                          date_policy_fac) +
+                       set_mecor(TRUE), 
+                     prior=prior(normal(0,1),class="meanme") + 
+                       prior(exponential(1),class="sdme") +
+                       prior(normal(0,5),class="b"),
+                     data=combine_dv_noimpute,
+                     chains=1,threads=18,
+                     warmup = 500,iter = 1000,
+                     backend="cmdstanr")
+  
+  saveRDS(contact_mod, "data/contact_mod_noimpute.rds")
+  
+} else {
+  
+  contact_mod <- readRDS("data/contact_mod_noimpute.rds")
+}
 
-saveRDS(contact_mod, "data/contact_mod.rds")
+
+
+
+
+library(modelsummary)
+library(kableExtra)
+library(posterior)
+
+contact_mod_sum <- as_draws_array(contact_mod,
+                                  variable="sdx|cap",
+                                  regex=T) %>% 
+  summarize_draws()
+
+contact_mod_sum %>% 
+  mutate(variable=recode(variable,
+                         b_cases_per_cap="Cases Per Capita",
+                         b_deaths_per_cap="Deaths Per Capita",
+                         bsp_memed_bizsdxEQsd_biz="Business Restrictions",
+                           bsp_memed_hm2sdxEQsd_hm2="Health Management",
+                           bsp_memed_sdsdxEQsd_sd="Social Distancing",
+                           bsp_memed_schoolsdxEQsd_school="School Restrictions",
+                           bsp_memed_maskssdxEQsd_masks="Masks",
+                           bsp_memed_hrsdxEQsd_hr="Health Resources"),
+         Estimate=paste0(round(median,digits=3)," (",round(q5,digits=3),
+                         ", ",
+                         round(q95,digits=3),
+                         ")"),
+         rhat=round(rhat,digits=3)) %>% 
+  select(Variable="variable",`Posterior Median and 5% -95% Interval`="Estimate",
+         rhat) %>% 
+  kable(format="latex",caption="Estimates of Regression of Contact Rates on Policy Intensity Scores",
+        label="contact_mod",
+        booktabs=T,
+        align = c("l", "r", "r")) %>% 
+  kable_styling(latex_options = c("striped","hold_position")) %>% 
+     footnote(general="Coefficients are the posterior median values and the uncertainty intervals are the 5% to 95% posterior density intervals. Cases per capita and deaths per capita were both standardized within country. Not shown are day fixed effects and the estimated posterior values of the intensity scores incorporating measurement error. The R-hat statistic measures the ability of the independent MCMC runs of the sampler to converge, with values less than or equal to 1 being preferred.",
+              threeparttable = T) %>% 
+  save_kable("contact_mod_table.tex",keep_tex=T)
+
+# visualize covariance matrix
+
+viz_cov_sum<- as_draws_array(contact_mod,
+                               variable="corme",
+                               regex=T) %>% 
+  summarize_draws() %>% 
+  mutate(all_match=str_extract_all(variable,"biz|hm2|sd|hr|mask|school"),
+         Var1=sapply(all_match, function(x) x[1]),
+         Var2=sapply(all_match, function(x) x[2]),
+         Var1=recode(Var1,
+                     biz="Business Restrictions",
+                     sd="Social Distancing",
+                     school="School Restrictions",
+                     mask="Mask Policies",
+                     hm2="Health Monitoring",
+                     hr="Health Resources"),
+         Var2=recode(Var2,
+                     biz="Business Restrictions",
+                     sd="Social Distancing",
+                     school="School Restrictions",
+                     mask="Mask Policies",
+                     hm2="Health Management",
+                     hr="Health Resources"))
+
+all_combos <- expand(viz_cov_sum, Var1, Var2)
+
+all_combos <- left_join(all_combos,viz_cov_sum) %>% 
+  filter(Var1!=Var2)
+
+all_combos2 <- all_combos %>% 
+  select(median,Var1="Var2",
+         Var2="Var1")
+
+all_combos <- bind_rows(all_combos,
+                        all_combos2) %>% 
+  filter(!is.na(median))
+
+all_combos %>% 
+  ggplot(aes(x=Var1,y=Var2,fill=median)) +
+  geom_tile() +
+  scale_fill_viridis_c(name="Correlation") +
+  theme_tufte() +
+  theme(axis.text.x =element_text(angle=90)) +
+  labs(x="",y="")
+
+ggsave("contact_mod_corr.pdf",width=6,height=4)
 
 
 # drop this model

@@ -213,7 +213,7 @@ rm(biz_mod)
 
 # Mask --------------------------------------------------------------------
 
-mask_mod <- readRDS("coronanet/activity_fit_mask_random_walk_run_1_RR.rds")
+mask_mod <- readRDS("coronanet/activity_fit_mask_random_walk_run_1_RR_nochange.rds")
 
 sum_time <- filter(mask_mod@summary,grepl(x=variable,pattern="tp1"))
 
@@ -348,7 +348,7 @@ rm(mask_mod)
 
 # Health monitoring -------------------------------------------------------
 
-hm2_mod <- readRDS("coronanet/activity_fit_hm2_random_walk_run_1_RR.rds")
+hm2_mod <- readRDS("coronanet/activity_fit_hm2_random_walk_run_1_RR_nochange.rds")
 
 sum_time <- filter(hm2_mod@summary,grepl(x=variable,pattern="tp1"))
 
