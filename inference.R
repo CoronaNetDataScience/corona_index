@@ -24,7 +24,7 @@ paper_output <- T
 
 # run everything from scratch
 
-load_data <- T
+load_data <- F
 run_mod <- T
 mult_pull <- F
 
