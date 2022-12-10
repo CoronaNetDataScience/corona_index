@@ -988,7 +988,7 @@ hr <- readRDS("coronanet/hr_discrim_object.rds")
 (mask + hm2) / (hr + school)
 
 ggsave("plots/discrim1.png",height=7.5,width=6)
-ggsave("plots/discrim1.pdf",width=6,height=4)
+ggsave("plots/discrim1.pdf",width=6,height=7.5)
 
 (sd + biz) 
 
