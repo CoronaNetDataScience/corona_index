@@ -271,7 +271,8 @@ combine_dv_noimpute <- left_join(combine_dv_noimpute, all_mods_sd,
          gdp_pc=as.numeric(scale(gdppc2019)),
          cases_per_cap=as.numeric(scale(cases/exp(pop_tot_log))),
          deaths_per_cap=as.numeric(scale(deaths/exp(pop_tot_log))),
-         mean_sd = (sd_school + sd_biz + sd_sd)/3)
+         mean_sd = (sd_school + sd_biz + sd_sd)/3) %>% 
+  mutate_at(matches("med"), ~ as.numeric(scale(.)))
 
 
 # Predicting contact rates ------------------------------------------------
@@ -304,11 +305,11 @@ if(run_mod) {
                        prior(exponential(1),class="sdme") +
                        prior(normal(0,5),class="b"),
                      data=combine_dv_noimpute,
-                     chains=1,threads=18,
+                     chains=1,threads=parallel::detectCores(),max_treedepth=12,
                      warmup = 500,iter = 1000,
                      backend="cmdstanr")
   
-  saveRDS(contact_mod, "data/contact_mod_noimpute.rds")
+  saveRDS(contact_mod, "/scratch/rmk7/coronanet/contact_mod_noimpute.rds")
   
 } else {
   
