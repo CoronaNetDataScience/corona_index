@@ -272,7 +272,7 @@ combine_dv_noimpute <- left_join(combine_dv_noimpute, all_mods_sd,
          cases_per_cap=as.numeric(scale(cases/exp(pop_tot_log))),
          deaths_per_cap=as.numeric(scale(deaths/exp(pop_tot_log))),
          mean_sd = (sd_school + sd_biz + sd_sd)/3) %>% 
-  mutate_at(matches("med"), ~ as.numeric(scale(.)))
+  mutate_at(vars(matches("med")), ~ as.numeric(scale(.)))
 
 
 # Predicting contact rates ------------------------------------------------
