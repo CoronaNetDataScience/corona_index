@@ -8,7 +8,7 @@ library(ggthemes)
 theme_set(theme_tufte() +theme(text=element_text(family="")))
 
 
-sim_vals <- readRDS("data/over_sims.rds")
+sim_vals <- readRDS("data/over_sims_2000.rds")
 
 sim_vals_err <- sapply(sim_vals, function(x) 'data.frame' %in% class(x))
 
@@ -54,4 +54,25 @@ tp2 <- tp1 +
           subtitle="True Effect is -2") +
   theme(plot.background = element_rect(colour="white"))
 ggsave("monte_carlo_irt.png",dpi=500,plot=tp2)
+
+just_vals %>% 
+  mutate(coef_sig_rat_glm=coefs_pos_sig/(coefs_pos_sig + coefs_neg_sig),
+         coef_sig_rat_lasso=coefs_pos_sig_lasso/(coefs_pos_sig_lasso + coefs_neg_sig_lasso),
+         coef_sig_rat_lowvif=coefs_pos_sig_lasso/(coefs_pos_sig_lowvif + coefs_neg_sig_lowvif)) %>% 
+  gather(key="Model Type",value="stat", coef_sig_rat_glm,coef_sig_rat_lasso,
+         coef_sig_rat_lowvif) %>% 
+  mutate(`Model Type`=case_when(grepl(x=`Model Type`,pattern="lasso")~"Lasso",
+                                grepl(x=`Model Type`,pattern="lowvif")~"Low VIF",
+                                TRUE~"Linear")) %>% 
+  ggplot(aes(x=stat)) +
+  geom_density(aes(fill=`Model Type`),
+               alpha=0.5,colour=NA) +
+  scale_fill_viridis_d() +
+  xlim(c(0,1)) +
+  scale_x_continuous(labels=scales::percent) +
+  theme_tufte() +
+  labs(x="% Positive of Estimated Coefficients",y="",
+       caption=stringr::str_wrap("Plot shows the positive proportion of estimated policy indicator coefficients in both a linear model and a Lasso model on simulated COVID-19 case counts from 1434 simulation draws. A distribution of linear model coefficients with the top two highest variance inflation factor scores excluded is also shown."))
+
+ggsave("pos_coef.pdf")
 

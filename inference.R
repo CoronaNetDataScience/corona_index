@@ -81,19 +81,19 @@ saveRDS(all_mods_data,'indices/all_indices.rds')
 
 # make a combined data file
 
-all_inds <- lapply(list.files(path="coronanet/",pattern="long\\_model",full.names=T),
-                   readRDS) %>% 
-  bind_rows %>% 
-  select(country,item,date_policy,pop_out) %>% 
-  group_by(country,item,date_policy) %>% 
-  summarize(pop_out=max(pop_out))
-
-all_inds_weighted <- all_inds %>% 
-  ungroup %>% 
-  spread(key="item",value="pop_out")
-
-saveRDS(all_inds_weighted, "indices/all_inds_weighted.rds")
-write_csv(all_inds_weighted,"indices/all_inds_weighted.csv")
+# all_inds <- lapply(list.files(path="coronanet/",pattern="long\\_model",full.names=T),
+#                    readRDS) %>% 
+#   bind_rows %>% 
+#   select(country,item,date_policy,pop_out) %>% 
+#   group_by(country,item,date_policy) %>% 
+#   summarize(pop_out=max(pop_out))
+# 
+# all_inds_weighted <- all_inds %>% 
+#   ungroup %>% 
+#   spread(key="item",value="pop_out")
+# 
+# saveRDS(all_inds_weighted, "indices/all_inds_weighted.rds")
+# write_csv(all_inds_weighted,"indices/all_inds_weighted.csv")
 
 if(load_data) {
   
