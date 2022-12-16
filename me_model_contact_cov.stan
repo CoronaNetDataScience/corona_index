@@ -150,7 +150,7 @@ transformed parameters {
     - 1 * student_t_lccdf(0 | 3, 0, 2.5);
   lprior += normal_lpdf(meanme_1 | 0, 1);
   lprior += exponential_lpdf(sdme_1 | 1);
-  lprior += lkj_corr_cholesky_lpdf(Lme_1 | 1);
+  lprior += lkj_corr_cholesky_lpdf(Lme_1 | 2);
 }
 model {
   // likelihood including constants
