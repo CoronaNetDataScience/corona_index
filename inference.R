@@ -302,7 +302,7 @@ if(run_mod) {
                           me(med_masks,sdx = sd_masks) +
                           me(med_hr,sdx = sd_hr) +
                           date_policy_fac) +
-                       set_mecor(FALSE), 
+                       set_mecor(TRUE), 
                      prior=prior(normal(0,1),class="meanme") + 
                        prior(exponential(1),class="sdme") +
                        prior(normal(0,5),class="b"),
@@ -311,7 +311,7 @@ if(run_mod) {
                      warmup = 500,iter = 1000,
                      backend="cmdstanr")
   
-  contact_mod_code <- cmdstan_model("me_model_contact.stan",
+  contact_mod_code <- cmdstan_model("me_model_contact_cov.stan",
                                     cpp_options = list(stan_threads = TRUE))
   
   contact_mod <- contact_mod_code$sample(data=contact_mod_data,
