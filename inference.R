@@ -306,7 +306,7 @@ if(run_mod) {
                      prior=prior(normal(0,1),class="meanme") + 
                        prior(exponential(1),class="sdme") +
                        prior(normal(0,5),class="b"),
-                     data=test_set,
+                     data=combine_dv_noimpute,
                      chains=1,threads=parallel::detectCores(),max_treedepth=12,
                      warmup = 500,iter = 1000,
                      backend="cmdstanr")
