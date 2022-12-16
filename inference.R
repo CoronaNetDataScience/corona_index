@@ -351,7 +351,7 @@ if(run_mod) {
                                       warmup = 500,iter = 1000,
                                       backend="cmdstanr")
     
-    contact_mod_code <- cmdstan_model("me_model_contact_cov.stan",
+    contact_mod_code <- cmdstan_model("me_model_contact.stan",
                                       cpp_options = list(stan_threads = TRUE))
     
     contact_mod <- contact_mod_code$sample(data=contact_mod_data,
