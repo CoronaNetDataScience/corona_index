@@ -320,7 +320,7 @@ if(run_mod) {
                                          refresh=100,
                                          chains=1,iter_warmup=500,
                                          iter_sampling=500,
-                                         max_treedepth=12,
+                                         max_treedepth=10,
                                          threads_per_chain=parallel::detectCores())
   
   saveRDS(contact_mod, "/scratch/rmk7/coronanet/contact_mod_noimpute.rds")
