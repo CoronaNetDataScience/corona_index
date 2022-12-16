@@ -29,7 +29,7 @@ model_cor <- Sys.getenv("MODELCOR")
 # run everything from scratch
 
 load_data <- F
-run_mod <- F
+run_mod <- T
 mult_pull <- F
 
 # load time-varying estimates
@@ -386,7 +386,7 @@ library(kableExtra)
 library(posterior)
 
 contact_mod_sum <- subset_draws(contact_mod,
-                                variable=c("b\\[[12]\\]|bsp|corme"),
+                                variable=c("b\\[[12]\\]|bsp"),
                                 regex=T) %>% 
   summarize_draws()
 
