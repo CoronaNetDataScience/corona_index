@@ -292,7 +292,9 @@ library(ordbetareg)
 
 if(run_mod) {
   
-  contact_mod <- brm(bf(contact ~ cases_per_cap + deaths_per_cap +
+  # make code and edit it a bit
+  
+  contact_mod_data <- make_standata(bf(contact ~ cases_per_cap + deaths_per_cap +
                           me(med_biz,sdx = sd_biz) +
                           me(med_hm2,sdx=sd_hm2) +
                           me(med_sd,sdx = sd_sd) +
@@ -304,10 +306,22 @@ if(run_mod) {
                      prior=prior(normal(0,1),class="meanme") + 
                        prior(exponential(1),class="sdme") +
                        prior(normal(0,5),class="b"),
-                     data=combine_dv_noimpute,
+                     data=test_set,
                      chains=1,threads=parallel::detectCores(),max_treedepth=12,
                      warmup = 500,iter = 1000,
                      backend="cmdstanr")
+  
+  contact_mod_code <- cmdstan_model("me_model_contact.stan",
+                                    cpp_options = list(stan_threads = TRUE),
+                                    force_recompile=TRUE)
+  
+  contact_mod <- contact_mod_code$sample(data=contact_mod_data,
+                                         seed=638825,
+                                         refresh=100,
+                                         chains=1,iter_warmup=500,
+                                         iter_sampling=500,
+                                         max_treedepth=12,
+                                         threads_per_chain=parallel::detectCores())
   
   saveRDS(contact_mod, "/scratch/rmk7/coronanet/contact_mod_noimpute.rds")
   
