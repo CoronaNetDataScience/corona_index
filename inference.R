@@ -314,7 +314,7 @@ if(run_mod) {
                                         prior(normal(0,5),class="b"),
                                       data=test_set,
                                       chains=1,threads=parallel::detectCores(),max_treedepth=12,
-                                      warmup = 500,iter = 1000,
+                                      warmup = 1000,iter = 500,
                                       backend="cmdstanr")
     
     contact_mod_code <- cmdstan_model("me_model_contact_cov.stan",
