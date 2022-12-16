@@ -312,15 +312,14 @@ if(run_mod) {
                      backend="cmdstanr")
   
   contact_mod_code <- cmdstan_model("me_model_contact.stan",
-                                    cpp_options = list(stan_threads = TRUE),
-                                    force_recompile=TRUE)
+                                    cpp_options = list(stan_threads = TRUE))
   
   contact_mod <- contact_mod_code$sample(data=contact_mod_data,
                                          seed=638825,
                                          refresh=100,
                                          chains=1,iter_warmup=500,
                                          iter_sampling=500,
-                                         max_treedepth=10,
+                                         max_treedepth=12,
                                          threads_per_chain=parallel::detectCores())
   
   saveRDS(contact_mod, "/scratch/rmk7/coronanet/contact_mod_noimpute.rds")
