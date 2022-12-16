@@ -29,7 +29,7 @@ model_cor <- Sys.getenv("MODELCOR")
 # run everything from scratch
 
 load_data <- F
-run_mod <- T
+run_mod <- F
 mult_pull <- F
 
 # load time-varying estimates
@@ -348,7 +348,7 @@ if(run_mod) {
                                         prior(normal(0,5),class="b"),
                                       data=combine_dv_noimpute,
                                       chains=1,threads=parallel::detectCores(),max_treedepth=12,
-                                      warmup = 500,iter = 1000,
+                                      warmup = 1000,iter = 1500,
                                       backend="cmdstanr")
     
     contact_mod_code <- cmdstan_model("me_model_contact.stan",
@@ -373,7 +373,8 @@ if(run_mod) {
   
 } else {
   
-  contact_mod <- readRDS("data/contact_mod_noimpute.rds")
+  contact_mod <- readRDS("coronanet/contact_mod_noimpute.rds")
+  
 }
 
 
@@ -384,21 +385,22 @@ library(modelsummary)
 library(kableExtra)
 library(posterior)
 
-contact_mod_sum <- as_draws_array(contact_mod,
-                                  variable="sdx|cap",
-                                  regex=T) %>% 
+contact_mod_sum <- subset_draws(contact_mod,
+                                variable=c("b\\[[12]\\]|bsp|corme"),
+                                regex=T) %>% 
   summarize_draws()
+
 
 contact_mod_sum %>% 
   mutate(variable=recode(variable,
-                         b_cases_per_cap="Cases Per Capita",
-                         b_deaths_per_cap="Deaths Per Capita",
-                         bsp_memed_bizsdxEQsd_biz="Business Restrictions",
-                           bsp_memed_hm2sdxEQsd_hm2="Health Management",
-                           bsp_memed_sdsdxEQsd_sd="Social Distancing",
-                           bsp_memed_schoolsdxEQsd_school="School Restrictions",
-                           bsp_memed_maskssdxEQsd_masks="Masks",
-                           bsp_memed_hrsdxEQsd_hr="Health Resources"),
+                         `b[1]`="Cases Per Capita",
+                         `b[2]`="Deaths Per Capita",
+                         `bsp[1]`="Business Restrictions",
+                         `bsp[2]`="Health Management",
+                         `bsp[3]`="Social Distancing",
+                         `bsp[4]`="School Restrictions",
+                         `bsp[5]`="Masks",
+                         `bsp[6]`="Health Resources"),
          Estimate=paste0(round(median,digits=3)," (",round(q5,digits=3),
                          ", ",
                          round(q95,digits=3),
@@ -417,8 +419,8 @@ contact_mod_sum %>%
 
 # visualize covariance matrix
 
-viz_cov_sum<- as_draws_array(contact_mod,
-                               variable="corme",
+viz_cov_sum<- subset_draws(contact_mod,
+                               variable="corme_1",
                                regex=T) %>% 
   summarize_draws() %>% 
   mutate(all_match=str_extract_all(variable,"biz|hm2|sd|hr|mask|school"),
