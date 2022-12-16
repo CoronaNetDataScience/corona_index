@@ -22,6 +22,10 @@ num_cores <- parallel::detectCores()
 # whether to generate tables/figures
 paper_output <- T
 
+# whether to model inter-score correlation
+
+model_cor <- Sys.getenv("MODELCOR")
+
 # run everything from scratch
 
 load_data <- F
@@ -294,35 +298,78 @@ if(run_mod) {
   
   # make code and edit it a bit
   
-  contact_mod_data <- make_standata(bf(contact ~ cases_per_cap + deaths_per_cap +
-                          me(med_biz,sdx = sd_biz) +
-                          me(med_hm2,sdx=sd_hm2) +
-                          me(med_sd,sdx = sd_sd) +
-                          me(med_school,sdx = sd_school) +
-                          me(med_masks,sdx = sd_masks) +
-                          me(med_hr,sdx = sd_hr) +
-                          date_policy_fac) +
-                       set_mecor(TRUE), 
-                     prior=prior(normal(0,1),class="meanme") + 
-                       prior(exponential(1),class="sdme") +
-                       prior(normal(0,5),class="b"),
-                     data=combine_dv_noimpute,
-                     chains=1,threads=parallel::detectCores(),max_treedepth=12,
-                     warmup = 500,iter = 1000,
-                     backend="cmdstanr")
+  if(model_cor) {
+    
+    contact_mod_data <- make_standata(bf(contact ~ cases_per_cap + deaths_per_cap +
+                                           me(med_biz,sdx = sd_biz) +
+                                           me(med_hm2,sdx=sd_hm2) +
+                                           me(med_sd,sdx = sd_sd) +
+                                           me(med_school,sdx = sd_school) +
+                                           me(med_masks,sdx = sd_masks) +
+                                           me(med_hr,sdx = sd_hr) +
+                                           date_policy_fac) +
+                                        set_mecor(TRUE), 
+                                      prior=prior(normal(0,1),class="meanme") + 
+                                        prior(exponential(1),class="sdme") +
+                                        prior(normal(0,5),class="b"),
+                                      data=test_set,
+                                      chains=1,threads=parallel::detectCores(),max_treedepth=12,
+                                      warmup = 500,iter = 1000,
+                                      backend="cmdstanr")
+    
+    contact_mod_code <- cmdstan_model("me_model_contact_cov.stan",
+                                      cpp_options = list(stan_threads = TRUE))
+    
+    contact_mod <- contact_mod_code$sample(data=contact_mod_data,
+                                           seed=638825,
+                                           refresh=100,
+                                           chains=1,iter_warmup=500,
+                                           iter_sampling=500,
+                                           max_treedepth=12,
+                                           threads_per_chain=parallel::detectCores())
+    
+    contact_mod_samp <- contact_mod$draws(variables=c("b","bsp","corme"))
+    
+    saveRDS(contact_mod, "/scratch/rmk7/coronanet/contact_mod_noimpute.rds")
+    
+  } else {
+    
+    contact_mod_data <- make_standata(bf(contact ~ cases_per_cap + deaths_per_cap +
+                                           me(med_biz,sdx = sd_biz) +
+                                           me(med_hm2,sdx=sd_hm2) +
+                                           me(med_sd,sdx = sd_sd) +
+                                           me(med_school,sdx = sd_school) +
+                                           me(med_masks,sdx = sd_masks) +
+                                           me(med_hr,sdx = sd_hr) +
+                                           date_policy_fac) +
+                                        set_mecor(TRUE), 
+                                      prior=prior(normal(0,1),class="meanme") + 
+                                        prior(exponential(1),class="sdme") +
+                                        prior(normal(0,5),class="b"),
+                                      data=combine_dv_noimpute,
+                                      chains=1,threads=parallel::detectCores(),max_treedepth=12,
+                                      warmup = 500,iter = 1000,
+                                      backend="cmdstanr")
+    
+    contact_mod_code <- cmdstan_model("me_model_contact_cov.stan",
+                                      cpp_options = list(stan_threads = TRUE))
+    
+    contact_mod <- contact_mod_code$sample(data=contact_mod_data,
+                                           seed=638825,
+                                           refresh=100,
+                                           chains=1,iter_warmup=500,
+                                           iter_sampling=500,
+                                           max_treedepth=12,
+                                           threads_per_chain=parallel::detectCores())
+    
+    contact_mod_samp <- contact_mod$draws(variables=c("b","bsp"))
+    
+    saveRDS(contact_mod_samp, "/scratch/rmk7/coronanet/contact_mod_noimpute_nocor.rds")
+    
+    
+  }
   
-  contact_mod_code <- cmdstan_model("me_model_contact_cov.stan",
-                                    cpp_options = list(stan_threads = TRUE))
   
-  contact_mod <- contact_mod_code$sample(data=contact_mod_data,
-                                         seed=638825,
-                                         refresh=100,
-                                         chains=1,iter_warmup=500,
-                                         iter_sampling=500,
-                                         max_treedepth=12,
-                                         threads_per_chain=parallel::detectCores())
-  
-  saveRDS(contact_mod, "/scratch/rmk7/coronanet/contact_mod_noimpute.rds")
   
 } else {
   
