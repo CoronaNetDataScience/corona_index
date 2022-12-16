@@ -298,7 +298,7 @@ if(run_mod) {
   
   # make code and edit it a bit
   
-  if(model_cor) {
+  if(model_cor=="yes") {
     
     contact_mod_data <- make_standata(bf(contact ~ cases_per_cap + deaths_per_cap +
                                            me(med_biz,sdx = sd_biz) +
