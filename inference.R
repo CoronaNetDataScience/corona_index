@@ -300,7 +300,7 @@ if(run_mod) {
                           me(med_masks,sdx = sd_masks) +
                           me(med_hr,sdx = sd_hr) +
                           date_policy_fac) +
-                       set_mecor(TRUE), 
+                       set_mecor(FALSE), 
                      prior=prior(normal(0,1),class="meanme") + 
                        prior(exponential(1),class="sdme") +
                        prior(normal(0,5),class="b"),
