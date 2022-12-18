@@ -323,8 +323,8 @@ if(run_mod) {
     contact_mod <- contact_mod_code$sample(data=contact_mod_data,
                                            seed=638825,
                                            refresh=100,
-                                           chains=1,iter_warmup=1000,
-                                           iter_sampling=500,
+                                           chains=2,iter_warmup=1000,
+                                           iter_sampling=1000,
                                            max_treedepth=15,
                                            threads_per_chain=parallel::detectCores())
     
@@ -460,7 +460,8 @@ all_combos %>%
   scale_fill_viridis_c(name="Correlation") +
   theme_tufte() +
   theme(axis.text.x =element_text(angle=90)) +
-  labs(x="",y="")
+  labs(x="",y="") +
+  theme(text=element_text(family=""))
 
 ggsave("contact_mod_corr.pdf",width=6,height=4)
 
