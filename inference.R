@@ -324,14 +324,14 @@ if(run_mod) {
                                            seed=638825,
                                            refresh=100,
                                            chains=4,iter_warmup=1000,
-                                           iter_sampling=1000,
+                                           iter_sampling=2000,
                                            max_treedepth=15,
                                            parallel_chains=4,
                                            threads_per_chain=parallel::detectCores()/2)
     
     contact_mod_samp <- contact_mod$draws(variables=c("b","bsp","corme_1"))
     
-    saveRDS(contact_mod_samp, "/scratch/rmk7/coronanet/contact_mod_noimpute.rds")
+    saveRDS(contact_mod, "/scratch/rmk7/coronanet/contact_mod_noimpute.rds")
     
   } else {
     
