@@ -323,10 +323,10 @@ if(run_mod) {
     contact_mod <- contact_mod_code$sample(data=contact_mod_data,
                                            seed=638825,
                                            refresh=100,
-                                           chains=2,iter_warmup=1000,
+                                           chains=4,iter_warmup=1000,
                                            iter_sampling=1000,
                                            max_treedepth=15,
-                                           parallel_chains=2,
+                                           parallel_chains=4,
                                            threads_per_chain=parallel::detectCores()/2)
     
     contact_mod_samp <- contact_mod$draws(variables=c("b","bsp","corme_1"))
