@@ -323,7 +323,7 @@ if(run_mod) {
     contact_mod <- contact_mod_code$sample(data=contact_mod_data,
                                            seed=638825,
                                            refresh=100,
-                                           chains=2,iter_warmup=500,
+                                           chains=4,iter_warmup=500,
                                            iter_sampling=1000,
                                            max_treedepth=15,
                                            parallel_chains=2,
