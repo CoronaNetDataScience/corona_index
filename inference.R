@@ -312,7 +312,7 @@ if(run_mod) {
                                       prior=prior(normal(0,1),class="meanme") + 
                                         prior(exponential(1),class="sdme") +
                                         prior(normal(0,5),class="b"),
-                                      data=test_set,
+                                      data=combine_dv_noimpute,
                                       chains=1,threads=parallel::detectCores(),max_treedepth=12,
                                       warmup = 1000,iter = 500,
                                       backend="cmdstanr")
@@ -323,10 +323,10 @@ if(run_mod) {
     contact_mod <- contact_mod_code$sample(data=contact_mod_data,
                                            seed=638825,
                                            refresh=100,
-                                           chains=4,iter_warmup=1000,
-                                           iter_sampling=2000,
+                                           chains=2,iter_warmup=500,
+                                           iter_sampling=500,
                                            max_treedepth=15,
-                                           parallel_chains=4,
+                                           parallel_chains=2,
                                            threads_per_chain=parallel::detectCores()/2)
     
     contact_mod_samp <- contact_mod$draws(variables=c("b","bsp","corme_1"))
