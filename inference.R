@@ -324,7 +324,7 @@ if(run_mod) {
                                            seed=638825,
                                            refresh=100,
                                            chains=2,iter_warmup=500,
-                                           iter_sampling=500,
+                                           iter_sampling=1000,
                                            max_treedepth=15,
                                            parallel_chains=2,
                                            threads_per_chain=parallel::detectCores()/2)
