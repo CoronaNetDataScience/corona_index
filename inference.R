@@ -326,7 +326,8 @@ if(run_mod) {
                                            chains=2,iter_warmup=1000,
                                            iter_sampling=1000,
                                            max_treedepth=15,
-                                           threads_per_chain=parallel::detectCores())
+                                           parallel_chains=2,
+                                           threads_per_chain=parallel::detectCores()/2)
     
     contact_mod_samp <- contact_mod$draws(variables=c("b","bsp","corme_1"))
     
