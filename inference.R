@@ -331,7 +331,7 @@ if(run_mod) {
                                            parallel_chains=4,
                                            threads_per_chain=floor(parallel::detectCores()/4))
     
-    contact_mod_samp <- contact_mod$draws(variables=c("b","bsp","corme_1"))
+    #contact_mod_samp <- contact_mod$draws(variables=c("b","bsp",""))
     
     saveRDS(contact_mod, "/scratch/rmk7/coronanet/contact_mod_noimpute.rds")
     
@@ -365,7 +365,7 @@ if(run_mod) {
                                            max_treedepth=12,
                                            threads_per_chain=parallel::detectCores()/4)
     
-    contact_mod_samp <- contact_mod$draws(variables=c("b","bsp"))
+    #contact_mod_samp <- contact_mod$draws(variables=c("b","bsp"))
     
     saveRDS(contact_mod, "/scratch/rmk7/coronanet/contact_mod_noimpute_nocor.rds")
     
