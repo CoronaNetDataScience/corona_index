@@ -109,7 +109,8 @@ parameters {
   vector[N] Xme_6;
 
   //matrix[Mme_1, N] zme_1;  // standardized latent values
-  cholesky_factor_corr[Mme_1] Lme_1;  // cholesky factor of the latent correlation matrix
+  //cholesky_factor_corr[Mme_1] Lme_1;  // cholesky factor of the latent correlation matrix
+  corr_matrix[Mme_1] Omega;        // prior correlation
   //vector[N] zme_1;  // standardized latent values
   //vector[N] zme_2;  // standardized latent values
   //vector[N] zme_3;  // standardized latent values
@@ -149,9 +150,8 @@ transformed parameters {
   lprior += normal_lpdf(bsp | 0, 5);
   lprior += student_t_lpdf(sigma | 3, 0, 2.5)
     - 1 * student_t_lccdf(0 | 3, 0, 2.5);
-  lprior += normal_lpdf(meanme_1 | 0, 1);
   lprior += exponential_lpdf(sdme_1 | 1);
-  lprior += lkj_corr_cholesky_lpdf(Lme_1 | 4);
+  //lprior += lkj_corr_cholesky_lpdf(Lme_1 | 4);
 }
 model {
   // likelihood including constants
@@ -163,6 +163,8 @@ model {
                         noise_1, noise_2, noise_3, noise_4, noise_5, noise_6,
                         meanme_1,sdme_1);
   }
+  Omega ~ lkj_corr(2);
+  meanme_1 ~ multi_normal(rep_vector(0,Mme_1), quad_form_diag(Omega, sdme_1));
   // priors including constants
   target += lprior;
 }
@@ -170,12 +172,12 @@ generated quantities {
   // actual population-level intercept
   real b_Intercept = Intercept - dot_product(means_X, b);
   // obtain latent correlation matrix
-  corr_matrix[Mme_1] Corme_1 = multiply_lower_tri_self_transpose(Lme_1);
-  vector<lower=-1,upper=1>[NCme_1] corme_1;
+  //corr_matrix[Mme_1] Corme_1 = multiply_lower_tri_self_transpose(Lme_1);
+  //vector<lower=-1,upper=1>[NCme_1] corme_1;
   // extract upper diagonal of correlation matrix
-  for (k in 1:Mme_1) {
-    for (j in 1:(k - 1)) {
-      corme_1[choose(k - 1, 2) + j] = Corme_1[j, k];
-    }
-  }
+  //for (k in 1:Mme_1) {
+  //  for (j in 1:(k - 1)) {
+  //    corme_1[choose(k - 1, 2) + j] = Corme_1[j, k];
+  //  }
+  //}
 }
