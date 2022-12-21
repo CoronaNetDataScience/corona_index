@@ -29,7 +29,7 @@ model_cor <- Sys.getenv("MODELCOR")
 # run everything from scratch
 
 load_data <- F
-run_mod <- T
+run_mod <- F
 mult_pull <- F
 
 # load time-varying estimates
@@ -317,7 +317,9 @@ if(run_mod) {
                                       warmup = 1000,iter = 500,
                                       backend="cmdstanr")
     
-    contact_mod_code <- cmdstan_model("me_model_contact_cov.stan",
+    # use centered parameterization for latent variables because of large number 
+    
+    contact_mod_code <- cmdstan_model("me_model_contact_cov_centered.stan",
                                       cpp_options = list(stan_threads = TRUE))
     
     contact_mod <- contact_mod_code$sample(data=contact_mod_data,
@@ -327,7 +329,7 @@ if(run_mod) {
                                            iter_sampling=250,
                                            max_treedepth=12,
                                            parallel_chains=4,
-                                           threads_per_chain=parallel::detectCores()/4)
+                                           threads_per_chain=3)
     
     contact_mod_samp <- contact_mod$draws(variables=c("b","bsp","corme_1"))
     
@@ -386,9 +388,8 @@ library(modelsummary)
 library(kableExtra)
 library(posterior)
 
-contact_mod_sum <- subset_draws(contact_mod,
-                                variable=c("b\\[[12]\\]|bsp"),
-                                regex=T) %>% 
+contact_mod_sum <- contact_mod$draws(variables = c("b[1]","b[2]",
+                                                   "bsp")) %>% 
   summarize_draws()
 
 
