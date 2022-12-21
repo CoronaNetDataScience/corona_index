@@ -325,8 +325,8 @@ if(run_mod) {
     contact_mod <- contact_mod_code$sample(data=contact_mod_data,
                                            seed=638825,
                                            refresh=100,
-                                           chains=4,iter_warmup=250,
-                                           iter_sampling=250,
+                                           chains=4,iter_warmup=1000,
+                                           iter_sampling=500,
                                            max_treedepth=12,
                                            parallel_chains=4,
                                            threads_per_chain=floor(parallel::detectCores()/4))
