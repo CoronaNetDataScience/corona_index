@@ -29,7 +29,7 @@ model_cor <- Sys.getenv("MODELCOR")
 # run everything from scratch
 
 load_data <- F
-run_mod <- F
+run_mod <- T
 mult_pull <- F
 
 # load time-varying estimates
@@ -312,7 +312,7 @@ if(run_mod) {
                                       prior=prior(normal(0,1),class="meanme") + 
                                         prior(exponential(1),class="sdme") +
                                         prior(normal(0,5),class="b"),
-                                      data=combine_dv_noimpute,
+                                      data=test_set,
                                       chains=1,threads=parallel::detectCores()/2,max_treedepth=12,
                                       warmup = 1000,iter = 500,
                                       backend="cmdstanr")
