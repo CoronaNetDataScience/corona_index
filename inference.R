@@ -331,9 +331,10 @@ if(run_mod) {
                                            parallel_chains=4,
                                            threads_per_chain=floor(parallel::detectCores()/4))
     
-    #contact_mod_samp <- contact_mod$draws(variables=c("b","bsp",""))
+    contact_mod_samp <- contact_mod$draws(variables=c("b","bsp","Omega"))
     
     saveRDS(contact_mod, "/scratch/rmk7/coronanet/contact_mod_noimpute.rds")
+    saveRDS(contact_mod_samp, "/scratch/rmk7/coronanet/contact_mod_noimpute_samp.rds")
     
   } else {
     
