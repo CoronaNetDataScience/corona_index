@@ -16,7 +16,8 @@ require(RPostgres)
 
 # load CoronaNet Data in long form
 
-clean <- readRDS("data/coronanet_internal_allvars.rds")
+clean <- readRDS("data/coronanet_with_covid_amp.rds") %>% 
+  filter((grepl(x=record_id, pattern="COVIDAMP") & country=="United States of America" & init_country_level!="National") | ((grepl(x=record_id, pattern="R\\_") & country!="United States of America") | (country=="United States of America" & init_country_level=="National" & grepl(x=record_id, pattern="R\\_"))))
 
 # number cleaning function
 
