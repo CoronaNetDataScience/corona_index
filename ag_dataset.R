@@ -9,7 +9,6 @@ require(lubridate)
 require(readr)
 require(stringr)
 require(readxl)
-require(RPostgres)
 
 
 # setup -------------------------------------------------------------------
