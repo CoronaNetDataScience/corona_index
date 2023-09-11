@@ -312,14 +312,14 @@ if(run_mod) {
                                       prior=prior(normal(0,1),class="meanme") + 
                                         prior(exponential(1),class="sdme") +
                                         prior(normal(0,5),class="b"),
-                                      data=combine_dv_noimpute,
+                                      data=test_set,
                                       chains=1,threads=parallel::detectCores()/2,max_treedepth=12,
                                       warmup = 1000,iter = 500,
                                       backend="cmdstanr")
     
     # use centered parameterization for latent variables because of large number 
     
-    contact_mod_code <- cmdstan_model("me_model_contact_cov_centered.stan",
+    contact_mod_code <- cmdstan_model("me_ovb_contact_cov_centered.stan",
                                       cpp_options = list(stan_threads = TRUE))
     
     contact_mod <- contact_mod_code$sample(data=contact_mod_data,
@@ -329,12 +329,12 @@ if(run_mod) {
                                            iter_sampling=250,
                                            max_treedepth=12,
                                            parallel_chains=4,
-                                           threads_per_chain=floor(parallel::detectCores()/4))
+                                           threads_per_chain=as.integer(floor(parallel::detectCores()/4)))
     
     contact_mod_samp <- contact_mod$draws(variables=c("b","bsp","Omega"))
     
-    saveRDS(contact_mod, "/scratch/rmk7/coronanet/contact_mod_noimpute.rds")
-    saveRDS(contact_mod_samp, "/scratch/rmk7/coronanet/contact_mod_noimpute_samp.rds")
+    saveRDS(contact_mod, "coronanet/contact_mod_noimpute.rds")
+    saveRDS(contact_mod_samp, "coronanet/contact_mod_noimpute_samp.rds")
     
   } else {
     
@@ -368,7 +368,7 @@ if(run_mod) {
     
     #contact_mod_samp <- contact_mod$draws(variables=c("b","bsp"))
     
-    saveRDS(contact_mod, "/scratch/rmk7/coronanet/contact_mod_noimpute_nocor.rds")
+    saveRDS(contact_mod, "coronanet/contact_mod_noimpute_nocor.rds")
     
     
   }
@@ -527,7 +527,7 @@ ggsave("contact_mod_corr.pdf",width=6,height=4)
 #                     cores=num_cores,
 #                     max_treedepth=12)
 # 
-#   saveRDS(school_mod,"/scratch/rmk7/school_mod_rr.rds")
+#   saveRDS(school_mod,"school_mod_rr.rds")
 # 
 #   sd_mod <- brm_multiple(brmsformula(med_sd | mi(sd_sd) ~ trade + finance + state_fragility + bureaucracy_corrupt +
 #                               retail_and_recreation_percent_change_from_baseline +
@@ -554,7 +554,7 @@ ggsave("contact_mod_corr.pdf",width=6,height=4)
 #                 cores=num_cores,
 #                 max_treedepth=12)
 # 
-#   # saveRDS(sd_mod,"/scratch/rmk7/sd_mod_rr.rds")
+#   # saveRDS(sd_mod,"sd_mod_rr.rds")
 #   
 #   # combined model, average SDs
 #   
@@ -625,7 +625,7 @@ ggsave("contact_mod_corr.pdf",width=6,height=4)
 #                          cores=num_cores,
 #                          max_treedepth=12)
 #   
-#   saveRDS(mult_mod,"/scratch/rmk7/multivariate_mod_rr.rds")
+#   saveRDS(mult_mod,"multivariate_mod_rr.rds")
 #   
 # } else {
 #   

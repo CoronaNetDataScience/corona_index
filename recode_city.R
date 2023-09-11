@@ -1,54 +1,63 @@
 # need to have some dedicated code as the cities is quite a task!
-
+  
 require(forcats)
 
-  un_city_data <- read_csv("data/UNdata_Export_20210401_132806548.csv") %>% 
-    group_by(City,`Country or Area`) %>% 
-    filter(Year==max(Year),Sex=="Both Sexes") %>% 
-    select(pop="Value",City) %>% 
-    mutate(City_rec=str_remove_all(City,"\\(.+\\)|\\.|-"),
-    City_rec=str_remove_all(City_rec,
-                                   "[Dd]istrict|[Dd]istricts|([Tt]he)? ?[Cc]ity of|([Tt]he)? ?[Dd]epartments? of|([Tt]he)? ?[Rr]egency of|([Tt]he)? ?[Mm]unicipality of|([Tt]he)? ?[Vv]illage of|[Cc]ity|[Vv]illage"),
-    City_rec=trimws(City_rec,which="both"),
-    City_rec=str_to_lower(City_rec),
-    City_rec=str_replace_all(City_rec,"[[:punct:]]",""),
-    City_rec=str_remove_all(City_rec," "))
+# switch to Kaggle DB
+
+  world_cities <- read_csv("data/worldcities.csv") %>% 
+    filter(!is.na(population),population>0)
+
+  # un_city_data <- read_csv("data/UNdata_Export_20210401_132806548.csv") %>% 
+  #   group_by(City,`Country or Area`) %>% 
+  #   filter(Year==max(Year),Sex=="Both Sexes") %>% 
+  #   select(pop="Value",City) %>% 
+  #   mutate(City_rec=str_remove_all(City,"\\(.+\\)|\\.|-"),
+  #   City_rec=str_remove_all(City_rec,
+  #                                  "[Dd]istrict|[Dd]istricts|([Tt]he)? ?[Cc]ity of|([Tt]he)? ?[Dd]epartments? of|([Tt]he)? ?[Rr]egency of|([Tt]he)? ?[Mm]unicipality of|([Tt]he)? ?[Vv]illage of|[Cc]ity|[Vv]illage"),
+  #   City_rec=trimws(City_rec,which="both"),
+  #   City_rec=str_to_lower(City_rec),
+  #   City_rec=str_replace_all(City_rec,"[[:punct:]]",""),
+  #   City_rec=str_remove_all(City_rec," "))
+  # 
+  # 
+  # un_city_table <- read_csv("data/table08.csv") %>% 
+  #   mutate(city2=str_extract(city,"(?<=\\().+(?=\\))|(?<=-).+")) %>% 
+  #   select(city,city2,population) %>% 
+  #   mutate(population=str_remove_all(population,",|\\.\\.\\."),
+  #          population=as.numeric(population)) %>% 
+  #   filter(!is.na(population)) %>% 
+  #   mutate(City_rec=str_remove_all(city,"\\(.+\\)|\\.|-\\s.*$"),
+  #          City_rec=str_remove_all(City_rec,
+  #                                  "[Dd]istrict|[Dd]istricts|([Tt]he)? ?[Cc]ity of|([Tt]he)? ?[Dd]epartments? of|([Tt]he)? ?[Rr]egency of|([Tt]he)? ?[Mm]unicipality of|([Tt]he)? ?[Vv]illage of|[Cc]ity|[Vv]illage"),
+  #          City_rec=trimws(City_rec,which="both"),
+  #          City_rec=str_to_lower(City_rec),
+  #          City_rec=str_replace_all(City_rec,"[[:punct:]]",""),
+  #          City_rec=str_remove_all(City_rec," "),
+  #          City_rec2=str_remove_all(city2,"\\(.+\\)|\\.|-\\s.*$"),
+  #          City_rec2=str_remove_all(City_rec2,
+  #                                  "[Dd]istrict|[Dd]istricts|([Tt]he)? ?[Cc]ity of|([Tt]he)? ?[Dd]epartments? of|([Tt]he)? ?[Rr]egency of|([Tt]he)? ?[Mm]unicipality of|([Tt]he)? ?[Vv]illage of|[Cc]ity|[Vv]illage"),
+  #          City_rec2=trimws(City_rec2,which="both"),
+  #          City_rec2=str_to_lower(City_rec2),
+  #          City_rec2=str_replace_all(City_rec2,"[[:punct:]]",""),
+  #          City_rec2=str_remove_all(City_rec2," "))
+  # 
+  # 
+  # oecd_city_data <- read_csv("data/cities_oecd.csv") %>% 
+  #   group_by(`Metropolitan areas`) %>% 
+  #   filter(Year==max(Year,na.rm=T),VAR=="T_T") %>% 
+  #   mutate(City_rec=str_remove_all(`Metropolitan areas`,"\\(.+\\)|\\.|-"),
+  #          City_rec=str_remove_all(City_rec,
+  #                                  "[Dd]istrict|[Dd]istricts|([Tt]he)? ?[Cc]ity of|([Tt]he)? ?[Dd]epartments? of|([Tt]he)? ?[Rr]egency of|([Tt]he)? ?[Mm]unicipality of|([Tt]he)? ?[Vv]illage of|[Cc]ity|[Vv]illage"),
+  #          City_rec=trimws(City_rec,which="both"),
+  #          City_rec=str_to_lower(City_rec),
+  #          City_rec=str_replace_all(City_rec,"[[:punct:]]",""),
+  #          City_rec=str_remove_all(City_rec," "))
   
+  city_list <- distinct(index,city,country)
   
-  un_city_table <- read_csv("data/table08.csv") %>% 
-    mutate(city2=str_extract(city,"(?<=\\().+(?=\\))|(?<=-).+")) %>% 
-    select(city,city2,population) %>% 
-    mutate(population=str_remove_all(population,",|\\.\\.\\."),
-           population=as.numeric(population)) %>% 
-    filter(!is.na(population)) %>% 
-    mutate(City_rec=str_remove_all(city,"\\(.+\\)|\\.|-\\s.*$"),
-           City_rec=str_remove_all(City_rec,
-                                   "[Dd]istrict|[Dd]istricts|([Tt]he)? ?[Cc]ity of|([Tt]he)? ?[Dd]epartments? of|([Tt]he)? ?[Rr]egency of|([Tt]he)? ?[Mm]unicipality of|([Tt]he)? ?[Vv]illage of|[Cc]ity|[Vv]illage"),
-           City_rec=trimws(City_rec,which="both"),
-           City_rec=str_to_lower(City_rec),
-           City_rec=str_replace_all(City_rec,"[[:punct:]]",""),
-           City_rec=str_remove_all(City_rec," "),
-           City_rec2=str_remove_all(city2,"\\(.+\\)|\\.|-\\s.*$"),
-           City_rec2=str_remove_all(City_rec2,
-                                   "[Dd]istrict|[Dd]istricts|([Tt]he)? ?[Cc]ity of|([Tt]he)? ?[Dd]epartments? of|([Tt]he)? ?[Rr]egency of|([Tt]he)? ?[Mm]unicipality of|([Tt]he)? ?[Vv]illage of|[Cc]ity|[Vv]illage"),
-           City_rec2=trimws(City_rec2,which="both"),
-           City_rec2=str_to_lower(City_rec2),
-           City_rec2=str_replace_all(City_rec2,"[[:punct:]]",""),
-           City_rec2=str_remove_all(City_rec2," "))
-  
-  
-  oecd_city_data <- read_csv("data/cities_oecd.csv") %>% 
-    group_by(`Metropolitan areas`) %>% 
-    filter(Year==max(Year,na.rm=T),VAR=="T_T") %>% 
-    mutate(City_rec=str_remove_all(`Metropolitan areas`,"\\(.+\\)|\\.|-"),
-           City_rec=str_remove_all(City_rec,
-                                   "[Dd]istrict|[Dd]istricts|([Tt]he)? ?[Cc]ity of|([Tt]he)? ?[Dd]epartments? of|([Tt]he)? ?[Rr]egency of|([Tt]he)? ?[Mm]unicipality of|([Tt]he)? ?[Vv]illage of|[Cc]ity|[Vv]illage"),
-           City_rec=trimws(City_rec,which="both"),
-           City_rec=str_to_lower(City_rec),
-           City_rec=str_replace_all(City_rec,"[[:punct:]]",""),
-           City_rec=str_remove_all(City_rec," "))
-  
-  city_list <- distinct(index,target_city,country)
+  city_list <- left_join(city_list, 
+                         world_cities, 
+                         by=c("city","country"))
   
   ## Recoding city_list$target_city into city_list$target_city_rec
   city_list$target_city_rec <- fct_recode(city_list$target_city,

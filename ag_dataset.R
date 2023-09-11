@@ -76,9 +76,12 @@ index <- filter(
     date_start,
     date_end,
     country,
+    ISO_A3,
     compliance,
     type,
     target_geog_level,
+    city,
+    province,
     target_city,
     target_province,
     target_other,
@@ -677,10 +680,11 @@ index_long <- bind_rows(index_long)
 index_long <- left_join(ungroup(index_long),distinct(select(index,record_id,
                                                             policy_id,
                                                             country,
+                                                            ISO_A3,
                                                             compliance,
                                                             init_country_level,
-                                                            target_city,
-                                                            target_province,
+                                                            city,
+                                                            province,
                                                             target_other)),
                         by=c("record_id","policy_id"))
 
@@ -690,24 +694,62 @@ index_long <- left_join(ungroup(index_long),distinct(select(index,record_id,
 
 # merge in city/provincial population data
 
-source("recode_city.R")
+city_crosswalk <- readxl::read_excel("data/recode_coronanet_cities.xlsx") %>% 
+  select(city, city_recode, country) %>% 
+  filter(!is.na(city),city!="NA")
+
+city_pop <- readxl::read_excel("data/recode_coronanet_cities.xlsx",
+                               sheet = "to_match_cities")
+
+city_crosswalk <- left_join(city_crosswalk,
+                            city_pop, 
+                            by=c("country","city_recode"="city_ascii")) %>% 
+  filter(!is.na(population),population>0) %>% 
+  select(city,country,city_pop="population")
+
+city_list <- distinct(index,city,country)
+
+city_list <- left_join(city_list, 
+                       city_crosswalk, 
+                       by=c("city","country")) %>% 
+  select(country,city,city_pop) %>% 
+  distinct %>% 
+  filter(!is.na(city))
 
 # merge in province pop data
 
-province_pop <- read_delim("coronanet/coronanet_population.csv",delim = ";") %>% 
-  select(-1) %>% 
-  distinct %>% 
-  filter(!is.na(province)) %>% 
-  select(country,province,province_pop=population_total)
+province_crosswalk <- read_excel("data/recode_provinces.xlsx") %>% 
+  select(ISO_A3, province, adm1_id)
+
+province_pop <- read_excel("data/recode_provinces.xlsx",sheet = "external_data") %>% 
+  select(province_pop="t",adm1_id)
+
+province_crosswalk <- left_join(province_crosswalk, province_pop,
+                                by="adm1_id") %>% 
+  filter(!is.na(adm1_id))
+
+provinces <- distinct(index, ISO_A3,country, province)
+
+provinces <- left_join(provinces, province_crosswalk,
+                       by=c("ISO_A3",
+                            "province"="province")) %>% 
+  group_by(ISO_A3, country, province, adm1_id) %>% 
+  summarize(province_pop=mean(province_pop))
+
+# province_pop <- read_delim("coronanet/coronanet_population.csv",delim = ";") %>% 
+#   select(-1) %>% 
+#   distinct %>% 
+#   filter(!is.na(province)) %>% 
+#   select(country,province,province_pop=population_total)
 
 # add missing data
 
-source("miss_province_pop.R")
-
-province_pop <- anti_join(province_pop,miss_prov,by=c('country',"province"))
-
-province_pop <- bind_rows(province_pop,miss_prov) %>% 
-  distinct
+# source("miss_province_pop.R")
+# 
+# province_pop <- anti_join(province_pop,miss_prov,by=c('country',"province"))
+# 
+# province_pop <- bind_rows(province_pop,miss_prov) %>% 
+#   distinct
 
 # merge city and province population data
 
@@ -751,17 +793,17 @@ wb_pop_country <- read_csv("data/wb_country_pop.csv") %>%
                                  326000)))
 # add taiwan, vatican, Macau,
 
-index_long <- left_join(index_long,combine_pop_sum,by="target_city") %>% 
+index_long <- left_join(index_long,city_list,by=c("country","city")) %>% 
   left_join(wb_pop_country,by="country") %>% 
-  left_join(province_pop,by=c("country",c("target_province"="province"))) %>% 
-  filter((init_country_level=="Municipal" & !is.na(combine_pop_city)) | (init_country_level=="Provincial" & !is.na(province_pop) ) | init_country_level=="National")
+  left_join(provinces,by=c("country","province")) %>% 
+  filter((init_country_level=="Municipal" & !is.na(city_pop)) | (init_country_level=="Provincial" & !is.na(province_pop) ) | init_country_level=="National")
 
 index_long <- group_by(index_long,country,item,date_policy,init_country_level) %>% 
   mutate(var=case_when(!grepl(x=item,pattern="number|curfew") & init_country_level %in% c("Municipal","Provincial")~1,
                        grepl(x=item,pattern="number|curfew") & init_country_level %in% c("Municipal","Provincial")~mean(var,na.rm=T),
                        TRUE~var)) %>% 
   ungroup %>% 
-         mutate(population=case_when(init_country_level=="Municipal" & var>0~combine_pop_city,
+         mutate(population=case_when(init_country_level=="Municipal" & var>0~city_pop,
                               init_country_level=="Provincial" & var>0~province_pop,
                               init_country_level=="National" & var>0~1,
                               TRUE~0))
