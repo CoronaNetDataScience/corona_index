@@ -670,7 +670,7 @@ index_long <- lapply(this_vars, function(a) {
   
 })
 
-index_long <- bind_rows(index_long)
+index_long <- bind_rows(index_long[1:3])
 
 #parallel::detectCores()
 
@@ -723,6 +723,14 @@ province_crosswalk <- read_excel("data/recode_provinces.xlsx") %>%
 province_pop <- read_excel("data/recode_provinces.xlsx",sheet = "external_data") %>% 
   select(province_pop="t",adm1_id)
 
+# add in some provinces missing from the external data
+
+province_pop_missing <- read_excel("data/recode_provinces.xlsx",
+                                   sheet = "missing_countries") %>% 
+  select(pop_missing="pop",country,province) %>% 
+  mutate(pop_missing=as.numeric(pop_missing)) %>% 
+  filter(!is.na(pop_missing))
+
 province_crosswalk <- left_join(province_crosswalk, province_pop,
                                 by="adm1_id") %>% 
   filter(!is.na(adm1_id))
@@ -734,6 +742,14 @@ provinces <- left_join(provinces, province_crosswalk,
                             "province"="province")) %>% 
   group_by(ISO_A3, country, province, adm1_id) %>% 
   summarize(province_pop=mean(province_pop))
+
+# merge in those missing from the external data
+
+provinces <- left_join(ungroup(provinces), province_pop_missing,
+                       by=c("country","province")) %>% 
+  mutate(province_pop=coalesce(province_pop, pop_missing)) %>% 
+  filter(!is.na(province_pop)) %>% 
+  select(country,province, province_pop)
 
 # province_pop <- read_delim("coronanet/coronanet_population.csv",delim = ";") %>% 
 #   select(-1) %>% 
