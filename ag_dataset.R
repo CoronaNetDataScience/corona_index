@@ -670,7 +670,7 @@ index_long <- lapply(this_vars, function(a) {
   
 })
 
-index_long <- bind_rows(index_long[1:3])
+index_long <- bind_rows(index_long)
 
 #parallel::detectCores()
 
@@ -700,6 +700,10 @@ city_crosswalk <- readxl::read_excel("data/recode_coronanet_cities.xlsx") %>%
 city_pop <- readxl::read_excel("data/recode_coronanet_cities.xlsx",
                                sheet = "to_match_cities")
 
+city_pop_missing <- readxl::read_excel("data/recode_coronanet_cities.xlsx",
+                                       sheet = "missing_cities") %>% 
+  select(city,country,missing_pop="population")
+
 city_crosswalk <- left_join(city_crosswalk,
                             city_pop, 
                             by=c("country","city_recode"="city_ascii")) %>% 
@@ -714,6 +718,20 @@ city_list <- left_join(city_list,
   select(country,city,city_pop) %>% 
   distinct %>% 
   filter(!is.na(city))
+
+# merge in some extra matches
+
+city_list <- left_join(city_list,
+                       city_pop_missing,
+                       by=c("city","country")) %>% 
+  mutate(city_pop=coalesce(city_pop,missing_pop)) %>% 
+  select(-missing_pop)
+
+city_list <- city_list %>% 
+  group_by(country,city) %>% 
+  summarize(city_pop=mean(city_pop,na.rm=T)) %>% 
+  ungroup
+
 
 # merge in province pop data
 
