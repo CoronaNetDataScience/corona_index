@@ -322,7 +322,7 @@ to_make <- index_long %>%
                               discrim_reg_sd = 3,
                               diff_reg_sd = 3,
                               #adapt_delta=0.95,
-                              max_treedepth=max_treedepth,het_var = F,
+                              max_treedepth=10,het_var = F,
                               fix_high=1,
                               fix_low=0,
                               time_center_cutoff = 650,
