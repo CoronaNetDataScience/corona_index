@@ -99,12 +99,12 @@ if(model_type %in% c("ht","hm","hm2","hr")) {
 
 restrict_list <- switch(model_type,
                         sd=c("social_distance","number_mass"),
-                        biz=c("biz_hours","biz_meeting"),
+                        biz=c("biz_restrict_rest","biz_meeting"),
                         ht=c("ht_type_pcr","ht_portal_sms"),
                         hm=c("hm_home_visit","hm_telephone"),
                         hm2=c("ht_type_pcr","ht_loc_clinic"),
                         mask=c("mask_everywhere","mask_transport"),
-                        hr=c("hr_ventilator","hr_masks"),
+                        hr=c("hr_ppe","hr_masks"),
                         school=c("primary_school","school_clean"))
 
   #pos_discrim <- model_type %in% c("biz","mask","hm")
@@ -322,7 +322,7 @@ to_make <- index_long %>%
                               discrim_reg_sd = 1,
                               diff_reg_sd = 3,
                               adapt_delta=0.95,
-                              max_treedepth=11,het_var = F,
+                              max_treedepth=12,het_var = F,
                               fix_high=1,
                               fix_low=0,
                               time_center_cutoff = 650,
