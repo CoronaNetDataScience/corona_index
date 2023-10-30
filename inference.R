@@ -336,7 +336,7 @@ if(run_mod) {
     
     contact_mod_samp <- contact_mod$draws(variables=c("b","bsp","Omega"))
     
-    saveRDS(contact_mod, "coronanet/contact_mod_noimpute.rds")
+    contact_mod$save_object("coronanet/contact_mod_noimpute.rds")
     saveRDS(contact_mod_samp, "coronanet/contact_mod_noimpute_samp.rds")
     
   } else {
@@ -354,6 +354,7 @@ if(run_mod) {
                                         prior(exponential(1),class="sdme") +
                                         prior(normal(0,5),class="b"),
                                       data=combine_dv_noimpute,
+                                      parallel_chains=4,
                                       chains=1,threads=parallel::detectCores(),max_treedepth=12,
                                       warmup = 1000,iter = 1500,
                                       backend="cmdstanr")
@@ -364,14 +365,16 @@ if(run_mod) {
     contact_mod <- contact_mod_code$sample(data=contact_mod_data,
                                            seed=638825,
                                            refresh=100,
-                                           chains=4,iter_warmup=500,
+                                           chains=4,
+                                           parallel_chains = 4,
+                                           iter_warmup=500,
                                            iter_sampling=500,
                                            max_treedepth=12,
                                            threads_per_chain=as.integer(floor(parallel::detectCores()/4)))
     
     #contact_mod_samp <- contact_mod$draws(variables=c("b","bsp"))
     
-    saveRDS(contact_mod, "coronanet/contact_mod_noimpute_nocor.rds")
+    contact_mod$save_object("coronanet/contact_mod_noimpute_nocor.rds")
     
     
   }
