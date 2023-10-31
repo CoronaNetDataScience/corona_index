@@ -339,7 +339,7 @@ if(run_mod) {
     contact_mod$save_object("coronanet/contact_mod_noimpute.rds")
     saveRDS(contact_mod_samp, "coronanet/contact_mod_noimpute_samp.rds")
     
-  } else {
+  } else if(model_cor=="no") {
     
     contact_mod_data <- make_standata(bf(contact ~ cases_per_cap + deaths_per_cap +
                                            me(med_biz,sdx = sd_biz) +
@@ -377,6 +377,26 @@ if(run_mod) {
     contact_mod$save_object("coronanet/contact_mod_noimpute_nocor.rds")
     
     
+  } else if(model_cor=="fixed") {
+    
+    # fit model without any latent-ness
+    
+    fix_mod <- brm(contact ~ cases_per_cap + deaths_per_cap +
+         med_biz +
+         med_hm2 +
+         med_sd +
+         med_school +
+         med_masks +
+         med_hr +
+         date_policy_fac, 
+    prior=prior(normal(0,5),class="b"),
+    data=combine_dv_noimpute,
+    chains=4,cores=4,
+    warmup = 500,iter = 1000,
+    backend="cmdstanr")
+    
+    saveRDS(fix_mod, "coronanet/contact_fixmod.rds")
+    
   }
   
   
@@ -384,6 +404,7 @@ if(run_mod) {
 } else {
   
   contact_mod <- readRDS("coronanet/contact_mod_noimpute.rds")
+  fix_mod <- readRDS("coronanet/contact_fixmod.rds")
   
 }
 
@@ -400,7 +421,7 @@ contact_mod_sum <- contact_mod$draws(variables = c("b[1]","b[2]",
   summarize_draws()
 
 
-contact_mod_sum %>% 
+mes_mod_res <- contact_mod_sum %>% 
   mutate(variable=recode(variable,
                          `b[1]`="Cases Per Capita",
                          `b[2]`="Deaths Per Capita",
@@ -415,8 +436,38 @@ contact_mod_sum %>%
                          round(q95,digits=3),
                          ")"),
          rhat=round(rhat,digits=3)) %>% 
-  select(Variable="variable",`Posterior Median and 5% -95% Interval`="Estimate",
-         rhat) %>% 
+  mutate(Model="Measurement") %>% 
+  select(Model,Variable="variable",`Posterior Median and 5% -95% Interval`="Estimate",
+         rhat)
+
+norm_mod_res <- as_draws(fix_mod,variables = c("cases_per_cap",
+                                           "deaths_per_camp","
+                                           med_biz","med_hm2",
+                                           "med_sd","med_school",
+                                           "med_masks","med_hr")) %>% 
+  summarize_draws() %>% 
+  mutate(variable=recode(variable,
+                         `b_cases_per_cap`="Cases Per Capita",
+                         `b_deaths_per_cap`="Deaths Per Capita",
+                         `b_med_biz`="Business Restrictions",
+                         `b_med_hm2`="Health Management",
+                         `b_med_sd`="Social Distancing",
+                         `b_med_school`="School Restrictions",
+                         `b_med_masks`="Masks",
+                         `b_med_hr`="Health Resources"),
+         Estimate=paste0(round(median,digits=3)," (",round(q5,digits=3),
+                         ", ",
+                         round(q95,digits=3),
+                         ")"),
+         rhat=round(rhat,digits=3)) %>% 
+  filter(!grepl(x=variable,pattern="date|prior|sigma|lp")) %>% 
+  mutate(Model="Conventional") %>% 
+  select(Model,Variable="variable",`Posterior Median and 5% -95% Interval`="Estimate",
+         rhat)
+
+bind_rows(mes_mod_res,
+          norm_mod_res) %>% 
+  arrange(Variable,Model) %>% 
   kable(format="latex",caption="Estimates of Regression of Contact Rates on Policy Intensity Scores",
         label="contact_mod",
         booktabs=T,
