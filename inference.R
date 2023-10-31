@@ -31,7 +31,7 @@ model_cor <- "no"
 # run everything from scratch
 
 load_data <- F
-run_mod <- T
+run_mod <- F
 mult_pull <- F
 
 # load time-varying estimates
@@ -403,7 +403,7 @@ if(run_mod) {
   
 } else {
   
-  contact_mod <- readRDS("coronanet/contact_mod_noimpute.rds")
+  contact_mod <- readRDS("coronanet/contact_mod_noimpute_nocor.rds")
   fix_mod <- readRDS("coronanet/contact_fixmod.rds")
   
 }
