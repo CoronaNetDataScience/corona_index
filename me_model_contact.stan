@@ -41,12 +41,12 @@ functions {
     ptarget += normal_lpdf(Xn_4[start:end] | Xme_4[start:end], noise_4[start:end]);
     ptarget += normal_lpdf(Xn_5[start:end] | Xme_5[start:end], noise_5[start:end]);
     ptarget += normal_lpdf(Xn_6[start:end] | Xme_6[start:end], noise_6[start:end]);
-    ptarget += std_normal_lpdf(Xme_1[start:end]);
-    ptarget += std_normal_lpdf(Xme_2[start:end]);
-    ptarget += std_normal_lpdf(Xme_3[start:end]);
-    ptarget += std_normal_lpdf(Xme_4[start:end]);
-    ptarget += std_normal_lpdf(Xme_5[start:end]);
-    ptarget += std_normal_lpdf(Xme_6[start:end]);
+    // ptarget += std_normal_lpdf(Xme_1[start:end]);
+    // ptarget += std_normal_lpdf(Xme_2[start:end]);
+    // ptarget += std_normal_lpdf(Xme_3[start:end]);
+    // ptarget += std_normal_lpdf(Xme_4[start:end]);
+    // ptarget += std_normal_lpdf(Xme_5[start:end]);
+    // ptarget += std_normal_lpdf(Xme_6[start:end]);
     
     return ptarget;
   }
@@ -90,8 +90,8 @@ parameters {
   vector[Ksp] bsp;  // special effects coefficients
   real<lower=0> sigma;  // dispersion parameter
   // parameters for noise free variables
-  vector[Mme_1] meanme_1;  // latent means
-  vector<lower=0>[Mme_1] sdme_1;  // latent SDs
+  // vector[Mme_1] meanme_1;  // latent means
+  // vector<lower=0>[Mme_1] sdme_1;  // latent SDs
   vector[N] Xme_1;  // actual latent values
   vector[N] Xme_2;  // actual latent values
   vector[N] Xme_3;  // actual latent values
@@ -124,8 +124,8 @@ transformed parameters {
   lprior += normal_lpdf(bsp | 0, 5);
   lprior += student_t_lpdf(sigma | 3, 0, 2.5)
     - 1 * student_t_lccdf(0 | 3, 0, 2.5);
-  lprior += normal_lpdf(meanme_1 | 0, 1);
-  lprior += exponential_lpdf(sdme_1 | 1);
+  // lprior += normal_lpdf(meanme_1 | 0, 1);
+  // lprior += exponential_lpdf(sdme_1 | 1);
 }
 model {
   // likelihood including constants
